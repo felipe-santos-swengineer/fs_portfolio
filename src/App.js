@@ -269,7 +269,7 @@ export default function App() {
           </section>
           <div ref={sobreRef} className="divDialogMain">~Sobre~</div>
           <section style={{ width: '100%' }}>
-            <div className="divDialog" style={{ marginTop: '20px' }}>
+            <div className="divDialog" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column' }}>
               <div class="seletor-container-sobre">
                 {imagens.map((bg, i) => (
                   <div
@@ -284,11 +284,13 @@ export default function App() {
                   </div>
                 ))}
               </div>
+              <div class="descricao-sobre" id="descricao">
+                {textos[selecionado]}
+              </div>
             </div>
+
           </section>
-          <div class="descricao" id="descricao">
-            Selecione uma imagem acima.
-          </div>
+
           <section ref={projetosRef} id="projetos">PROJETOS</section>
           <section ref={contatoRef} id="contato">CONTATO</section>
         </div >

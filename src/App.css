@@ -278,3 +278,7 @@ html {
   background-color: rgba(0, 0, 0, 0.8);
   /* fundo branco semitransparente */
 }
+
+.descricao-sobre {
+  color: white
+}

@@ -1,39 +1,68 @@
+/* RESET GLOBAL */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* MAPA - BACKGROUND E CONTAINER */
 .bg_map {
-    margin: 20px;
-    width: 100%;
-    max-width: 1024px;
-    background-image: url('../assets/images/mapa_sda.png');
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    align-items: center;
-    background-color: red;
-    border-radius: 16px;
-    box-shadow: 0 0 10px gold, 0 0 30px rgba(255, 215, 0, 0.5);
-    background-color: rgba(0, 0, 0, 0.7);
+  width: 100%;
+  background-image: url('../assets/images/mapa_sda.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  box-shadow: 0 0 10px gold, 0 0 30px rgba(255, 215, 0, 0.5);
+  padding: 20px;
 }
 
+/* TÍTULO */
+.titulo_mapa {
+  margin-bottom: 30px;
+  font-size: 25px;
+  color: white;
+  text-decoration: underline;
+  text-shadow:
+    2px 2px 4px rgba(0, 0, 0, 0.7),
+    -2px -2px 4px rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 10px 20px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* CONTAINER DE CADA ESTRUTURA */
 .mapa-container {
-    width: 200px;
-    margin-top: 50px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+  width: 100%;
+  max-width: 200px;
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+/* ANIMAÇÃO */
 @keyframes jogarNaMesa {
   0% {
     opacity: 0;
     transform: scale(2.5) rotate(-15deg) translateY(-200px);
   }
+
   60% {
     opacity: 1;
     transform: scale(1.05) rotate(3deg) translateY(20px);
   }
+
   100% {
     transform: scale(1) rotate(0deg) translateY(0);
   }
@@ -43,55 +72,82 @@
   animation: jogarNaMesa 0.8s ease-out forwards;
 }
 
-
+/* ESTRUTURA */
 .mapa-estrutura {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  position: relative;
 }
 
 .mapa-estrutura.esquerda {
-    justify-content: flex-start;
-    padding-right: 100%;
-
+  justify-content: flex-start;
+  margin-right: auto;
 }
 
 .mapa-estrutura.direita {
-    justify-content: flex-end;
-    padding-left: 50%;
-    flex-direction: row-reverse;
+  justify-content: flex-end;
+  margin-left: auto;
+  flex-direction: row-reverse;
 }
 
 .mapa-estrutura img {
-    width: 200px;
-    height: auto;
-    transition: transform 0.3s ease;
-    filter: drop-shadow(0 0 10px black);
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 0 10px black);
 }
 
 .mapa-estrutura img:hover {
-    cursor: pointer;
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 6px gold);
+  cursor: pointer;
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 6px gold);
 }
 
+/* TEXTO DE DIÁLOGO */
 .textDialogMapa {
-    padding: 5px;
-    width: 100%;
-    font-size: 20px;
-    color: white;
+  padding: 5px;
+  width: 100%;
+  font-size: 20px;
+  color: white;
+  text-align: center;
 }
 
-
+/* CONECTOR */
 .conector {
-    width: 100px;
-    height: 100px;
+  width: 100px;
+  height: 100px;
 }
 
 .conector line {
-    stroke: red;
-    stroke-width: 4;
-    stroke-linecap: round;
+  stroke: red;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 600px) {
+  .mapa-container {
+    max-width: 100%;
+  }
+
+  .mapa-estrutura {
+    flex-direction: column !important;
+    align-items: center;
+  }
+
+  .mapa-estrutura img {
+    max-width: 80%;
+  }
+
+  .textDialogMapa {
+    font-size: 16px;
+  }
+
+  .titulo_mapa {
+    font-size: 20px;
+    padding: 8px 16px;
+  }
 }

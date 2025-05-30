@@ -20,6 +20,7 @@ export default function MapaVertical({ onIrParaInicio, onIrParaSobre, onIrParaPr
   return (
     <div className="bg_map">
       <div className={`mapa-container ${animar ? "animado" : ""}`}>
+        <div className="titulo_mapa">Mapa <br/>do<br/> portfólio</div>
         <div className="mapa-estrutura esquerda">
           <img src={Inicio} alt="Início" onClick={onIrParaInicio}/>
           <div className="divDialog">
@@ -27,7 +28,6 @@ export default function MapaVertical({ onIrParaInicio, onIrParaSobre, onIrParaPr
               Início
             </div>
           </div>
-
         </div>
         <svg className="conector">
           <line x1="20" y1="0" x2="80" y2="100" />

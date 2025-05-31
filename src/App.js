@@ -30,7 +30,9 @@ export default function App() {
     'Personalidade e Interesses'
   ];
   const textos = [
-    'Texto sobre a primeira imagem',
+    `🧙 Em uma pequena cidade do sertão cearense, um jovem guerreiro do conhecimento iniciou sua jornada em 2018. Por meio do portal místico conhecido como SISU, e enfrentando as forças da ampla concorrência, conquistou seu ingresso na lendária Universidade Federal do Ceará — campus Russas.
+📘 Durante anos de intensos estudos e batalhas contra códigos indomáveis, este aventureiro alcançou o bacharelado em Engenharia de Software — dominando magias de requisitos, forjando estruturas de dados e decifrando runas de programação.
+⚔️ Ao final da formação, atravessou os portões da academia direto para os campos de batalha do mercado, onde passou a aplicar suas habilidades como um verdadeiro herói digital. Hoje, segue aprimorando sua técnica, pronto para enfrentar os maiores bugs e monstros de produção.`,
     'Texto sobre a segunda imagem',
     'Texto sobre a terceira imagem'
   ];
@@ -134,7 +136,7 @@ export default function App() {
         <div className="popup-overlay">
           <div className="popup-box">
             <h2>Bem-vindo!</h2>
-            <button onClick={handleEnableSound}>Iniciar aventura!</button>
+            <button onClick={handleEnableSound}>Iniciar a exploração!</button>
           </div>
         </div>
       )}
@@ -285,7 +287,68 @@ export default function App() {
                 ))}
               </div>
               <div class="descricao-sobre" id="descricao">
-                {textos[selecionado]}
+                {selecionado === 0 ?
+                  <div>
+                    🧙 Em uma pequena cidade do sertão cearense, um jovem guerreiro do conhecimento iniciou sua jornada em 2018. Por meio do portal místico conhecido como SISU, e enfrentando as forças da ampla concorrência, conquistou seu ingresso na lendária Universidade Federal do Ceará — campus Russas.
+                    <br /><br />
+                    📘 Durante anos de intensos estudos e batalhas contra códigos indomáveis, este aventureiro alcançou o bacharelado em Engenharia de Software — dominando magias de requisitos, forjando estruturas de dados e decifrando runas de programação.
+                    <br /><br />
+                    ⚔️ Ao final da formação, atravessou os portões da academia direto para os campos de batalha do mercado, onde passou a aplicar suas habilidades como um verdadeiro herói digital. Hoje, segue aprimorando sua técnica, pronto para enfrentar os maiores bugs e monstros de produção.
+                  </div>
+                  : ''
+                }
+                {selecionado === 1 ?
+                  <div class="ficha-rpg">
+                    <h3>🧭 Experiências</h3>
+                    <ul>
+                      <li>⚔️ <strong>Bolsista desenvolvedor Full-Stack</strong> — Participou de campanhas em projetos reais, entregando interfaces responsivas e interativas.</li>
+                      <ul>
+                        <li>🏢 Empresa: UFC</li>
+                        <li>⏳ Duração: 04/2021 até 01/2022</li>
+                        <li>📜 Resumo: Projeto para auxiliar alunos de cursos de graduação na
+                          etapa de entrega das atividades complementares, através do desenvolvimento
+                          de uma aplicação web para gestão das horas complementares.</li>
+                      </ul>
+                      <hr />
+                      <li>🏰 <strong>Estagiário em Desenvolvimento Web</strong> — Aliou-se a uma guilda de programadores para manter sistemas e implementar novas funcionalidades.</li>
+                      <ul>
+                        <li>🏢 Empresa: Núcleo de soluções de Software UFC</li>
+                        <li>⏳ Duração: 05/2021 até 09/2021</li>
+                        <li>📜 Resumo: Garantir a excelência no desenvolvimento de software,
+                          contribuindo para a formação profissional e crescimento tecnológico no Vale do Jaguaribe.
+                          As atividades do estágio foram focadas no sistema Darwin, módulo responsável pela gestão de seleções e
+                          competições, que tem sido utilizado para selecionar bolsistas para os programas disponibilizados
+                          para o Campus da UFC em Russas, como PIBI, PAIP e PID.</li>
+                      </ul>
+                      <hr />
+                      <li>🧪 <strong>Estagiário em Desenvolvimento Web</strong> — Manteve e desenvolveu novas soluções em ERP corporativo de uma guilda renomada.</li>
+                      <ul>
+                        <li>🏢 Empresa: TOTVS</li>
+                        <li>⏳ Duração: 06/2022 até 05/2023</li>
+                        <li>📜 Resumo: Desenvolvimento e manutenção do software ERP Protheus, trabalhando na linguagem Advpl ou em novas aplicações
+                          com Javascript (react/node).</li>
+                      </ul>
+                      <hr />
+                      <li>🧪 <strong>Desenvolvimento Front-End</strong> — Criou soluções digitais para promover a inovação pública, empresarial e científica.</li>
+                      <ul>
+                        <li>🏢 Empresa: Funcap</li>
+                        <li>⏳ Duração: 08/2021 até 04/2025</li>
+                        <li>📜 Resumo: Projeto para criar uma vitrine digital para exibição de dados
+                          anuais da inovação pública e empresarial da Funcap, sendo feita sua primeira versão
+                          com Javascript (react/node) e posteriormente alterada para php (laravel) após mudança na diretoria da organização.</li>
+                      </ul>
+                    </ul>
+
+                    <h3>🔮 Habilidades</h3>
+                    <ul>
+                      <li>🧙‍♂️ <strong>Magias Front-End:</strong> HTML5, CSS3, JavaScript, React.js, Tailwind, animações com Framer Motion.</li>
+                      <li>🛠️ <strong>Ferramentas do Arsenal:</strong> Git, GitHub, Figma, VSCode, Vite, APIs REST.</li>
+                      <li>🔍 <strong>Perícias Especiais:</strong> Criação de UIs responsivas, experiências visuais imersivas, performance otimizada.</li>
+                      <li>📦 <strong>Inventário Adicional:</strong> Conhecimento básico em back-end (Node.js), versionamento, e resolução de bugs malditos.</li>
+                    </ul>
+                  </div>
+                  : ''
+                }
               </div>
             </div>
 

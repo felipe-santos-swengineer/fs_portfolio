@@ -1,16 +1,21 @@
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { HiMenuAlt2 } from 'react-icons/hi';
 import { FaMapMarkedAlt } from 'react-icons/fa';
 import temaAudio from './assets/audio/dndAdventure_NCS.mp3';
 import bemVindoAudio from './assets/audio/bem_vindo_bill_voice.mp3';
 import inicioAudio from './assets/audio/inicio_bill_voice.mp3';
 import motivacaoAudio from './assets/audio/motivacao_bill_voice.mp3';
+import projetosAudio from './assets/audio/projetos_bill_voice.mp3';
 import MapaVertical from './components/MapaVertical';
 import Aventureiro from './assets/images/warrior_climb.gif';
 import Escolaridade from './assets/images/escolaridade.png';
 import Habilidades from './assets/images/habilidades.png';
 import Interesses from './assets/images/interesses.png';
+import Magelvl0 from './assets/images/lvl0.png';
+import Magelvl1 from './assets/images/lvl1.png';
+import Magelvl2 from './assets/images/lvl2.png';
+import Magelvl3 from './assets/images/lvl3.png';
 import { FaPlay, FaStop } from 'react-icons/fa';
 import "./App.css";
 
@@ -29,13 +34,6 @@ export default function App() {
     'Experiência e Habilidades',
     'Personalidade e Interesses'
   ];
-  const textos = [
-    `🧙 Em uma pequena cidade do sertão cearense, um jovem guerreiro do conhecimento iniciou sua jornada em 2018. Por meio do portal místico conhecido como SISU, e enfrentando as forças da ampla concorrência, conquistou seu ingresso na lendária Universidade Federal do Ceará — campus Russas.
-📘 Durante anos de intensos estudos e batalhas contra códigos indomáveis, este aventureiro alcançou o bacharelado em Engenharia de Software — dominando magias de requisitos, forjando estruturas de dados e decifrando runas de programação.
-⚔️ Ao final da formação, atravessou os portões da academia direto para os campos de batalha do mercado, onde passou a aplicar suas habilidades como um verdadeiro herói digital. Hoje, segue aprimorando sua técnica, pronto para enfrentar os maiores bugs e monstros de produção.`,
-    'Texto sobre a segunda imagem',
-    'Texto sobre a terceira imagem'
-  ];
 
   const imagens = [
     `url(${Escolaridade})`,
@@ -43,18 +41,19 @@ export default function App() {
     `url(${Interesses})`
   ];
 
-
   //array de audios
   const audioRef = useRef(null);
   const audioRef2 = useRef(null);
   const audioRef3 = useRef(null);
   const audioRef4 = useRef(null);
+  const audioRef5 = useRef(null);
 
   //array de booleanos que define se um audio esta tocando ou nao
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlaying2, setIsPlaying2] = useState(false);
   const [isPlaying3, setIsPlaying3] = useState(false);
   const [isPlaying4, setIsPlaying4] = useState(false);
+  const [isPlaying5, setIsPlaying5] = useState(false);
 
   //referencias do mapa
   const mapaRef = useRef(null);
@@ -84,12 +83,15 @@ export default function App() {
     audioRef2.current.pause();
     audioRef3.current.pause();
     audioRef4.current.pause();
+    audioRef5.current.pause();
     audioRef2.current.currentTime = 0;
     audioRef3.current.currentTime = 0;
     audioRef4.current.currentTime = 0;
+    audioRef5.current.currentTime = 0;
     setIsPlaying2(false);
     setIsPlaying3(false);
     setIsPlaying4(false);
+    setIsPlaying5(false);
   }
 
   //audio de bem vindo
@@ -130,8 +132,54 @@ export default function App() {
     setIsPlaying4(!isPlaying4);
   };
 
+  //audio da motivacao
+  const toggleAudio5 = () => {
+    reiniciarAudios();
+    if (isPlaying5) {
+      reiniciarAudios();
+    }
+    else {
+      audioRef5.current.volume = 0.3;
+      audioRef5.current.play();
+    }
+    setIsPlaying5(!isPlaying5);
+  };
+
+  //evolucao do personagem
+  const refChar = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: refChar,
+    offset: ["start end", "end start"],
+  });
+
+  // Transforma o progresso (0 a 1) em nível 0 a 100
+  const levelProgress = useTransform(scrollYProgress, [0, 1], [0, 100]);
+
+  // Armazena o nível como número para exibir normalmente
+  const [level, setLevel] = useState(0);
+
+  // Atualiza o estado toda vez que o valor animado muda
+  useMotionValueEvent(levelProgress, "change", (latest) => {
+    setLevel(Math.floor(latest));
+  });
+
+  // Transforma o nível (0–100) em um efeito visual de brilho
+  const boxShadow = useTransform(levelProgress, [0, 100], [
+    "0 0 0px #00ffff",
+    "0 0 40px #00ffff",
+  ]);
+
+  //seleciona o nivel do mago
+  function getMageSprite(level) {
+    if (level < 25) return Magelvl0;
+    if (level < 50) return Magelvl1;
+    if (level < 75) return Magelvl2;
+    return Magelvl3;
+  }
+
+
   return (
-    <div>
+    <div ref={refChar}>
       {showPopup && (
         <div className="popup-overlay">
           <div className="popup-box">
@@ -164,10 +212,38 @@ export default function App() {
           </AnimatePresence>
         </div>
       )}
+      {!showPopup && (
+        <div className="mapa-wrapper2">
+          <motion.div
+            className={`toggle-button2`}
+            whileTap={{ scale: 0.9 }}
+          ><motion.div
+            style={{ color: "white" }}
+          >
+              Nivel {level}
+              <motion.div
+                className="aura-wrapper"
+                style={{
+                  boxShadow,
+                  border: "1px solid white",
+                  backgroundColor: "#000",
+                }}
+              >
+                <img
+                  width='80px'
+                  height='150px'
+                  src={getMageSprite(level)}
+                  alt="Personagem"
+                />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </div>
+      )}
       <div className="container-basic">
         <div className="container-content">
           <div className="divDialogMain">~INTRODUÇÃO~</div>
-          <div className="divDialog" style={{ marginTop: '20px' }}>
+          <div className="divDialog">
             <div className="textDialog">
               Bem-vindo(a) ao Portfólio de Felipe Santos! 🗡️<br /> <br />
               Prepare-se para uma jornada diferente: <br />
@@ -202,7 +278,7 @@ export default function App() {
           </div>
           <div ref={inicioRef} className="divDialogMain">~Início~</div>
           <section id="inicio">
-            <div className="divDialog" style={{ marginTop: '20px' }}>
+            <div className="divDialog">
               <div className="textDialog">
                 ~Parte 1~
                 <br /><br />
@@ -271,7 +347,7 @@ export default function App() {
           </section>
           <div ref={sobreRef} className="divDialogMain">~Sobre~</div>
           <section style={{ width: '100%' }}>
-            <div className="divDialog" style={{ marginTop: '20px', display: 'flex', flexDirection: 'column' }}>
+            <div className="divDialog" style={{ display: 'flex', flexDirection: 'column' }}>
               <div class="seletor-container-sobre">
                 {imagens.map((bg, i) => (
                   <div
@@ -349,12 +425,65 @@ export default function App() {
                   </div>
                   : ''
                 }
+                {selecionado === 2 ?
+                  <div>
+                    <h3>Personalidade</h3>
+                    <br />
+                    Classe : Estrategista Criativo
+                    <br /><br />
+                    Atributos Dominantes: Curiosidade +4, Resiliência +3, Pensamento Analítico +5
+                    <br /><br />
+                    Traço de Personalidade: Sempre pronto para aprender uma nova habilidade ou aceitar uma missão desafiadora. Gosto de explorar ideias fora da rota principal e encontrar soluções que surpreendam até os NPCs mais experientes.
+                    <br /><br />
+                    <h3>Interesses</h3>
+                    <br />
+                    🔧 Tecnologia & Desenvolvimento: Especialista em React, com afinidade por criar interfaces envolventes e experiências interativas. Gosto de construir sistemas modulares, como se estivesse montando um inventário eficiente para longas jornadas.
+                    <br /><br />
+                    🎨 Design & Narrativa Visual: Fascinado por contar histórias através da estética. Acredito que cada detalhe visual carrega lore — desde a tipografia até a paleta de cores.
+                    <br /><br />
+                    🕹️ Games & RPGs: RPGs moldaram minha visão de mundo: colaboração, estratégia, progressão e liberdade criativa. São mais que um hobby — são uma linguagem.
+                    <br /><br />
+                    📚 Exploração Intelectual: Leio, estudo, pesquiso. Curto aprender frameworks, teorias de design, arquitetura de sistemas ou mesmo filosofia — tudo pode virar XP para a próxima missão.
+                  </div>
+                  :
+                  ''
+                }
               </div>
             </div>
-
           </section>
-
-          <section ref={projetosRef} id="projetos">PROJETOS</section>
+          <div ref={sobreRef} className="divDialogMain">~Projetos~</div>
+          <section className="container-animated-warrior" style={{ marginTop: '20px' }}>
+            <div className="divDialog" >
+              <div className="textDialog">
+                Ao longo da minha jornada como desenvolvedor ⚔️, enfrentei desafios dignos de um verdadeiro aventureiro digital.
+                Cada projeto aqui é uma missão concluída 🧾 — com planejamento estratégico 🧠,
+                batalhas contra bugs épicos 🐉 e a criação de soluções encantadas ✨.
+                <br /><br />
+                Nesta seção, você encontrará relíquias do meu progresso 📜: sistemas interativos 🔧,
+                interfaces mágicas 🧙‍♂️, componentes reutilizáveis 🧩 e códigos otimizados ⚙️. Cada linha
+                escrita é como uma escolha em combate entre performance ⚡, acessibilidade 🧿 e experiência do usuário 💡.
+                <br /><br />
+                Prepare sua ficha 🎲, equipe suas habilidades 💼 e explore meus projetos.
+                Quem sabe não encontramos uma nova quest para embarcar juntos? 🗺️
+              </div>
+              <button
+                onClick={toggleAudio5}
+                style={{
+                  background: 'rgba(0,0,0,0.5)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  padding: '12px',
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: '20px',
+                  transition: 'background 0.3s',
+                }}
+                title={isPlaying5 ? 'Parar música' : 'Tocar música'}
+              >
+                {isPlaying5 ? <FaStop style={{ color: 'red', fontSize: '50px' }} /> : <FaPlay style={{ color: 'green', opacity: 0.5, fontSize: '50px' }} />}
+              </button>
+            </div>
+          </section>
           <section ref={contatoRef} id="contato">CONTATO</section>
         </div >
       </div >
@@ -369,6 +498,9 @@ export default function App() {
       </audio>
       <audio ref={audioRef4} onEnded={() => setIsPlaying4(false)}>
         <source src={motivacaoAudio} type="audio/mpeg" />
+      </audio>
+      <audio ref={audioRef5} onEnded={() => setIsPlaying5(false)}>
+        <source src={projetosAudio} type="audio/mpeg" />
       </audio>
     </div >
   );

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useInView } from 'react-intersection-observer';
 import Inicio from "../assets/svg/inicio.svg";
 import Sobre from "../assets/svg/sobre.svg";
 import Projetos from "../assets/svg/projetos.svg";

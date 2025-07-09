@@ -36,7 +36,6 @@ import Ldc0 from './assets/images/ldc0.png';
 import Ldc1 from './assets/images/ldc1.png';
 import Ldc2 from './assets/images/ldc2.png';
 import Ldc3 from './assets/images/ldc3.png';
-import Ldc4 from './assets/images/ldc4.png';
 
 import "./App.css";
 
@@ -70,7 +69,6 @@ export default function App() {
   const audioRef5 = useRef(null);
 
   //array de booleanos que define se um audio esta tocando ou nao
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isPlaying2, setIsPlaying2] = useState(false);
   const [isPlaying3, setIsPlaying3] = useState(false);
   const [isPlaying4, setIsPlaying4] = useState(false);
@@ -412,7 +410,7 @@ export default function App() {
           </section>
           <section className="container-animated-warrior" style={{ marginTop: '20px' }}>
             <div class="corda">
-              <img src={Aventureiro} class="guerreiro" />
+              <img src={Aventureiro} class="guerreiro" alt='guerreiro'/>
             </div>
             <div className="divDialog" >
               <div className="textDialog">
@@ -626,7 +624,7 @@ export default function App() {
                   </div>
                 );
               })}
-              <a href="https://github.com/felipe-santos-swengineer?tab=repositories" target="_blank" class="ver-mais-btn">
+              <a href="https://github.com/felipe-santos-swengineer?tab=repositories" target="_blank" class="ver-mais-btn"  rel="noreferrer">
                 <div>Ver mais</div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" >
                   <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-4.147-4.146a.5.5 0 1 1 .708-.708l5 5a.5.5 0 0 1 0 .708l-5 5a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z" />
@@ -649,11 +647,11 @@ export default function App() {
                   </tr>
                   <tr>
                     <td>💼 LinkedIn</td>
-                    <td><a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" target="_blank">linkedin.com/in/felipesantos</a></td>
+                    <td><a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" target="_blank"  rel="noreferrer">linkedin.com/in/felipesantos</a></td>
                   </tr>
                   <tr>
                     <td>📸 Instagram</td>
-                    <td><a href="https://www.instagram.com/felipe_santos_swengineer/" target="_blank">@felipe_santos_swengineer</a></td>
+                    <td><a href="https://www.instagram.com/felipe_santos_swengineer/" target="_blank"  rel="noreferrer">@felipe_santos_swengineer</a></td>
                   </tr>
                 </tbody>
               </table>

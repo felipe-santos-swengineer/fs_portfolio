@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { HiMenuAlt2 } from 'react-icons/hi';
-import { FaMapMarkedAlt } from 'react-icons/fa';
+import { FaMapMarkedAlt, FaPlay, FaStop } from 'react-icons/fa';
 import temaAudio from './assets/audio/dndAdventure_NCS.mp3';
 import bemVindoAudio from './assets/audio/bem_vindo_bill_voice.mp3';
 import inicioAudio from './assets/audio/inicio_bill_voice.mp3';
@@ -12,11 +12,32 @@ import Aventureiro from './assets/images/warrior_climb.gif';
 import Escolaridade from './assets/images/escolaridade.png';
 import Habilidades from './assets/images/habilidades.png';
 import Interesses from './assets/images/interesses.png';
+import Luta from './assets/images/fight.gif';
 import Magelvl0 from './assets/images/lvl0.png';
 import Magelvl1 from './assets/images/lvl1.png';
 import Magelvl2 from './assets/images/lvl2.png';
 import Magelvl3 from './assets/images/lvl3.png';
-import { FaPlay, FaStop } from 'react-icons/fa';
+import SliderProjeto from "./components/SliderProjeto";
+import Talkdoor1 from './assets/images/talkdoor1.png';
+import Talkdoor2 from './assets/images/talkdoor2.png';
+import Talkdoor3 from './assets/images/talkdoor3.png';
+import Talkdoor4 from './assets/images/talkdoor4.png';
+import Talkdoor5 from './assets/images/talkdoor5.png';
+import Talkdoor6 from './assets/images/talkdoor6.png';
+import Vitrine1 from './assets/images/vitrine1.png';
+import Vitrine2 from './assets/images/vitrine2.png';
+import Vitrine3 from './assets/images/vitrine3.png';
+import Vitrine4 from './assets/images/vitrine4.png';
+import Vitrine5 from './assets/images/vitrine5.png';
+import Tetris1 from './assets/images/tetris1.png';
+import Tetris2 from './assets/images/tetris2.png';
+import Tetris3 from './assets/images/tetris3.png';
+import Ldc0 from './assets/images/ldc0.png';
+import Ldc1 from './assets/images/ldc1.png';
+import Ldc2 from './assets/images/ldc2.png';
+import Ldc3 from './assets/images/ldc3.png';
+import Ldc4 from './assets/images/ldc4.png';
+
 import "./App.css";
 
 export default function App() {
@@ -68,7 +89,7 @@ export default function App() {
     audioRef.current.play().then(() => {
       setShowPopup(false);
     }).catch(err => {
-      console.error("Erro ao iniciar som:", err);
+      //console.error("Erro ao iniciar som:", err);
       setShowPopup(false);
     });
   };
@@ -177,6 +198,85 @@ export default function App() {
     return Magelvl3;
   }
 
+  //projetos
+
+  const projetos = [
+    {
+      id: 1,
+      titulo: "Talkdoor",
+      descricao: `Este projeto foi uma rede social 📱 
+      desenvolvida durante o TCC 🎓, voltada para o ambiente 
+      universitário 🏫, com o objetivo de conectar estudantes 👩‍🎓👨‍🎓, 
+      professores e pesquisadores em torno de interesses acadêmicos 📚. 
+      A plataforma permitia compartilhar conteúdos como artigos 📄, eventos 📅, 
+      discussões de disciplinas 💬, projetos de pesquisa 🔍 e oportunidades acadêmicas 🎯. 
+      Focada em colaboração 🤝 e troca de conhecimento 🧠, a rede fortalecia a comunidade 
+      interna da universidade e incentiva o engajamento intelectual, fazendo uso de algoritmos que
+      priorizavam conteúdo baseado no perfil do usuário, assim como facebook e instagram 🚀.`,
+      imagens: [
+        Talkdoor1,
+        Talkdoor2,
+        Talkdoor3,
+        Talkdoor4,
+        Talkdoor5,
+        Talkdoor6
+      ],
+      github: "https://github.com/felipe-santos-swengineer/tcc-front.git",
+    },
+    {
+      id: 2,
+      titulo: "Vitrine Funcap",
+      descricao: `A Vitrine Funcap é uma plataforma online criada pela Funcap
+      (Fundação Cearense de Apoio ao Desenvolvimento Científico e Tecnológico) para 
+      divulgar e conectar projetos de pesquisa 🔬, inovação 💡 e empreendedorismo 🚀 
+      desenvolvidos no Ceará com potenciais parceiros, investidores e a sociedade em geral.
+      O site apresenta uma vitrine virtual 🖥️ de iniciativas financiadas pela fundação, 
+      destacando seus impactos 🌍, soluções tecnológicas 🧠 e oportunidades de aplicação no mercado 💼.
+      É um espaço que promove a visibilidade 👁️ dos resultados da ciência 
+      cearense e facilita o contato 🤝 entre pesquisadores e o setor produtivo.`,
+      imagens: [
+        Vitrine1,
+        Vitrine2,
+        Vitrine3,
+        Vitrine4,
+        Vitrine5
+      ],
+      link: "https://vitrinefuncap.com"
+    },
+    {
+      id: 3,
+      titulo: "Tetris para 2 jogadores",
+      descricao: `Desafie um amigo em uma partida de Tetris duelo 1 contra 1! ⚔️
+      Monte suas peças rapidamente, complete linhas e envie obstáculos para o adversário.
+      Mostre quem é o mestre do bloco nesse jogo cheio de estratégia, velocidade e competição! ⏱️🔥
+      Prepare-se para muita emoção, reflexos e diversão sem parar ao som de uma batalha de Naruto! 🚀👾`,
+      imagens: [
+        Tetris1,
+        Tetris2,
+        Tetris3
+      ],
+      github: "https://github.com/felipe-santos-swengineer/Tetris_2_players_duel"
+    },
+    {
+      id: 4,
+      titulo: "Chronos-UFC",
+      descricao: `O sistema foi desenvolvido para facilitar e organizar o processo de 
+      registro das horas complementares dos alunos da Universidade Federal do Ceará 🏫.
+      Os alunos cadastram suas atividades complementares diretamente na plataforma 💻, 
+      anexando documentos comprobatórios e informando a carga horária realizada ⏱️.
+      Os professores (ou coordenadores responsáveis) acessam o sistema para avaliar a 
+      validade das atividades 📄, aprovando ou solicitando ajustes com comentários.
+      📊 O sistema também permite o acompanhamento do progresso por categoria, 
+      ajudando o aluno a visualizar o que ainda precisa ser cumprido para se formar com tudo em dia 🎯.`,
+      imagens: [
+        Ldc0,
+        Ldc1,
+        Ldc2,
+        Ldc3
+      ],
+      github: "https://github.com/felipe-santos-swengineer/client-ldc"
+    },
+  ];
 
   return (
     <div ref={refChar}>
@@ -242,7 +342,7 @@ export default function App() {
       )}
       <div className="container-basic">
         <div className="container-content">
-          <div className="divDialogMain">~INTRODUÇÃO~</div>
+          <div className="divDialogMain">~Introdução~</div>
           <div className="divDialog">
             <div className="textDialog">
               Bem-vindo(a) ao Portfólio de Felipe Santos! 🗡️<br /> <br />
@@ -377,7 +477,7 @@ export default function App() {
                   <div class="ficha-rpg">
                     <h3>🧭 Experiências</h3>
                     <ul>
-                      <li>⚔️ <strong>Bolsista desenvolvedor Full-Stack</strong> — Participou de campanhas em projetos reais, entregando interfaces responsivas e interativas.</li>
+                      <li>⚔️ <strong>Desenvolvedor Full-Stack</strong> — Participou de campanhas em projetos reais, entregando interfaces responsivas e interativas.</li>
                       <ul>
                         <li>🏢 Empresa: UFC</li>
                         <li>⏳ Duração: 04/2021 até 01/2022</li>
@@ -405,7 +505,7 @@ export default function App() {
                           com Javascript (react/node).</li>
                       </ul>
                       <hr />
-                      <li>🧪 <strong>Desenvolvimento Front-End</strong> — Criou soluções digitais para promover a inovação pública, empresarial e científica.</li>
+                      <li>🧪 <strong>Desenvolvedor Front-End</strong> — Criou soluções digitais para promover a inovação pública, empresarial e científica.</li>
                       <ul>
                         <li>🏢 Empresa: Funcap</li>
                         <li>⏳ Duração: 08/2021 até 04/2025</li>
@@ -417,10 +517,10 @@ export default function App() {
 
                     <h3>🔮 Habilidades</h3>
                     <ul>
-                      <li>🧙‍♂️ <strong>Magias Front-End:</strong> HTML5, CSS3, JavaScript, React.js, Tailwind, animações com Framer Motion.</li>
-                      <li>🛠️ <strong>Ferramentas do Arsenal:</strong> Git, GitHub, Figma, VSCode, Vite, APIs REST.</li>
+                      <li>🧙‍♂️ <strong>Magias Front-End:</strong> HTML5, CSS3, JavaScript, React.js, laravel, Tailwind, entre outros.</li>
+                      <li>🛠️ <strong>Ferramentas do Arsenal:</strong> Git, GitHub, VSCode, APIs REST.</li>
                       <li>🔍 <strong>Perícias Especiais:</strong> Criação de UIs responsivas, experiências visuais imersivas, performance otimizada.</li>
-                      <li>📦 <strong>Inventário Adicional:</strong> Conhecimento básico em back-end (Node.js), versionamento, e resolução de bugs malditos.</li>
+                      <li>📦 <strong>Inventário Adicional:</strong> Conhecimento em back-end (Node.js, php), versionamento, e resolução de bugs malditos.</li>
                     </ul>
                   </div>
                   : ''
@@ -451,19 +551,24 @@ export default function App() {
               </div>
             </div>
           </section>
-          <div ref={sobreRef} className="divDialogMain">~Projetos~</div>
-          <section className="container-animated-warrior" style={{ marginTop: '20px' }}>
+          <div ref={projetosRef} className="divDialogMain">~Projetos~</div>
+          <img
+            src={Luta}
+            alt="combate"
+            style={{ width: '100%', height: '450px' }}
+          />
+          <section className="container-animated-warrior">
             <div className="divDialog" >
               <div className="textDialog">
-                Ao longo da minha jornada como desenvolvedor ⚔️, enfrentei desafios dignos de um verdadeiro aventureiro digital.
-                Cada projeto aqui é uma missão concluída 🧾 — com planejamento estratégico 🧠,
-                batalhas contra bugs épicos 🐉 e a criação de soluções encantadas ✨.
+                Ao longo da minha jornada como desenvolvedor⚔️, enfrentei desafios dignos de um verdadeiro aventureiro digital.
+                Cada projeto aqui é uma missão concluída 🧾 — com planejamento estratégico🧠,
+                batalhas contra bugs épicos🐉 e a criação de soluções encantadas✨.
                 <br /><br />
-                Nesta seção, você encontrará relíquias do meu progresso 📜: sistemas interativos 🔧,
-                interfaces mágicas 🧙‍♂️, componentes reutilizáveis 🧩 e códigos otimizados ⚙️. Cada linha
-                escrita é como uma escolha em combate entre performance ⚡, acessibilidade 🧿 e experiência do usuário 💡.
+                Nesta seção, você encontrará relíquias do meu progresso📜: sistemas interativos🔧,
+                interfaces mágicas🧙‍♂️, componentes reutilizáveis🧩 e códigos otimizados⚙️. Cada linha
+                escrita é como uma escolha em combate entre performance⚡, acessibilidade🧿 e experiência do usuário💡.
                 <br /><br />
-                Prepare sua ficha 🎲, equipe suas habilidades 💼 e explore meus projetos.
+                Prepare sua ficha🎲, equipe suas habilidades💼 e explore meus projetos.
                 Quem sabe não encontramos uma nova quest para embarcar juntos? 🗺️
               </div>
               <button
@@ -484,7 +589,87 @@ export default function App() {
               </button>
             </div>
           </section>
-          <section ref={contatoRef} id="contato">CONTATO</section>
+          <div className="divDialog">
+            <div className="lista-projetos">
+              {projetos.map((projeto, index) => {
+                const ordem = index % 2 === 0 ? 'normal' : 'invertido';
+                return (
+                  <div key={projeto.id} className={`projeto-linha ${ordem}`}>
+                    <SliderProjeto imagens={projeto.imagens} />
+                    <div className="projeto-texto">
+                      <h3>{projeto.titulo}</h3>
+                      <p>{projeto.descricao}</p>
+
+                      <div className="projeto-botoes">
+                        {projeto.github && (
+                          <a
+                            href={projeto.github}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="botao"
+                          >
+                            Ver no GitHub
+                          </a>
+                        )}
+                        {projeto.link && (
+                          <a
+                            href={projeto.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="botao"
+                          >
+                            Ver Publicação
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <a href="https://github.com/felipe-santos-swengineer?tab=repositories" target="_blank" class="ver-mais-btn">
+                <div>Ver mais</div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" >
+                  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-4.147-4.146a.5.5 0 1 1 .708-.708l5 5a.5.5 0 0 1 0 .708l-5 5a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+          <div ref={contatoRef} className="divDialogMain">~Contato~</div>
+          <div className="divDialog" >
+            <div className="textDialog">
+              <table class="tabela-contato">
+                <tbody>
+                  <tr>
+                    <td>📧 Email</td>
+                    <td>felipesantosswengineer@email.com</td>
+                  </tr>
+                  <tr>
+                    <td>📞 Telefone</td>
+                    <td>(88) 99837-8028</td>
+                  </tr>
+                  <tr>
+                    <td>💼 LinkedIn</td>
+                    <td><a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" target="_blank">linkedin.com/in/felipesantos</a></td>
+                  </tr>
+                  <tr>
+                    <td>📸 Instagram</td>
+                    <td><a href="https://www.instagram.com/felipe_santos_swengineer/" target="_blank">@felipe_santos_swengineer</a></td>
+                  </tr>
+                </tbody>
+              </table>
+              <br></br>
+              <div>
+                🛡️⚔️ Obrigado, bravo aventureiro! ⚔️🛡️
+                <br></br>
+                <br></br>
+                Sua jornada por estas terras chegou a uma pausa, mas as portas estarão sempre abertas para você voltar!
+                Que a sorte dos dados esteja ao seu favor 🍀, e que suas quests futuras sejam épicas! 🗡️✨
+                <br></br>
+                <br></br>
+                Volte sempre para novas aventuras e desafios — a guilda agradece sua visita! Se deseja rever, use a função lateral para voltar ao  mapa.🏰🎉
+              </div>
+            </div>
+          </div>
         </div >
       </div >
       <audio ref={audioRef} loop>

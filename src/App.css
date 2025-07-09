@@ -328,3 +328,155 @@ html {
   color: white;
   padding: 10px;
 }
+
+.lista-projetos {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding: 20px;
+}
+
+.projeto-linha {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.projeto-linha.invertido {
+  flex-direction: row-reverse;
+}
+
+.projeto-imagem {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.projeto-texto {
+  color: white;
+  flex: 1;
+  max-width: 500px;
+}
+
+.projeto-texto h3 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.projeto-texto p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #ddd;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+
+  .projeto-linha,
+  .projeto-linha.invertido {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .projeto-texto {
+    max-width: 100%;
+  }
+}
+
+.projeto-botoes {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.botao {
+  padding: 10px 16px;
+  background-color: #444;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.botao:hover {
+  background-color: #666;
+}
+
+.ver-mais-btn {
+  text-decoration: none;
+  font-size: 19px;
+  font-family: inherit;
+  margin-top: 15px;
+  padding: 10px 25px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background-color: #444;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.ver-mais-btn:hover {
+  background-color: #666;
+}
+
+
+.tabela-contato {
+  width: 100%;
+  margin: 20px auto;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tabela-contato th {
+  background-color: #007bff;
+  color: white;
+  padding: 12px;
+  font-size: 18px;
+  text-align: center;
+  border-radius: 6px 6px 0 0;
+}
+
+/* Primeira coluna alinhada à esquerda */
+.tabela-contato td:first-child {
+  text-align: left;
+  padding-left: 15px;
+  width: 40%; /* você pode ajustar esse valor */
+}
+
+/* Segunda coluna alinhada à direita */
+.tabela-contato td:last-child {
+  text-align: right;
+  padding-right: 15px;
+  width: 60%; /* ajusta conforme necessário */
+}
+
+.tabela-contato td {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.tabela-contato a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.tabela-contato a:hover {
+  text-decoration: underline;
+}
+

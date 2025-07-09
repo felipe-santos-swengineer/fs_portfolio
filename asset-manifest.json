@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/fs_portfolio/static/css/main.ad661936.css",
-    "main.js": "/fs_portfolio/static/js/main.ff1ee3b8.js",
+    "main.js": "/fs_portfolio/static/js/main.1b0497cf.js",
     "static/media/dndAdventure_NCS.mp3": "/fs_portfolio/static/media/dndAdventure_NCS.8844c4a2307629088512.mp3",
     "static/media/inicio.svg": "/fs_portfolio/static/media/inicio.b6f2d905d03e3767bd74670130701a56.svg",
     "static/media/mapa_sda.png": "/fs_portfolio/static/media/mapa_sda.0b1f616fa29888eee8b2.png",
@@ -38,14 +38,13 @@
     "static/media/ldc3.png": "/fs_portfolio/static/media/ldc3.05d2ce9f56d2c7149646.png",
     "static/media/talkdoor4.png": "/fs_portfolio/static/media/talkdoor4.5ce7273bc6706fc16450.png",
     "static/media/ldc1.png": "/fs_portfolio/static/media/ldc1.6c3ffdbb9971994b20dc.png",
-    "static/media/ldc4.png": "/fs_portfolio/static/media/ldc4.2822b3569dc70eb2e5b8.png",
     "static/media/bg.png": "/fs_portfolio/static/media/bg.a3bb66a7fbb3d013a391.png",
     "index.html": "/fs_portfolio/index.html",
     "main.ad661936.css.map": "/fs_portfolio/static/css/main.ad661936.css.map",
-    "main.ff1ee3b8.js.map": "/fs_portfolio/static/js/main.ff1ee3b8.js.map"
+    "main.1b0497cf.js.map": "/fs_portfolio/static/js/main.1b0497cf.js.map"
   },
   "entrypoints": [
     "static/css/main.ad661936.css",
-    "static/js/main.ff1ee3b8.js"
+    "static/js/main.1b0497cf.js"
   ]
 }

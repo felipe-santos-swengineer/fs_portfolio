@@ -462,7 +462,7 @@ export default function App() {
               </div>
               <div class="descricao-sobre" id="descricao">
                 {selecionado === 0 ?
-                  <div>
+                  <div className="textDialog">
                     🧙 Em uma pequena cidade do sertão cearense, um jovem guerreiro do conhecimento iniciou sua jornada em 2018. Por meio do portal místico conhecido como SISU, e enfrentando as forças da ampla concorrência, conquistou seu ingresso na lendária Universidade Federal do Ceará — campus Russas.
                     <br /><br />
                     📘 Durante anos de intensos estudos e batalhas contra códigos indomáveis, este aventureiro alcançou o bacharelado em Engenharia de Software — dominando magias de requisitos, forjando estruturas de dados e decifrando runas de programação.
@@ -472,7 +472,7 @@ export default function App() {
                   : ''
                 }
                 {selecionado === 1 ?
-                  <div class="ficha-rpg">
+                  <div className="textDialog">
                     <h3>🧭 Experiências</h3>
                     <ul>
                       <li>⚔️ <strong>Desenvolvedor Full-Stack</strong> — Participou de campanhas em projetos reais, entregando interfaces responsivas e interativas.</li>
@@ -524,7 +524,7 @@ export default function App() {
                   : ''
                 }
                 {selecionado === 2 ?
-                  <div>
+                  <div className="textDialog">
                     <h3>Personalidade</h3>
                     <br />
                     Classe : Estrategista Criativo
@@ -595,8 +595,8 @@ export default function App() {
                   <div key={projeto.id} className={`projeto-linha ${ordem}`}>
                     <SliderProjeto imagens={projeto.imagens} />
                     <div className="projeto-texto">
-                      <h3>{projeto.titulo}</h3>
-                      <p>{projeto.descricao}</p>
+                      <h3 className="textDialog">{projeto.titulo}</h3>
+                      <p className="textDialog">{projeto.descricao}</p>
 
                       <div className="projeto-botoes">
                         {projeto.github && (
@@ -656,7 +656,7 @@ export default function App() {
                 </tbody>
               </table>
               <br></br>
-              <div>
+              <div className="textDialog">
                 🛡️⚔️ Obrigado, bravo aventureiro! ⚔️🛡️
                 <br></br>
                 <br></br>

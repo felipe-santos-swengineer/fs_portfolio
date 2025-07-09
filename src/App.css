@@ -3,7 +3,9 @@ html {
   font-family: 'Uncial Antiqua', cursive;
   margin: 0;
   padding: 0;
-  background-color: #f5f1e9;
+  width: 100%;
+  overflow-x: hidden;
+  background-color: red;
 }
 
 .container-basic {
@@ -18,7 +20,7 @@ html {
 }
 
 .container-content {
-  width: calc(100% - 20px);
+  width: 100%;
   max-width: 1024px;
   padding: 10px;
   display: flex;
@@ -437,46 +439,51 @@ html {
 
 .tabela-contato {
   width: 100%;
-  margin: 20px auto;
+  max-width: 100%;
   border-collapse: collapse;
   font-family: Arial, sans-serif;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.tabela-contato th {
-  background-color: #007bff;
-  color: white;
-  padding: 12px;
-  font-size: 18px;
-  text-align: center;
-  border-radius: 6px 6px 0 0;
-}
-
-/* Primeira coluna alinhada à esquerda */
-.tabela-contato td:first-child {
-  text-align: left;
-  padding-left: 15px;
-  width: 40%; /* você pode ajustar esse valor */
-}
-
-/* Segunda coluna alinhada à direita */
-.tabela-contato td:last-child {
-  text-align: right;
-  padding-right: 15px;
-  width: 60%; /* ajusta conforme necessário */
+  word-break: break-word;
+  table-layout: fixed;
+  margin-bottom: 20px;
 }
 
 .tabela-contato td {
-  padding: 10px 0;
+  padding: 10px;
   border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+/* Alinhar as colunas para bordas esquerda/direita */
+.tabela-contato td:first-child {
+  text-align: left;
+  width: 100%;
+}
+
+.tabela-contato td:last-child {
+  text-align: right;
+  width: 100%;
 }
 
 .tabela-contato a {
   color: #007bff;
   text-decoration: none;
+  word-break: break-all;
 }
 
 .tabela-contato a:hover {
   text-decoration: underline;
 }
 
+/* Responsivo */
+@media (max-width: 600px) {
+  .tabela-contato td {
+    display: block;
+    width: 100%;
+    text-align: left !important;
+  }
+
+  .tabela-contato tr {
+    display: block;
+    margin-bottom: 10px;
+  }
+}

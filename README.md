@@ -1,70 +1,107 @@
-# Getting Started with Create React App
+# Felipe Santos .Dev — Portfólio Pessoal (RPG 2D)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Um portfólio criado com temática de RPG 2D, desenvolvido em React para exibir meus projetos, habilidades e informações pessoais de forma dinâmica.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🌐 Visualização
 
-### `npm start`
+O portfólio está publicado e acessível em:  
+[felipe-santos-swengineer.github.io/fs_portfolio](https://felipe-santos-swengineer.github.io/fs_portfolio/)  
+[Repositório no GitHub](https://github.com/felipe-santos-swengineer/fs_portfolio)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🧰 Tecnologias & Ferramentas
 
-### `npm test`
+- React (Create React App)  
+- JavaScript / JSX  
+- CSS (e possíveis libs ou estilos personalizados)  
+- Dependências gerenciadas via `npm` ou `yarn`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 📁 Estrutura do Projeto
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Aqui está uma visão geral de como o projeto está organizado:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```
+fs_portfolio/
+├─ public/
+│   ├─ index.html
+│   ├─ favicon.ico
+│   └─ manifest.json
+├─ src/
+│   ├─ assets/           # Imagens, ícones, etc.
+│   ├─ components/       # Componentes reutilizáveis (Header, Footer, etc.)
+│   ├─ pages/            # Páginas ou views (Home, Sobre, Projetos, etc.)
+│   ├─ App.js
+│   ├─ index.js
+│   ├─ styles/           # Arquivos de estilo globais ou específicos
+│   └─ (outros arquivos React / configuração se houver)
+├─ .gitignore
+├─ package.json
+├─ package-lock.json or yarn.lock
+├─ README.md
+└─ (possível) outras pastas de config ou scripts
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🚀 Como rodar localmente
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Para executar o projeto no seu computador:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Clone este repositório:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+   ```bash
+   git clone https://github.com/felipe-santos-swengineer/fs_portfolio.git
+   ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2. Acesse a pasta:
 
-## Learn More
+   ```bash
+   cd fs_portfolio
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+3. Instale as dependências:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+   ```bash
+   npm install
+   # ou
+   yarn install
+   ```
 
-### Code Splitting
+4. Rode em modo de desenvolvimento:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+   ```bash
+   npm start
+   # ou
+   yarn start
+   ```
 
-### Analyzing the Bundle Size
+   O app abrirá em `http://localhost:3000` automaticamente (ou você pode acessar manualmente).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 🔧 Scripts Disponíveis
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+No `package.json`, você verá scripts como:
 
-### Advanced Configuration
+- `npm start` — executa o app em modo de desenvolvimento  
+- `npm run build` — gera a versão de produção, otimizada  
+- `npm test` — executa testes (se tiver configurado)  
+- `npm run eject` — (se você quiser sair do Create React App, opcional)  
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## 📫 Contato
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- **Nome:** Felipe Santos  
+- **E-mail:** felipesantosswengineer@gmail.com 
+- **LinkedIn:** https://www.linkedin.com/in/felipe-santos-rodrigues/
 
-### `npm run build` fails to minify
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+✨ Desenvolvido por **Felipe Santos**

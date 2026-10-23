@@ -1,9 +1,9 @@
 {
   "files": {
-    "main.css": "/fs_portfolio/static/css/main.3f25645a.css",
-    "main.js": "/fs_portfolio/static/js/main.d6303090.js",
-    "static/css/157.ba01cdbb.chunk.css": "/fs_portfolio/static/css/157.ba01cdbb.chunk.css",
-    "static/js/157.fd698620.chunk.js": "/fs_portfolio/static/js/157.fd698620.chunk.js",
+    "main.css": "/fs_portfolio/static/css/main.7dfbc500.css",
+    "main.js": "/fs_portfolio/static/js/main.7915102e.js",
+    "static/css/157.ce7e8307.chunk.css": "/fs_portfolio/static/css/157.ce7e8307.chunk.css",
+    "static/js/157.f1c2af58.chunk.js": "/fs_portfolio/static/js/157.f1c2af58.chunk.js",
     "static/js/712.ffa4820c.chunk.js": "/fs_portfolio/static/js/712.ffa4820c.chunk.js",
     "static/media/dndAdventure_NCS.mp3": "/fs_portfolio/static/media/dndAdventure_NCS.8844c4a2307629088512.mp3",
     "static/media/vitrine1.png": "/fs_portfolio/static/media/vitrine1.63079bcfa81c08d64ccd.png",
@@ -37,14 +37,14 @@
     "static/media/talkdoor4.png": "/fs_portfolio/static/media/talkdoor4.5ce7273bc6706fc16450.png",
     "static/media/ldc1.png": "/fs_portfolio/static/media/ldc1.6c3ffdbb9971994b20dc.png",
     "index.html": "/fs_portfolio/index.html",
-    "main.3f25645a.css.map": "/fs_portfolio/static/css/main.3f25645a.css.map",
-    "main.d6303090.js.map": "/fs_portfolio/static/js/main.d6303090.js.map",
-    "157.ba01cdbb.chunk.css.map": "/fs_portfolio/static/css/157.ba01cdbb.chunk.css.map",
-    "157.fd698620.chunk.js.map": "/fs_portfolio/static/js/157.fd698620.chunk.js.map",
+    "main.7dfbc500.css.map": "/fs_portfolio/static/css/main.7dfbc500.css.map",
+    "main.7915102e.js.map": "/fs_portfolio/static/js/main.7915102e.js.map",
+    "157.ce7e8307.chunk.css.map": "/fs_portfolio/static/css/157.ce7e8307.chunk.css.map",
+    "157.f1c2af58.chunk.js.map": "/fs_portfolio/static/js/157.f1c2af58.chunk.js.map",
     "712.ffa4820c.chunk.js.map": "/fs_portfolio/static/js/712.ffa4820c.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.3f25645a.css",
-    "static/js/main.d6303090.js"
+    "static/css/main.7dfbc500.css",
+    "static/js/main.7915102e.js"
   ]
 }

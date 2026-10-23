@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import useModalFocus from './useModalFocus';
 import { X, Volume2 } from 'lucide-react';
 
 export const AUDIO_CHANNELS = [
   ['music', 'Música ambiente', 'A trilha que acompanha a exploração.'],
   ['steps', 'Passos', 'Passos na pedra e na grama.'],
-  ['interactions', 'Efeitos dos edifícios', 'Portas, páginas, forja e sino.'],
+  ['interactions', 'Efeitos dos edifícios e fogos', 'Portas, páginas, forja, sino e fogos da missão.'],
   ['voices', 'Vozes dos NPCs', 'As conversas faladas com os moradores.'],
   ['narration', 'Narrações das seções', 'As gravações da história e dos projetos.'],
 ];
@@ -19,21 +20,7 @@ export function loadAudioSettings() {
 
 export default function AudioSettings({ settings, onChange, onClose, notice }) {
   const panel = useRef(null);
-  useEffect(() => {
-    const previous = document.activeElement;
-    panel.current.querySelector('button').focus();
-    const handler = e => {
-      if (e.key === 'Escape') { e.stopPropagation(); onClose(); }
-      if (e.key === 'Tab') {
-        const items = panel.current.querySelectorAll('button,input');
-        if (e.shiftKey && document.activeElement === items[0]) { e.preventDefault(); items[items.length - 1].focus(); }
-        else if (!e.shiftKey && document.activeElement === items[items.length - 1]) { e.preventDefault(); items[0].focus(); }
-      }
-    };
-    panel.current.addEventListener('keydown', handler);
-    const current = panel.current;
-    return () => { current.removeEventListener('keydown', handler); previous?.focus(); };
-  }, [onClose]);
+  useModalFocus(panel, onClose);
   return <div className="modal-backdrop audio-panel-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
     <section className="audio-panel" role="dialog" aria-modal="true" aria-labelledby="audio-title" ref={panel}>
       <button className="close" aria-label="Fechar configurações de áudio" onClick={onClose}><X size={21} /></button>

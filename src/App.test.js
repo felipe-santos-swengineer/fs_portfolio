@@ -2,12 +2,12 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import App from './App';
 import VillageAudio from './audio/VillageAudio';
 
-jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep }) => <div data-testid="village-canvas"><button onClick={() => onStep('stone')}>Simular passo</button></div> }));
+jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, zoom, missionRound }) => <div data-testid="village-canvas" data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onTalk(0)}>Conversar com Bia</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
 
 beforeEach(() => {
   localStorage.clear();
-  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), interact: jest.fn(), closeDoor: jest.fn(), step: jest.fn(), dispose: jest.fn() }));
+  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), interact: jest.fn(), closeDoor: jest.fn(), step: jest.fn(), firework: jest.fn(), stopFireworks: jest.fn(), dispose: jest.fn() }));
   jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
@@ -101,4 +101,25 @@ test('desligar as vozes interrompe o NPC sem desligar os outros canais', async (
     expect(screen.getByRole('button', { name: 'Ouvir mensagem' }).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Simular passo' })); expect(engine().step).toHaveBeenCalledWith('stone');
   } finally { window.Audio = previousAudio; }
+});
+
+test('concluir os quatro destinos substitui a missão por Recomeçar e reinicia o progresso', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Aproximar' }));
+  const originalScene = screen.getByTestId('village-canvas');
+  const zoom = originalScene.getAttribute('data-zoom');
+  for (const section of ['Minha história', 'Sobre mim', 'Projetos', 'Contato']) {
+    fireEvent.click(screen.getByRole('button', { name: `Entrar: ${section}` }));
+    fireEvent.keyDown(document, { key: 'Escape' });
+  }
+  expect(screen.queryByText('SUA MISSÃO')).toBeNull();
+  expect(screen.getByText('JORNADA CONCLUÍDA')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Recomeçar' }));
+  expect(screen.getByText('SUA MISSÃO')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Recomeçar' })).toBeNull();
+  expect(screen.queryAllByText(/EXPLORADO/)).toHaveLength(0);
+  expect(screen.getByTestId('village-canvas')).toBe(originalScene);
+  expect(originalScene.getAttribute('data-zoom')).toBe(zoom);
+  expect(originalScene.getAttribute('data-round')).toBe('1');
+  expect(engine().stopFireworks).toHaveBeenCalledTimes(1);
 });

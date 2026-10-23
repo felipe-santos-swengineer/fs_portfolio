@@ -43,6 +43,7 @@ export default class VillageAudio {
 
   track(source, nodes, start, duration, noise = false) {
     source.villageChannel = this.channel;
+    source.villageEffect = this.effectType;
     this.sources.add(source);
     source.onended = () => { this.sources.delete(source); source.disconnect(); nodes.forEach(n => n.disconnect()); };
     if (noise) source.start(start, Math.random() * .5); else source.start(start);
@@ -100,6 +101,24 @@ export default class VillageAudio {
   }
 
   closeDoor() { if (!this.channels.interactions) return; this.channel = 'interactions'; this.rustle(.1, 600, .08); this.tone(100, .12, .045, 0, 'triangle', 55); }
+
+  firework(stage) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions'; this.effectType = 'fireworks';
+    if (stage === 'launch') {
+      this.tone(430, .22, .025, 0, 'triangle', 1700);
+      this.rustle(.2, 2800, .045);
+    } else if (stage === 'burst') {
+      this.rustle(.48, 2200, .2);
+      this.tone(110, .28, .12, 0, 'sine', 36);
+      for (let i = 0; i < 5; i++) this.rustle(.055, 3700, .05, .08 + i * .075, (i % 2 ? 1 : -1) * .35);
+    }
+    this.effectType = null;
+  }
+
+  stopFireworks() {
+    for (const source of this.sources) if (source.villageEffect === 'fireworks') { try { source.stop(); } catch { /* Already ended. */ } }
+  }
 
   dispose() {
     this.mute();

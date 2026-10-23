@@ -2,6 +2,16 @@
 
 A vila é renderizada em WebGL 2 com Three.js, câmera em perspectiva e geometria tridimensional. A interface usa uma paleta escura; o cenário noturno combina luar, sombras, lanternas, água luminosa e vaga-lumes.
 
+## Céu e dragão
+
+Ao visitar os quatro destinos, o painel da missão é substituído por um agradecimento e pelo botão **Recomeçar**. Assim que a última seção for fechada, os quatro NPCs lançam uma breve salva de fogos coloridos para o céu. A celebração dura cerca de três segundos e acontece uma única vez por rodada. Os sons de subida, explosão e crepitação acompanham os lançamentos e respeitam o som geral e a categoria **Efeitos dos edifícios e fogos**. Com movimento reduzido, os fogos são substituídos por pontos luminosos estáticos, sem lançamentos ou explosões visuais. Recomeçar limpa apenas o progresso da missão e interrompe a celebração em andamento, preparando outra rodada. O cenário não é reconstruído: jogador, NPCs, câmera, céu, dragão, diálogos e preferências de áudio permanecem como estão.
+
+O céu percorre um ciclo de três minutos, começando à noite e passando gradualmente pelo amanhecer, dia e entardecer. O gradiente do céu, a neblina, as cores e intensidades da iluminação e o brilho das lanternas acompanham a transição. Sol, lua e estrelas aparecem conforme o período; os vaga-lumes ficam mais discretos durante o dia. A interface continua usando sua paleta escura.
+
+Um dragão 3D com asas, cauda, chifres e patas articuladas sobrevoa o vilarejo. Após cerca de 35 segundos de voo, aproxima-se de um telhado, pousa, recolhe as asas e descansa por 12 segundos antes de decolar. Ele alterna os telhados da taverna, oficina e correio; a torre da biblioteca fica fora das rotas de pouso. Os caminhos mantêm continuidade entre voo, aproximação, descanso e decolagem.
+
+O ciclo e o dragão pausam enquanto uma seção ou o painel de áudio está aberto. Com a preferência de movimento reduzido do sistema, o céu permanece noturno e o dragão descansa em um telhado, sem voos ou batidas de asas contínuas. O céu e o dragão não acrescentam novos sons às configurações de áudio.
+
 - **Taverna:** barris, mesa, bancos, chaminé e caneca identificam a seção de introdução, história e motivação, com as três narrações originais.
 - **Biblioteca:** torre, livro aberto e estante com livros identificam escolaridade, experiências, habilidades e interesses.
 - **Oficina:** forja acesa, bigorna e martelo identificam os quatro projetos originais, 18 imagens, links e narração.
@@ -11,7 +21,7 @@ A vila é renderizada em WebGL 2 com Three.js, câmera em perspectiva e geometri
 
 - Arraste com o mouse ou um dedo para rotacionar a câmera em torno da vila.
 - Use a roda do mouse ou o gesto de pinça para aproximar e afastar. Há também botões de zoom.
-- Use WASD ou as setas para caminhar com o personagem 3D. A direção acompanha a orientação da câmera. No celular, use os botões de direção.
+- Clique no cenário ou dê foco a ele com Tab para usar WASD ou as setas. A direção acompanha a orientação da câmera. Tab sai do cenário; quando outro elemento tem foco, as teclas não são capturadas pelo jogo. Atalhos com Ctrl, Alt ou Meta também são preservados. No celular, use os botões de direção, que também respondem a Enter e espaço enquanto estão em foco.
 - O personagem possui braços e pernas articulados, balanço durante a caminhada, capa e mochila. Casas, fonte e limites da vila bloqueiam a passagem.
 - Perto de uma entrada, pressione E. Clicar nos edifícios ou nos atalhos inferiores também abre as seções.
 - Use **Focar personagem** para reposicionar a câmera sobre o viajante.
@@ -19,11 +29,19 @@ A vila é renderizada em WebGL 2 com Three.js, câmera em perspectiva e geometri
 
 ## Conteúdo e acessibilidade
 
+O botão **Acessibilidade** no cabeçalho e nas seções abre ajustes de tamanho do texto (padrão, ampliado ou muito ampliado), alto contraste, fonte simples, redução de movimentos, pausa das animações e modo leitura sem 3D. As preferências são validadas e salvas no navegador; a opção de restaurar redefine somente os ajustes de acessibilidade. A preferência de movimento reduzido do sistema é acompanhada inclusive quando muda durante a visita.
+
+O link **Pular para o conteúdo** aparece ao receber foco. Os controles têm foco visível e áreas mínimas de toque de 44 px de altura. As janelas mantêm o foco em seus controles, fecham com Escape, devolvem o foco ao elemento de origem e tornam o conteúdo ao fundo inativo. O progresso dos destinos possui semântica de barra de progresso e mensagens para leitores de tela. As galerias podem receber foco para rolagem pelo teclado. A câmera oferece botões de rotação para dispensar gestos de arraste.
+
+O modo leitura inclui navegação por seções e todas as mensagens dos quatro moradores em texto, com reprodução opcional das gravações. Nenhuma seção exige caminhar pelo cenário. A pausa de animações interrompe o céu, o dragão, os moradores e os efeitos automáticos, mantendo a caminhada manual e a câmera disponíveis.
+
+Os testes incluem auditoria estrutural com axe-core, navegação de foco, ajustes persistidos e acesso ao conteúdo sem o canvas. A auditoria em jsdom não mede o contraste visual nem valida shaders, layout ou compatibilidade com leitores de tela reais. Não representa certificação de conformidade WCAG.
+
 ### Moradores da vila
 
 Quatro NPCs articulados passeiam com destinos aleatórios e pequenas pausas: Bia, guardiã da biblioteca; Tom, artesão; Lia, mensageira; e Rui, anfitrião da taverna. As rotas são calculadas em uma malha que respeita as casas, a fonte e os limites transitáveis.
 
-Clique em um morador, pressione **F** quando estiver próximo ou use os atalhos de nomes abaixo da vila. O morador selecionado para de caminhar e se volta ao visitante durante a conversa. Cada um possui duas mensagens de agradecimento, alternadas a cada interação. **Outra mensagem** troca o diálogo; Escape ou o botão de fechar encerra a conversa.
+Clique em um morador ou pressione **F** quando estiver próximo. Um botão contextual para conversar também aparece junto ao tutorial quando há um morador por perto. O morador selecionado para de caminhar e se volta ao visitante durante a conversa. Cada um possui duas mensagens de agradecimento, alternadas a cada interação. **Outra mensagem** troca o diálogo; Escape ou o botão de fechar encerra a conversa.
 
 Com os sons da vila ativados, a mensagem é reproduzida por um MP3 local gerado previamente com voz neural. O texto exibido é o mesmo usado na geração. Cada personagem tem uma voz própria, sem mudanças artificiais de pitch ou velocidade na reprodução:
 

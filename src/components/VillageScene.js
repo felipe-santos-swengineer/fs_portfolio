@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SITES, canWalk, nearbySite, walkingSurface, advanceFootsteps } from './villageNavigation';
 import { VILLAGERS, createWalkingGraph, advanceVillager } from './villagers';
+import { createDragon, createDayNight } from './VillageAtmosphere';
+import { createMissionFireworks } from './MissionFireworks';
 import './VillageScene.css';
 
 export function createVillage(scene) {
@@ -82,7 +84,7 @@ export function createVillage(scene) {
       const beam = box(g, 3.65, .06, .07, '#222e36', side * 1.43, 5.05, -2.35 + r * 1.17); beam.rotation.z = side * -.627;
     });
     lamp(g, -2.1, 2.8, 2.5, '#ffb66d', 12);
-    label(g, site.title, site.detail, site.color, 0, 7.2, 0);
+    label(g, site.title, site.detail, site.color, 0, 7.2, 3.1);
 
     if (index === 0) {
       // Tavern: chimney, barrels, outdoor tables and a hanging mug sign.
@@ -221,11 +223,12 @@ export function createVillage(scene) {
   return { buildings, player, body, limbs, crystal, flames, fireflies, cape, npcs };
 }
 
-export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey }) {
+export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, cameraTurn = 0 }) {
   const mount = useRef(null);
-  const live = useRef({ paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey });
-  live.current = { paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey };
+  const live = useRef({ paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn });
+  live.current = { paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn };
   const [error, setError] = useState(false);
+  const [atmosphereLabel, setAtmosphereLabel] = useState('NOITE · DRAGÃO EM VOO');
 
   useEffect(() => {
     const container = mount.current;
@@ -234,22 +237,33 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
+    renderer.domElement.tabIndex = 0;
+    renderer.domElement.setAttribute('role', 'img');
+    renderer.domElement.setAttribute('aria-describedby', 'village-keyboard-help');
     renderer.domElement.setAttribute('aria-label', 'Cenário 3D: arraste para girar a câmera e use WASD para caminhar');
     container.appendChild(renderer.domElement);
     const scene = new THREE.Scene(); scene.background = new THREE.Color('#0c131c'); scene.fog = new THREE.FogExp2('#0c131c', .009);
-    scene.add(new THREE.HemisphereLight('#9fb9df', '#28382d', 1.3));
+    const hemisphere = new THREE.HemisphereLight('#9fb9df', '#28382d', 1.3); scene.add(hemisphere);
     const moon = new THREE.DirectionalLight('#a9c6ef', 2.6); moon.position.set(-12, 22, 8); moon.castShadow = true;
     moon.shadow.mapSize.set(2048, 2048); Object.assign(moon.shadow.camera, { left: -23, right: 23, top: 23, bottom: -23, far: 70 }); moon.shadow.camera.updateProjectionMatrix(); moon.shadow.normalBias = .035; scene.add(moon);
     const world = createVillage(scene);
+    const dragon = createDragon(scene);
+    const dayNight = createDayNight(scene, hemisphere, moon, world);
+    const fireworks = createMissionFireworks(scene, stage => live.current.onFirework?.(stage));
+    let celebrated = false;
+    let oldMissionRound = live.current.missionRound;
+    let previousReducedMotion = live.current.reduceMotion;
     const walkingGraph = createWalkingGraph();
+    let oldCameraTurn = live.current.cameraTurn;
+    const verticalAxis = new THREE.Vector3(0, 1, 0);
     const portrait = container.clientWidth < 600;
-    const camera = new THREE.PerspectiveCamera(44, 1, .1, 160); camera.position.set(24, 24, 32).multiplyScalar(portrait ? 1.4 : 1);
+    const camera = new THREE.PerspectiveCamera(44, 1, .1, 260); camera.position.set(24, 24, 32).multiplyScalar(portrait ? 1.4 : 1);
     const controls = new OrbitControls(camera, renderer.domElement); controls.target.set(0, 1.1, 0); controls.enableDamping = true; controls.dampingFactor = .07; controls.enablePan = false;
     controls.minDistance = 7; controls.maxDistance = 78; controls.minPolarAngle = .25; controls.maxPolarAngle = Math.PI / 2 - .09; controls.update();
     const resize = () => { const { width, height } = container.getBoundingClientRect(); renderer.setSize(width, height); camera.aspect = width / Math.max(height, 1); camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
     const raycaster = new THREE.Raycaster(); const pointer = new THREE.Vector2(); let start;
-    const pointerdown = e => { start = { x: e.clientX, y: e.clientY }; };
+    const pointerdown = e => { renderer.domElement.focus({ preventScroll: true }); start = { x: e.clientX, y: e.clientY }; };
     const pointerup = e => {
       if (!start || live.current.paused || Math.hypot(start.x - e.clientX, start.y - e.clientY) > 6) return;
       const rect = renderer.domElement.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); raycaster.setFromCamera(pointer, camera);
@@ -260,14 +274,28 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
     };
     renderer.domElement.addEventListener('pointerdown', pointerdown); renderer.domElement.addEventListener('pointerup', pointerup);
     const lost = e => { e.preventDefault(); setError(true); }; renderer.domElement.addEventListener('webglcontextlost', lost);
-    const down = e => { const k = e.key.toLowerCase(); if (!live.current.paused && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k) && !e.target.closest('button,a,input,audio')) { e.preventDefault(); keys.current.add(k); } };
+    const down = e => { const k = e.key.toLowerCase(); if (!live.current.paused && !e.ctrlKey && !e.altKey && !e.metaKey && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k) && !e.target.closest('button,a,input,audio')) { e.preventDefault(); keys.current.add(k); } };
     const up = e => keys.current.delete(e.key.toLowerCase()); const clear = () => keys.current.clear();
-    window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
+    renderer.domElement.addEventListener('keydown', down); renderer.domElement.addEventListener('blur', clear); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
     const forward = new THREE.Vector3(), right = new THREE.Vector3(), movement = new THREE.Vector3(); const target = new THREE.Vector3(); const delta = new THREE.Vector3();
-    let frame, previous = 0, clock = 0, stepDistance = 0, oldNear = -2, oldNearNpc = -2, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let frame, previous = 0, clock = 0, environmentTime = 0, oldAtmosphereLabel = '', stepDistance = 0, oldNear = -2, oldNearNpc = -2, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
     const draw = time => {
+      const reducedMotion = live.current.reduceMotion, ambientPaused = live.current.ambientPaused;
       const dt = Math.min((time - previous) / 1000 || 0, .04); previous = time; clock += dt;
+      if (oldMissionRound !== live.current.missionRound) { oldMissionRound = live.current.missionRound; celebrated = false; fireworks.stop(); }
+      if (live.current.missionComplete && !live.current.paused && !ambientPaused && !celebrated) {
+        celebrated = true;
+        fireworks.start(world.npcs.map(npc => npc.group.position), reducedMotion);
+        live.current.onCelebrate?.();
+      }
+      fireworks.update(!live.current.paused && !ambientPaused && !document.hidden ? dt : 0);
+      if (reducedMotion && !previousReducedMotion && fireworks.active) fireworks.stop();
+      previousReducedMotion = reducedMotion;
+      if (!live.current.paused && !document.hidden && !reducedMotion && !ambientPaused) environmentTime += dt;
+      const skyState = dayNight.update(environmentTime);
+      const dragonState = dragon.update(environmentTime, ambientPaused || live.current.paused ? 0 : dt, reducedMotion);
+      const atmosphere = `${skyState.label} · ${dragonState.perched ? 'DRAGÃO DESCANSANDO' : 'DRAGÃO EM VOO'}`;
+      if (atmosphere !== oldAtmosphereLabel) { oldAtmosphereLabel = atmosphere; setAtmosphereLabel(atmosphere); }
       const k = keys.current; const movingX = Number(k.has('d') || k.has('arrowright')) - Number(k.has('a') || k.has('arrowleft')); const movingZ = Number(k.has('w') || k.has('arrowup')) - Number(k.has('s') || k.has('arrowdown'));
       let walking = false;
       if (!live.current.paused && (movingX || movingZ)) {
@@ -286,32 +314,34 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
         }
       }
       world.limbs.forEach((limb, i) => { limb.rotation.x = walking ? Math.sin(clock * 10) * .65 * (i < 2 ? 1 : -1) * (i % 2 ? -1 : 1) : THREE.MathUtils.damp(limb.rotation.x, 0, 14, dt); });
-      world.body.position.y = walking ? Math.abs(Math.sin(clock * 10)) * .07 : 0;
+      world.body.position.y = walking && !reducedMotion ? Math.abs(Math.sin(clock * 10)) * .07 : 0;
       world.npcs.forEach((npc, index) => {
         const talking = live.current.talkingNpc === index;
-        const moving = !live.current.paused && !talking && advanceVillager(npc, dt, walkingGraph);
+        const moving = !live.current.paused && !talking && !fireworks.active && !reducedMotion && !ambientPaused && advanceVillager(npc, dt, walkingGraph);
         if (talking) { const p = world.player.position; npc.body.rotation.y = Math.atan2(p.x - npc.group.position.x, p.z - npc.group.position.z); }
         npc.limbs.forEach((joint, i) => { joint.rotation.x = moving ? Math.sin(clock * 6.5 + npc.phase) * .48 * ([1, -1, -1, 1][i]) : THREE.MathUtils.damp(joint.rotation.x, 0, 12, dt); });
         npc.body.position.y = moving ? Math.abs(Math.sin(clock * 6.5 + npc.phase)) * .045 : 0;
+        if (fireworks.active && fireworks.elapsed < 1 && !reducedMotion) npc.limbs[3].rotation.x = -2.3;
       });
-      if (!reducedMotion) { world.crystal.rotation.y += dt * .45; world.crystal.position.y = 2.2 + Math.sin(clock * 1.4) * .1; world.cape.rotation.x = -.13 + Math.sin(clock * (walking ? 10 : 2)) * (walking ? .13 : .025); world.fireflies.rotation.y += dt * .012; world.flames.forEach(f => { f.scale.y = 1 + Math.sin(clock * 9) * .18; }); }
+      if (!reducedMotion && !ambientPaused) { world.crystal.rotation.y += dt * .45; world.crystal.position.y = 2.2 + Math.sin(clock * 1.4) * .1; world.cape.rotation.x = -.13 + Math.sin(clock * (walking ? 10 : 2)) * (walking ? .13 : .025); world.fireflies.rotation.y += dt * .012; world.flames.forEach(f => { f.scale.y = 1 + Math.sin(clock * 9) * .18; }); }
       const p = world.player.position; const near = nearbySite(p.x, p.z);
       if (near !== oldNear) { oldNear = near; live.current.onNear(near); }
       let closestNpc = -1, closestDistance = 2.7;
       world.npcs.forEach((npc, index) => { const d = Math.hypot(npc.group.position.x - p.x, npc.group.position.z - p.z); if (d < closestDistance) { closestNpc = index; closestDistance = d; } });
       if (closestNpc !== oldNearNpc) { oldNearNpc = closestNpc; live.current.onNearNpc?.(closestNpc); }
+      if (live.current.cameraTurn !== oldCameraTurn) { camera.position.sub(controls.target).applyAxisAngle(verticalAxis, (live.current.cameraTurn - oldCameraTurn) * Math.PI / 6).add(controls.target); oldCameraTurn = live.current.cameraTurn; }
       if (live.current.zoom !== oldZoom) { camera.position.sub(controls.target).multiplyScalar(oldZoom / live.current.zoom).add(controls.target); oldZoom = live.current.zoom; }
       if (live.current.resetKey !== oldReset) { controls.target.set(p.x, 1.1, p.z); camera.position.set(p.x + 13, 15, p.z + 18); oldReset = live.current.resetKey; }
-      controls.enabled = !live.current.paused; controls.update(); renderer.render(scene, camera); frame = requestAnimationFrame(draw);
+      controls.enabled = !live.current.paused; controls.enableDamping = !reducedMotion; controls.update(); renderer.render(scene, camera); frame = requestAnimationFrame(draw);
     }; frame = requestAnimationFrame(draw);
     return () => {
       cancelAnimationFrame(frame); observer.disconnect(); controls.dispose(); clear();
-      window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear);
+      renderer.domElement.removeEventListener('keydown', down); renderer.domElement.removeEventListener('blur', clear); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear);
       renderer.domElement.removeEventListener('pointerdown', pointerdown); renderer.domElement.removeEventListener('pointerup', pointerup); renderer.domElement.removeEventListener('webglcontextlost', lost);
       scene.traverse(o => { o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.map?.dispose(); m.dispose(); }); });
       renderer.dispose(); renderer.domElement.remove();
     };
   }, [keys]);
 
-  return <div className="webgl-scene" ref={mount}>{error && <div className="scene-error"><strong>O cenário 3D precisa de WebGL 2.</strong><p>Você pode acessar todas as histórias pelo modo leitura ou pelos destinos abaixo.</p></div>}</div>;
+  return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para entrar em um edifício próximo e F para conversar com um morador próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.</p>{!error && <div className="atmosphere-status">{atmosphereLabel}</div>}{error && <div className="scene-error"><strong>O cenário 3D precisa de WebGL 2.</strong><p>Você pode acessar todas as histórias pelo modo leitura ou pelos destinos abaixo.</p></div>}</div>;
 }

@@ -60,3 +60,17 @@ test('desligar uma categoria interrompe só seus efeitos em andamento', async ()
   expect(audio.context.created).toHaveLength(count);
   audio.dispose();
 });
+
+test('os sons de fogos respeitam o canal de efeitos e podem ser cancelados sem interromper outros sons', async () => {
+  const audio = new VillageAudio(); await audio.enable();
+  audio.step('stone'); const steps = [...audio.sources];
+  audio.firework('launch'); audio.firework('burst');
+  const fireworks = [...audio.sources].filter(source => source.villageEffect === 'fireworks');
+  expect(fireworks.length).toBeGreaterThan(0);
+  audio.stopFireworks();
+  steps.forEach(source => expect(source.stop).toHaveBeenCalledTimes(1));
+  fireworks.forEach(source => expect(source.stop).toHaveBeenCalledTimes(2));
+  audio.setChannels({ interactions: false });
+  const count = audio.context.created.length; audio.firework('burst'); expect(audio.context.created).toHaveLength(count);
+  audio.dispose();
+});

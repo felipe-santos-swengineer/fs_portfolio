@@ -228,7 +228,6 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
   const live = useRef({ paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn });
   live.current = { paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn };
   const [error, setError] = useState(false);
-  const [atmosphereLabel, setAtmosphereLabel] = useState('NOITE · DRAGÃO EM VOO');
 
   useEffect(() => {
     const container = mount.current;
@@ -278,7 +277,7 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
     const up = e => keys.current.delete(e.key.toLowerCase()); const clear = () => keys.current.clear();
     renderer.domElement.addEventListener('keydown', down); renderer.domElement.addEventListener('blur', clear); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
     const forward = new THREE.Vector3(), right = new THREE.Vector3(), movement = new THREE.Vector3(); const target = new THREE.Vector3(); const delta = new THREE.Vector3();
-    let frame, previous = 0, clock = 0, environmentTime = 0, oldAtmosphereLabel = '', stepDistance = 0, oldNear = -2, oldNearNpc = -2, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
+    let frame, previous = 0, clock = 0, environmentTime = 0, stepDistance = 0, oldNear = -2, oldNearNpc = -2, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
     const draw = time => {
       const reducedMotion = live.current.reduceMotion, ambientPaused = live.current.ambientPaused;
       const dt = Math.min((time - previous) / 1000 || 0, .04); previous = time; clock += dt;
@@ -292,10 +291,8 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
       if (reducedMotion && !previousReducedMotion && fireworks.active) fireworks.stop();
       previousReducedMotion = reducedMotion;
       if (!live.current.paused && !document.hidden && !reducedMotion && !ambientPaused) environmentTime += dt;
-      const skyState = dayNight.update(environmentTime);
-      const dragonState = dragon.update(environmentTime, ambientPaused || live.current.paused ? 0 : dt, reducedMotion);
-      const atmosphere = `${skyState.label} · ${dragonState.perched ? 'DRAGÃO DESCANSANDO' : 'DRAGÃO EM VOO'}`;
-      if (atmosphere !== oldAtmosphereLabel) { oldAtmosphereLabel = atmosphere; setAtmosphereLabel(atmosphere); }
+      dayNight.update(environmentTime);
+      dragon.update(environmentTime, ambientPaused || live.current.paused ? 0 : dt, reducedMotion);
       const k = keys.current; const movingX = Number(k.has('d') || k.has('arrowright')) - Number(k.has('a') || k.has('arrowleft')); const movingZ = Number(k.has('w') || k.has('arrowup')) - Number(k.has('s') || k.has('arrowdown'));
       let walking = false;
       if (!live.current.paused && (movingX || movingZ)) {
@@ -343,5 +340,5 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
     };
   }, [keys]);
 
-  return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para entrar em um edifício próximo e F para conversar com um morador próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.</p>{!error && <div className="atmosphere-status">{atmosphereLabel}</div>}{error && <div className="scene-error"><strong>O cenário 3D precisa de WebGL 2.</strong><p>Você pode acessar todas as histórias pelo modo leitura ou pelos destinos abaixo.</p></div>}</div>;
+  return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para entrar em um edifício próximo e F para conversar com um morador próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.</p>{error && <div className="scene-error"><strong>O cenário 3D precisa de WebGL 2.</strong><p>Você pode acessar todas as histórias pelo modo leitura ou pelos destinos abaixo.</p></div>}</div>;
 }

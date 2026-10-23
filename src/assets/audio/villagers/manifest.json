@@ -1,0 +1,90 @@
+[
+  {
+    "npc": "Bia",
+    "line": 0,
+    "text": "Que bom receber você por aqui! Obrigada por visitar o portfólio do Felipe. Na biblioteca, você encontra a formação, as experiências e as ideias que acompanham essa jornada.",
+    "file": "bia-1.mp3",
+    "voice": "pt-BR-FranciscaNeural",
+    "gender": "female",
+    "tone": "Calma e acolhedora",
+    "rate": "-3%",
+    "bytes": 69840
+  },
+  {
+    "npc": "Bia",
+    "line": 1,
+    "text": "Cada visita traz uma nova história para a vila. Obrigada por dedicar seu tempo ao trabalho do Felipe. Explore com calma: sempre há algo para descobrir!",
+    "file": "bia-2.mp3",
+    "voice": "pt-BR-FranciscaNeural",
+    "gender": "female",
+    "tone": "Calma e acolhedora",
+    "rate": "-3%",
+    "bytes": 62064
+  },
+  {
+    "npc": "Tom",
+    "line": 0,
+    "text": "Olá, viajante! Obrigado por visitar o portfólio do Felipe. Na oficina, as ideias ganham forma: entre para conhecer os projetos e as soluções que ele construiu.",
+    "file": "tom-1.mp3",
+    "voice": "pt-BR-AntonioNeural",
+    "gender": "male",
+    "tone": "Firme e descontraído",
+    "rate": "+0%",
+    "bytes": 75600
+  },
+  {
+    "npc": "Tom",
+    "line": 1,
+    "text": "Uma boa criação começa com curiosidade. Obrigado por trazer a sua até aqui! Dê uma olhada nos projetos da oficina e, se uma ideia surgir, passe no correio para conversar.",
+    "file": "tom-2.mp3",
+    "voice": "pt-BR-AntonioNeural",
+    "gender": "male",
+    "tone": "Firme e descontraído",
+    "rate": "+0%",
+    "bytes": 76464
+  },
+  {
+    "npc": "Lia",
+    "line": 0,
+    "text": "Boas-vindas à vila! Obrigada por conhecer o portfólio do Felipe. Se quiser trocar ideias ou conversar sobre um projeto, o correio tem os caminhos para entrar em contato.",
+    "file": "lia-1.mp3",
+    "voice": "pt-BR-ThalitaMultilingualNeural",
+    "gender": "female",
+    "tone": "Leve e animada",
+    "rate": "+5%",
+    "bytes": 58464
+  },
+  {
+    "npc": "Lia",
+    "line": 1,
+    "text": "Sua visita já faz parte desta jornada. Obrigada por passear pela vila! Espero que você encontre inspiração por aqui e uma boa oportunidade de começar uma conversa.",
+    "file": "lia-2.mp3",
+    "voice": "pt-BR-ThalitaMultilingualNeural",
+    "gender": "female",
+    "tone": "Leve e animada",
+    "rate": "+5%",
+    "bytes": 61056
+  },
+  {
+    "npc": "Rui",
+    "line": 0,
+    "text": "Entre e fique à vontade! Obrigado por visitar o portfólio do Felipe. A taverna guarda as histórias que deram origem a esta vila. Escolha uma porta e faça seu próprio caminho.",
+    "file": "rui-1.mp3",
+    "voice": "en-US-BrianMultilingualNeural",
+    "gender": "male",
+    "tone": "Grave e acolhedor",
+    "rate": "-6%",
+    "bytes": 80208
+  },
+  {
+    "npc": "Rui",
+    "line": 1,
+    "text": "Sempre cabe mais uma pessoa nesta aventura. Obrigado pelo seu tempo e pela visita! Conheça a trajetória do Felipe, ouça as histórias e volte quando quiser.",
+    "file": "rui-2.mp3",
+    "voice": "en-US-BrianMultilingualNeural",
+    "gender": "male",
+    "tone": "Grave e acolhedor",
+    "rate": "-6%",
+    "bytes": 73152
+  }
+]

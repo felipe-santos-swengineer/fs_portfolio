@@ -1,690 +1,167 @@
-import { useState, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
-import { HiMenuAlt2 } from 'react-icons/hi';
-import { FaMapMarkedAlt, FaPlay, FaStop } from 'react-icons/fa';
-import temaAudio from './assets/audio/dndAdventure_NCS.mp3';
-import bemVindoAudio from './assets/audio/bem_vindo_bill_voice.mp3';
-import inicioAudio from './assets/audio/inicio_bill_voice.mp3';
-import motivacaoAudio from './assets/audio/motivacao_bill_voice.mp3';
-import projetosAudio from './assets/audio/projetos_bill_voice.mp3';
-import MapaVertical from './components/MapaVertical';
-import Aventureiro from './assets/images/warrior_climb.gif';
-import Escolaridade from './assets/images/escolaridade.png';
-import Habilidades from './assets/images/habilidades.png';
-import Interesses from './assets/images/interesses.png';
-import Luta from './assets/images/fight.gif';
-import Magelvl0 from './assets/images/lvl0.png';
-import Magelvl1 from './assets/images/lvl1.png';
-import Magelvl2 from './assets/images/lvl2.png';
-import Magelvl3 from './assets/images/lvl3.png';
-import SliderProjeto from "./components/SliderProjeto";
-import Talkdoor1 from './assets/images/talkdoor1.png';
-import Talkdoor2 from './assets/images/talkdoor2.png';
-import Talkdoor3 from './assets/images/talkdoor3.png';
-import Talkdoor4 from './assets/images/talkdoor4.png';
-import Talkdoor5 from './assets/images/talkdoor5.png';
-import Talkdoor6 from './assets/images/talkdoor6.png';
-import Vitrine1 from './assets/images/vitrine1.png';
-import Vitrine2 from './assets/images/vitrine2.png';
-import Vitrine3 from './assets/images/vitrine3.png';
-import Vitrine4 from './assets/images/vitrine4.png';
-import Vitrine5 from './assets/images/vitrine5.png';
-import Tetris1 from './assets/images/tetris1.png';
-import Tetris2 from './assets/images/tetris2.png';
-import Tetris3 from './assets/images/tetris3.png';
-import Ldc0 from './assets/images/ldc0.png';
-import Ldc1 from './assets/images/ldc1.png';
-import Ldc2 from './assets/images/ldc2.png';
-import Ldc3 from './assets/images/ldc3.png';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Compass, Volume2, VolumeX, BookOpen, ArrowUpRight, X, Footprints } from 'lucide-react';
+import { projetos, textos, titulosTextos } from './content';
+import VillageAudio from './audio/VillageAudio';
+import AudioSettings, { loadAudioSettings } from './components/AudioSettings';
+import VillagerSpeech from './audio/VillagerSpeech';
+import { VILLAGER_VOICES } from './audio/villagerClips';
+import { VILLAGERS } from './components/villagers';
+import welcome from './assets/audio/bem_vindo_bill_voice.mp3';
+import history from './assets/audio/inicio_bill_voice.mp3';
+import motivation from './assets/audio/motivacao_bill_voice.mp3';
+import projectsAudio from './assets/audio/projetos_bill_voice.mp3';
+import music from './assets/audio/dndAdventure_NCS.mp3';
+import './App.css';
+const VillageScene = lazy(() => import('./components/VillageScene'));
 
-import "./App.css";
+
+const places = [
+  { name: 'Taverna do início', section: 'Minha história', icon: '⚑', texts: [0, 1, 2], audio: [welcome, history, motivation] },
+  { name: 'Biblioteca do saber', section: 'Sobre mim', icon: '✧', texts: [3, 4, 5] },
+  { name: 'Oficina das criações', section: 'Projetos', icon: '⚒', texts: [6], audio: [projectsAudio] },
+  { name: 'Correio da vila', section: 'Contato', icon: '✉', texts: [7] },
+];
+
+function Content({ index, narrationEnabled }) {
+  const place = places[index];
+  return <>
+    {place.texts.map((n, i) => <section className="story" key={n}>
+      <h3>{titulosTextos[n]}</h3>
+      {place.audio?.[i] && <label className="narration">OUÇA A HISTÓRIA ORIGINAL<audio aria-label={`Narração: ${titulosTextos[n]}`} controls muted={!narrationEnabled} preload="none" src={place.audio[i]} onPlay={e => { if (!narrationEnabled) { e.target.pause(); return; } document.querySelectorAll('audio[data-narration]').forEach(a => { if (a !== e.target) a.pause(); }); }} data-narration /><small>{narrationEnabled ? 'A gravação original acompanha os temas desta seção; o texto foi revisado para esta edição.' : 'Narrações silenciadas. Você pode ativá-las nas configurações de áudio.'}</small></label>}
+      {textos[n]?.split(/\n\s*\n/).map((p, j) => <p key={j}>{p.trim()}</p>)}
+    </section>)}
+    {index === 2 && projetos.map(p => <article className="project" key={p.id}><h3>{p.titulo}</h3><p>{p.descricao}</p><div className="gallery">{p.imagens.map((src, i) => <img src={src} alt={`${p.titulo} — tela ${i + 1}`} key={src} loading="lazy" />)}</div><a href={p.github || p.link} target="_blank" rel="noreferrer">{p.github ? 'Explorar no GitHub' : 'Visitar projeto'} <ArrowUpRight size={16} /></a></article>)}
+    {index === 3 && <div className="contact-links"><a href="mailto:felipesantosswengineer@email.com">Enviar email ↗</a><a href="tel:+5588998378028">Ligar ↗</a><a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" target="_blank" rel="noreferrer">LinkedIn ↗</a><a href="https://www.instagram.com/felipe_santos_swengineer/" target="_blank" rel="noreferrer">Instagram ↗</a></div>}
+  </>;
+}
 
 export default function App() {
-
-  //pop-up inicial para ativar som
-  const [showPopup, setShowPopup] = useState(true);
-
-  //drawer lateral de configuracao
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  //drawer sobre
-  const [selecionado, setSelecionado] = useState(0);
-  const titulos = [
-    'Escolaridade',
-    'Experiência e Habilidades',
-    'Personalidade e Interesses'
-  ];
-
-  const imagens = [
-    `url(${Escolaridade})`,
-    `url(${Habilidades})`,
-    `url(${Interesses})`
-  ];
-
-  //array de audios
-  const audioRef = useRef(null);
-  const audioRef2 = useRef(null);
-  const audioRef3 = useRef(null);
-  const audioRef4 = useRef(null);
-  const audioRef5 = useRef(null);
-
-  //array de booleanos que define se um audio esta tocando ou nao
-  const [isPlaying2, setIsPlaying2] = useState(false);
-  const [isPlaying3, setIsPlaying3] = useState(false);
-  const [isPlaying4, setIsPlaying4] = useState(false);
-  const [isPlaying5, setIsPlaying5] = useState(false);
-
-  //referencias do mapa
-  const mapaRef = useRef(null);
-  const inicioRef = useRef(null);
-  const sobreRef = useRef(null);
-  const projetosRef = useRef(null);
-  const contatoRef = useRef(null);
-
-  //iniciar som de background
-  const handleEnableSound = () => {
-    audioRef.current.volume = 0.2;
-    audioRef.current.play().then(() => {
-      setShowPopup(false);
-    }).catch(err => {
-      //console.error("Erro ao iniciar som:", err);
-      setShowPopup(false);
+  const [selected, setSelected] = useState(null);
+  const [visited, setVisited] = useState([]);
+  const [audioSettings, setAudioSettings] = useState(loadAudioSettings);
+  const sound = audioSettings.master;
+  const [audioPanelOpen, setAudioPanelOpen] = useState(false);
+  const preferences = useRef(audioSettings);
+  const audioRevision = useRef(0);
+  const closeAudioPanel = useCallback(() => setAudioPanelOpen(false), []);
+  const [conversation, setConversation] = useState(null);
+  const [nearNpc, setNearNpc] = useState(-1);
+  const [speaking, setSpeaking] = useState(false);
+  const [voiceNotice, setVoiceNotice] = useState('');
+  const [audioNotice, setAudioNotice] = useState('');
+  const [reading, setReading] = useState(false);
+  const [near, setNear] = useState(-1);
+  const [resetKey, setResetKey] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const keys = useRef(new Set());
+  const bg = useRef(null);
+  const effects = useRef(null);
+  const speech = useRef(null);
+  if (!speech.current) speech.current = new VillagerSpeech();
+  const visits = useRef(VILLAGERS.map(() => 0));
+  const npcPanel = useRef(null);
+  if (!effects.current) effects.current = new VillageAudio();
+  const soundRequested = useRef(false);
+  const dialog = useRef(null);
+  const previousFocus = useRef(null);
+  const open = i => { speech.current.stop(); setConversation(null); previousFocus.current = document.activeElement; keys.current.clear(); if (preferences.current.master && preferences.current.interactions) effects.current.interact(i); setSelected(i); setVisited(v => [...new Set([...v, i])]); };
+  const close = () => { if (preferences.current.master && preferences.current.interactions) effects.current.closeDoor(); setSelected(null); previousFocus.current?.focus(); };
+  const speakNpc = useCallback((index, line) => {
+    if (!soundRequested.current || !preferences.current.voices) return;
+    speech.current.stop();
+    document.querySelectorAll('audio[data-narration]').forEach(a => { if (!a.paused) a.pause(); });
+    bg.current.volume = .025; setSpeaking(true); setVoiceNotice('');
+    const person = VILLAGERS[index];
+    speech.current.speak(person.lines[line], VILLAGER_VOICES[person.name], success => {
+      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      if (!success) setVoiceNotice('Não foi possível reproduzir a fala. Tente ouvir novamente ou acompanhe a mensagem em texto.');
     });
+  }, []);
+  const talk = useCallback(index => {
+    keys.current.clear();
+    const line = visits.current[index]++ % VILLAGERS[index].lines.length;
+    setConversation({ index, line }); setVoiceNotice('');
+    if (soundRequested.current) speakNpc(index, line);
+  }, [speakNpc]);
+  const endConversation = () => { speech.current.stop(); setSpeaking(false); setConversation(null); };
+
+  useEffect(() => { if (conversation) npcPanel.current?.focus(); }, [conversation]);
+  useEffect(() => {
+    const handler = e => {
+      if (e.key === 'Escape' && conversation && !audioPanelOpen) { speech.current.stop(); setSpeaking(false); setConversation(null); }
+      if (!audioPanelOpen && e.key.toLowerCase() === 'f' && !e.repeat && nearNpc >= 0 && selected === null && !reading) { e.preventDefault(); talk(nearNpc); }
+    };
+    window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
+  }, [conversation, nearNpc, selected, reading, talk, audioPanelOpen]);
+
+  useEffect(() => {
+    const engine = effects.current;
+    const background = bg.current;
+    const voice = speech.current;
+    const duck = e => { if (e.target.hasAttribute?.('data-narration') && (!preferences.current.master || !preferences.current.narration)) { if (!e.target.paused) e.target.pause(); return; } if (e.type === 'play' && e.target.hasAttribute?.('data-narration')) voice.stop(); background.volume = voice.playing || [...document.querySelectorAll('audio[data-narration]')].some(a => !a.paused && !a.ended) ? .025 : .09; };
+    const hide = () => { if (document.hidden) voice.stop(); };
+    document.addEventListener('visibilitychange', hide);
+    document.addEventListener('play', duck, true); document.addEventListener('pause', duck, true); document.addEventListener('ended', duck, true);
+    return () => { soundRequested.current = false; audioRevision.current++; voice.stop(); engine.dispose(); if (!background.paused) background.pause(); document.removeEventListener('visibilitychange', hide); document.removeEventListener('play', duck, true); document.removeEventListener('pause', duck, true); document.removeEventListener('ended', duck, true); };
+  }, []);
+
+
+  useEffect(() => { const enter = e => { if (!audioPanelOpen && e.key.toLowerCase() === 'e' && !e.repeat && near >= 0 && selected === null && !reading) open(near); }; window.addEventListener('keydown', enter); return () => window.removeEventListener('keydown', enter); }, [near, selected, reading, audioPanelOpen]);
+  useEffect(() => {
+    if (selected === null || audioPanelOpen) return;
+    dialog.current?.querySelector('button')?.focus();
+    const handler = e => {
+      if (e.key === 'Escape') { if (preferences.current.master && preferences.current.interactions) effects.current.closeDoor(); setSelected(null); previousFocus.current?.focus(); }
+      if (e.key === 'Tab') { const items = dialog.current.querySelectorAll('button,a,audio'); const first = items[0], last = items[items.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); } }
+    };
+    document.addEventListener('keydown', handler); return () => document.removeEventListener('keydown', handler);
+  }, [selected, audioPanelOpen]);
+  const updateAudio = async next => {
+    const revision = ++audioRevision.current;
+    preferences.current = next; soundRequested.current = next.master; setAudioSettings(next); setAudioNotice('');
+    try { localStorage.setItem('village-audio', JSON.stringify(next)); } catch { /* Private mode can block storage. */ }
+    effects.current.setChannels({ steps: next.steps, interactions: next.interactions });
+    if (!next.master || !next.voices) speech.current.stop();
+    document.querySelectorAll('audio[data-narration]').forEach(a => { a.muted = !next.master || !next.narration; if (a.muted && !a.paused) a.pause(); });
+    if (!next.master) { effects.current.mute(); bg.current.pause(); return; }
+    if (!next.music) bg.current.pause();
+    bg.current.volume = speech.current.playing || [...document.querySelectorAll('audio[data-narration]')].some(a => !a.paused && !a.ended) ? .025 : .09;
+    const musicAttempt = next.music ? bg.current.play().then(() => true).catch(() => false) : Promise.resolve(true);
+    const effectAttempt = next.steps || next.interactions ? effects.current.enable() : Promise.resolve(true);
+    if (!next.steps && !next.interactions) effects.current.mute();
+    const [effectsReady, musicReady] = await Promise.all([effectAttempt, musicAttempt]);
+    if (revision !== audioRevision.current) { if (!preferences.current.master || (!preferences.current.steps && !preferences.current.interactions)) effects.current.mute(); if (!preferences.current.master || !preferences.current.music) bg.current.pause(); return; }
+    if (!effectsReady || !musicReady) setAudioNotice('Alguns sons não puderam ser iniciados. Suas escolhas foram mantidas; tente ativar o som geral novamente.');
   };
 
-  //funcao para rolar a tela na secao do mapa
-  const scrollToSection = (ref) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
-  //reseta e desliga todos os audios da narracao
-  const reiniciarAudios = () => {
-    audioRef2.current.pause();
-    audioRef3.current.pause();
-    audioRef4.current.pause();
-    audioRef5.current.pause();
-    audioRef2.current.currentTime = 0;
-    audioRef3.current.currentTime = 0;
-    audioRef4.current.currentTime = 0;
-    audioRef5.current.currentTime = 0;
-    setIsPlaying2(false);
-    setIsPlaying3(false);
-    setIsPlaying4(false);
-    setIsPlaying5(false);
-  }
-
-  //audio de bem vindo
-  const toggleAudio2 = () => {
-    reiniciarAudios();
-    if (isPlaying2) {
-      reiniciarAudios();
-    } else {
-      audioRef2.current.volume = 0.3;
-      audioRef2.current.play();
-    }
-    setIsPlaying2(!isPlaying2);
-  };
-
-  //audio do inicio
-  const toggleAudio3 = () => {
-    reiniciarAudios();
-    if (isPlaying3) {
-      reiniciarAudios();
-    }
-    else {
-      audioRef3.current.volume = 0.3;
-      audioRef3.current.play();
-    }
-    setIsPlaying3(!isPlaying3);
-  };
-
-  //audio da motivacao
-  const toggleAudio4 = () => {
-    reiniciarAudios();
-    if (isPlaying4) {
-      reiniciarAudios();
-    }
-    else {
-      audioRef4.current.volume = 0.3;
-      audioRef4.current.play();
-    }
-    setIsPlaying4(!isPlaying4);
-  };
-
-  //audio da motivacao
-  const toggleAudio5 = () => {
-    reiniciarAudios();
-    if (isPlaying5) {
-      reiniciarAudios();
-    }
-    else {
-      audioRef5.current.volume = 0.3;
-      audioRef5.current.play();
-    }
-    setIsPlaying5(!isPlaying5);
-  };
-
-  //evolucao do personagem
-  const refChar = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: refChar,
-    offset: ["start end", "end start"],
-  });
-
-  // Transforma o progresso (0 a 1) em nível 0 a 100
-  const levelProgress = useTransform(scrollYProgress, [0, 1], [0, 100]);
-
-  // Armazena o nível como número para exibir normalmente
-  const [level, setLevel] = useState(0);
-
-  // Atualiza o estado toda vez que o valor animado muda
-  useMotionValueEvent(levelProgress, "change", (latest) => {
-    setLevel(Math.floor(latest));
-  });
-
-  // Transforma o nível (0–100) em um efeito visual de brilho
-  const boxShadow = useTransform(levelProgress, [0, 100], [
-    "0 0 0px #00ffff",
-    "0 0 40px #00ffff",
-  ]);
-
-  //seleciona o nivel do mago
-  function getMageSprite(level) {
-    if (level < 25) return Magelvl0;
-    if (level < 50) return Magelvl1;
-    if (level < 75) return Magelvl2;
-    return Magelvl3;
-  }
-
-  //projetos
-
-  const projetos = [
-    {
-      id: 1,
-      titulo: "Talkdoor",
-      descricao: `Este projeto foi uma rede social 📱 
-      desenvolvida durante o TCC 🎓, voltada para o ambiente 
-      universitário 🏫, com o objetivo de conectar estudantes 👩‍🎓👨‍🎓, 
-      professores e pesquisadores em torno de interesses acadêmicos 📚. 
-      A plataforma permitia compartilhar conteúdos como artigos 📄, eventos 📅, 
-      discussões de disciplinas 💬, projetos de pesquisa 🔍 e oportunidades acadêmicas 🎯. 
-      Focada em colaboração 🤝 e troca de conhecimento 🧠, a rede fortalecia a comunidade 
-      interna da universidade e incentiva o engajamento intelectual, fazendo uso de algoritmos que
-      priorizavam conteúdo baseado no perfil do usuário, assim como facebook e instagram 🚀.`,
-      imagens: [
-        Talkdoor1,
-        Talkdoor2,
-        Talkdoor3,
-        Talkdoor4,
-        Talkdoor5,
-        Talkdoor6
-      ],
-      github: "https://github.com/felipe-santos-swengineer/tcc-front.git",
-    },
-    {
-      id: 2,
-      titulo: "Vitrine Funcap",
-      descricao: `A Vitrine Funcap é uma plataforma online criada pela Funcap
-      (Fundação Cearense de Apoio ao Desenvolvimento Científico e Tecnológico) para 
-      divulgar e conectar projetos de pesquisa 🔬, inovação 💡 e empreendedorismo 🚀 
-      desenvolvidos no Ceará com potenciais parceiros, investidores e a sociedade em geral.
-      O site apresenta uma vitrine virtual 🖥️ de iniciativas financiadas pela fundação, 
-      destacando seus impactos 🌍, soluções tecnológicas 🧠 e oportunidades de aplicação no mercado 💼.
-      É um espaço que promove a visibilidade 👁️ dos resultados da ciência 
-      cearense e facilita o contato 🤝 entre pesquisadores e o setor produtivo.`,
-      imagens: [
-        Vitrine1,
-        Vitrine2,
-        Vitrine3,
-        Vitrine4,
-        Vitrine5
-      ],
-      link: "https://vitrinefuncap.com"
-    },
-    {
-      id: 3,
-      titulo: "Tetris para 2 jogadores",
-      descricao: `Desafie um amigo em uma partida de Tetris duelo 1 contra 1! ⚔️
-      Monte suas peças rapidamente, complete linhas e envie obstáculos para o adversário.
-      Mostre quem é o mestre do bloco nesse jogo cheio de estratégia, velocidade e competição! ⏱️🔥
-      Prepare-se para muita emoção, reflexos e diversão sem parar ao som de uma batalha de Naruto! 🚀👾`,
-      imagens: [
-        Tetris1,
-        Tetris2,
-        Tetris3
-      ],
-      github: "https://github.com/felipe-santos-swengineer/Tetris_2_players_duel"
-    },
-    {
-      id: 4,
-      titulo: "Chronos-UFC",
-      descricao: `O sistema foi desenvolvido para facilitar e organizar o processo de 
-      registro das horas complementares dos alunos da Universidade Federal do Ceará 🏫.
-      Os alunos cadastram suas atividades complementares diretamente na plataforma 💻, 
-      anexando documentos comprobatórios e informando a carga horária realizada ⏱️.
-      Os professores (ou coordenadores responsáveis) acessam o sistema para avaliar a 
-      validade das atividades 📄, aprovando ou solicitando ajustes com comentários.
-      📊 O sistema também permite o acompanhamento do progresso por categoria, 
-      ajudando o aluno a visualizar o que ainda precisa ser cumprido para se formar com tudo em dia 🎯.`,
-      imagens: [
-        Ldc0,
-        Ldc1,
-        Ldc2,
-        Ldc3
-      ],
-      github: "https://github.com/felipe-santos-swengineer/client-ldc"
-    },
-  ];
-
-  return (
-    <div ref={refChar}>
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-box">
-            <h2>Bem-vindo!</h2>
-            <button onClick={handleEnableSound}>Iniciar a exploração!</button>
-          </div>
+  return <div className="app">
+    <header><a className="brand" href="#portfolio" aria-label="Felipe Santos, início"><span className="brand-mark">F<span>.</span></span><span>FELIPE SANTOS<small>ENGENHEIRO DE SOFTWARE</small></span></a><div className="header-actions"><span className="edition">PORTFÓLIO 3D · VOL. 02</span><button onClick={() => { endConversation(); setReading(!reading); }}><BookOpen size={16} /><span>{reading ? 'Voltar à vila' : 'Modo leitura'}</span></button><button onClick={() => { keys.current.clear(); setAudioPanelOpen(true); }} aria-label="Configurações de áudio" aria-haspopup="dialog">{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>Áudio</span></button></div></header>
+    <main id="portfolio">
+      <div className="intro"><span className="eyebrow"><span /> FELIPE SANTOS · ENGENHARIA DE SOFTWARE</span><h1>Ideias ganham vida.<br />Histórias, <em>caminhos.</em></h1><p>Uma vila para conhecer quem sou e o que construo.<br /> Explore os projetos, descubra minha trajetória<br /> e encontre um ponto de partida para nossa conversa.</p><div className="intro-note"><Compass size={18} /><span>Arraste para olhar ao redor. Escolha uma porta para começar.</span></div></div>
+      {reading ? <div className="reading-list">{places.map((p, i) => <section key={p.name}><span className="eyebrow">0{i + 1} · {p.name}</span><h2>{p.section}</h2><Content index={i} narrationEnabled={sound && audioSettings.narration} /></section>)}</div> : <>
+        <div className="viewport" aria-label="Vilarejo tridimensional do portfólio">
+          <Suspense fallback={<div className="scene-loading">Acendendo as lanternas da vila…</div>}><VillageScene keys={keys} paused={selected !== null || audioPanelOpen} onOpen={open} onNear={setNear} onStep={surface => { if (preferences.current.master && preferences.current.steps) effects.current.step(surface); }} onTalk={talk} onNearNpc={setNearNpc} talkingNpc={conversation?.index} zoom={zoom} resetKey={resetKey} /></Suspense>
+          {conversation && <section className="npc-dialogue" aria-label={`Conversa com ${VILLAGERS[conversation.index].name}`} tabIndex={-1} ref={npcPanel}>
+            <div className="npc-dialogue-heading"><span className="npc-avatar" style={{ background: VILLAGERS[conversation.index].color }}>{VILLAGERS[conversation.index].name[0]}</span><div><h2>{VILLAGERS[conversation.index].name}</h2><small>{VILLAGERS[conversation.index].role}</small></div><button onClick={endConversation} aria-label="Encerrar conversa"><X size={18} /></button></div>
+            <p aria-live="polite">{VILLAGERS[conversation.index].lines[conversation.line]}</p>
+            <div className="npc-dialogue-actions"><button disabled={!sound || !audioSettings.voices} onClick={() => { if (speaking) speech.current.stop(); else speakNpc(conversation.index, conversation.line); }}>{speaking ? 'Parar voz' : 'Ouvir mensagem'}</button><button onClick={() => talk(conversation.index)}>Outra mensagem ↗</button></div>
+            <small className="npc-voice-note">{voiceNotice || (!sound || !audioSettings.voices ? 'Ative as vozes dos NPCs nas configurações de áudio.' : `Voz ${VILLAGER_VOICES[VILLAGERS[conversation.index].name].gender === 'female' ? 'feminina' : 'masculina'} · ${VILLAGER_VOICES[VILLAGERS[conversation.index].name].tone.toLowerCase()}`)}</small>
+          </section>}
+          <div className="scene-caption"><span className="live-dot" /> VILA DOS CRIADORES <small>NOITE TRANQUILA · CEARÁ</small></div>
+          <div className="compass"><span>N</span><Compass size={34} strokeWidth={1} /></div>
+          <div className="camera-tools"><button onClick={() => setResetKey(v => v + 1)}>Focar personagem</button><div className="zoom"><button onClick={() => setZoom(z => Math.min(2, z + .2))} aria-label="Aproximar">+</button><button onClick={() => setZoom(z => Math.max(.5, z - .2))} aria-label="Afastar">−</button></div></div>
         </div>
-      )}
-      {!showPopup && (
-        <div className="mapa-wrapper">
-          <motion.div
-            className={`toggle-button ${isExpanded ? 'active' : ''}`}
-            onClick={() => setIsExpanded(!isExpanded)}
-            whileTap={{ scale: 0.9 }}
-          >
-            <HiMenuAlt2 size={24} color="#00ffff" />
-          </motion.div>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                className="mapa-content"
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 240 }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ type: 'spring', stiffness: 250, damping: 20 }}
-              >
-                <FaMapMarkedAlt onClick={() => scrollToSection(mapaRef)} size={24} color="#00ffff" style={{ cursor: 'pointer' }} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
-      {!showPopup && (
-        <div className="mapa-wrapper2">
-          <motion.div
-            className={`toggle-button2`}
-            whileTap={{ scale: 0.9 }}
-          ><motion.div
-            style={{ color: "white" }}
-          >
-              Nivel {level}
-              <motion.div
-                className="aura-wrapper"
-                style={{
-                  boxShadow,
-                  border: "1px solid white",
-                  backgroundColor: "#000",
-                }}
-              >
-                <img
-                  width='80px'
-                  height='150px'
-                  src={getMageSprite(level)}
-                  alt="Personagem"
-                />
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        </div>
-      )}
-      <div className="container-basic">
-        <div className="container-content">
-          <div className="divDialogMain">~Introdução~</div>
-          <div className="divDialog">
-            <div className="textDialog">
-              Bem-vindo(a) ao Portfólio de Felipe Santos! 🗡️<br /> <br />
-              Prepare-se para uma jornada diferente: <br />
-              Navegue pelo meu mundo através do mapa abaixo e escolha para onde deseja ir.
-              Cada região revela um pouco mais sobre mim, meus projetos e minhas habilidades.<br /> <br />
-              Clique em uma área do mapa para começar sua aventura! 🗺️
-            </div>
-            <button
-              onClick={toggleAudio2}
-              style={{
-                background: 'rgba(0,0,0,0.5)',
-                border: 'none',
-                borderRadius: '50%',
-                padding: '12px',
-                cursor: 'pointer',
-                color: 'white',
-                fontSize: '20px',
-                transition: 'background 0.3s',
-              }}
-              title={isPlaying2 ? 'Parar música' : 'Tocar música'}
-            >
-              {isPlaying2 ? <FaStop style={{ color: 'red', fontSize: '50px' }} /> : <FaPlay style={{ color: 'green', opacity: 0.5, fontSize: '50px' }} />}
-            </button>
-          </div>
-          <div ref={mapaRef} className="divMapa">
-            <MapaVertical
-              onIrParaInicio={() => scrollToSection(inicioRef)}
-              onIrParaSobre={() => scrollToSection(sobreRef)}
-              onIrParaProjetos={() => scrollToSection(projetosRef)}
-              onIrParaContato={() => scrollToSection(contatoRef)}
-            />
-          </div>
-          <div ref={inicioRef} className="divDialogMain">~Início~</div>
-          <section id="inicio">
-            <div className="divDialog">
-              <div className="textDialog">
-                ~Parte 1~
-                <br /><br />
-                ⚔️ Em tempos de vastas planícies digitais, onde cada desenvolvedor ergue seus castelos de código e design, eu escolhi um caminho diferente.
-                Não foi em um salão de espelhos modernos que minha ideia nasceu, mas sim ao redor de uma fogueira imaginária, onde contos ganham vida e aventuras são escritas com paixão e propósito.
-                <br /><br />
-                Assim como heróis embarcam em jornadas para descobrir quem são e do que são capazes, eu também trilho minha estrada como desenvolvedor — enfrentando bugs como feras, aprendendo magias novas em forma de linguagens, e construindo ferramentas como espadas afiadas.
-                <br /><br />
-                Criar um portfólio no estilo RPG não foi apenas uma escolha estética. Foi um chamado. Uma forma de unir tudo que me inspira: o encantamento das histórias, a lógica do código e a busca constante por evolução.
-                <br /><br />
-                Neste mundo que criei, cada seção é uma vila, um santuário ou um campo de batalha. Cada projeto é uma relíquia da minha jornada. E você, visitante, é mais que um espectador — é um aventureiro convidado a explorar.
-                <br /><br />
-                Que esta terra digital conte minha história não apenas com palavras, mas com alma.✨
-              </div>
-              <button
-                onClick={toggleAudio3}
-                style={{
-                  background: 'rgba(0,0,0,0.5)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  padding: '12px',
-                  cursor: 'pointer',
-                  color: 'white',
-                  fontSize: '20px',
-                  transition: 'background 0.3s',
-                }}
-                title={isPlaying3 ? 'Parar música' : 'Tocar música'}
-              >
-                {isPlaying3 ? <FaStop style={{ color: 'red', fontSize: '50px' }} /> : <FaPlay style={{ color: 'green', opacity: 0.5, fontSize: '50px' }} />}            </button>
-            </div>
-          </section>
-          <section className="container-animated-warrior" style={{ marginTop: '20px' }}>
-            <div class="corda">
-              <img src={Aventureiro} class="guerreiro" alt='guerreiro'/>
-            </div>
-            <div className="divDialog" >
-              <div className="textDialog">
-                ~Parte 2~
-                <br /><br />
-                🧙‍♂️ Desde cedo, sempre fui fascinado pelo que acontece “por trás da cortina” dos sites, aplicativos e jogos que uso diariamente ✨.
-                <br /><br />
-                A curiosidade de entender como aquelas interfaces ganhavam vida, como cada clique resultava em uma ação e como mundos inteiros podiam ser criados dentro de telas digitais 🏰🗡️
-                me motivou a mergulhar no universo da tecnologia da informação 💻⚔️.
-                <br /><br />
-                Queria descobrir o que realmente acontece nos bastidores — as linhas de código, as estruturas, os algoritmos que dão forma àquilo que parece mágico para o usuário final 🧩📜.
-                <br /><br />
-                Essa vontade de desvendar esses mistérios e construir minhas próprias experiências digitais foi o que me impulsionou a seguir pelo caminho da TI, buscando transformar a curiosidade em conhecimento e a paixão em resultados concretos 🎯🔥.
-              </div>
-              <button
-                onClick={toggleAudio4}
-                style={{
-                  background: 'rgba(0,0,0,0.5)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  padding: '12px',
-                  cursor: 'pointer',
-                  color: 'white',
-                  fontSize: '20px',
-                  transition: 'background 0.3s',
-                }}
-                title={isPlaying4 ? 'Parar música' : 'Tocar música'}
-              >
-                {isPlaying4 ? <FaStop style={{ color: 'red', fontSize: '50px' }} /> : <FaPlay style={{ color: 'green', opacity: 0.5, fontSize: '50px' }} />}
-              </button>
-            </div>
-          </section>
-          <div ref={sobreRef} className="divDialogMain">~Sobre~</div>
-          <section style={{ width: '100%' }}>
-            <div className="divDialog" style={{ display: 'flex', flexDirection: 'column' }}>
-              <div class="seletor-container-sobre">
-                {imagens.map((bg, i) => (
-                  <div
-                    key={i}
-                    className={`imagens-sobre ${selecionado === i ? 'selecionado' : 'nao-selecionado'}`}
-                    style={{ backgroundImage: bg }}
-                    onClick={() => setSelecionado(i)}
-                  >
-                    <div className="texto-imagem">
-                      <p>{titulos[i]}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div class="descricao-sobre" id="descricao">
-                {selecionado === 0 ?
-                  <div className="textDialog">
-                    🧙 Em uma pequena cidade do sertão cearense, um jovem guerreiro do conhecimento iniciou sua jornada em 2018. Por meio do portal místico conhecido como SISU, e enfrentando as forças da ampla concorrência, conquistou seu ingresso na lendária Universidade Federal do Ceará — campus Russas.
-                    <br /><br />
-                    📘 Durante anos de intensos estudos e batalhas contra códigos indomáveis, este aventureiro alcançou o bacharelado em Engenharia de Software — dominando magias de requisitos, forjando estruturas de dados e decifrando runas de programação.
-                    <br /><br />
-                    ⚔️ Ao final da formação, atravessou os portões da academia direto para os campos de batalha do mercado, onde passou a aplicar suas habilidades como um verdadeiro herói digital. Hoje, segue aprimorando sua técnica, pronto para enfrentar os maiores bugs e monstros de produção.
-                  </div>
-                  : ''
-                }
-                {selecionado === 1 ?
-                  <div className="textDialog">
-                    <h3>🧭 Experiências</h3>
-                    <ul>
-                      <li>⚔️ <strong>Desenvolvedor Full-Stack</strong> — Participou de campanhas em projetos reais, entregando interfaces responsivas e interativas.</li>
-                      <ul>
-                        <li>🏢 Empresa: UFC</li>
-                        <li>⏳ Duração: 04/2021 até 01/2022</li>
-                        <li>📜 Resumo: Projeto para auxiliar alunos de cursos de graduação na
-                          etapa de entrega das atividades complementares, através do desenvolvimento
-                          de uma aplicação web para gestão das horas complementares.</li>
-                      </ul>
-                      <hr />
-                      <li>🏰 <strong>Estagiário em Desenvolvimento Web</strong> — Aliou-se a uma guilda de programadores para manter sistemas e implementar novas funcionalidades.</li>
-                      <ul>
-                        <li>🏢 Empresa: Núcleo de soluções de Software UFC</li>
-                        <li>⏳ Duração: 05/2021 até 09/2021</li>
-                        <li>📜 Resumo: Garantir a excelência no desenvolvimento de software,
-                          contribuindo para a formação profissional e crescimento tecnológico no Vale do Jaguaribe.
-                          As atividades do estágio foram focadas no sistema Darwin, módulo responsável pela gestão de seleções e
-                          competições, que tem sido utilizado para selecionar bolsistas para os programas disponibilizados
-                          para o Campus da UFC em Russas, como PIBI, PAIP e PID.</li>
-                      </ul>
-                      <hr />
-                      <li>🧪 <strong>Estagiário em Desenvolvimento Web</strong> — Manteve e desenvolveu novas soluções em ERP corporativo de uma guilda renomada.</li>
-                      <ul>
-                        <li>🏢 Empresa: TOTVS</li>
-                        <li>⏳ Duração: 06/2022 até 05/2023</li>
-                        <li>📜 Resumo: Desenvolvimento e manutenção do software ERP Protheus, trabalhando na linguagem Advpl ou em novas aplicações
-                          com Javascript (react/node).</li>
-                      </ul>
-                      <hr />
-                      <li>🧪 <strong>Desenvolvedor Front-End</strong> — Criou soluções digitais para promover a inovação pública, empresarial e científica.</li>
-                      <ul>
-                        <li>🏢 Empresa: Funcap</li>
-                        <li>⏳ Duração: 08/2021 até 04/2025</li>
-                        <li>📜 Resumo: Projeto para criar uma vitrine digital para exibição de dados
-                          anuais da inovação pública e empresarial da Funcap, sendo feita sua primeira versão
-                          com Javascript (react/node) e posteriormente alterada para php (laravel) após mudança na diretoria da organização.</li>
-                      </ul>
-                    </ul>
-
-                    <h3>🔮 Habilidades</h3>
-                    <ul>
-                      <li>🧙‍♂️ <strong>Magias Front-End:</strong> HTML5, CSS3, JavaScript, React.js, laravel, Tailwind, entre outros.</li>
-                      <li>🛠️ <strong>Ferramentas do Arsenal:</strong> Git, GitHub, VSCode, APIs REST.</li>
-                      <li>🔍 <strong>Perícias Especiais:</strong> Criação de UIs responsivas, experiências visuais imersivas, performance otimizada.</li>
-                      <li>📦 <strong>Inventário Adicional:</strong> Conhecimento em back-end (Node.js, php), versionamento, e resolução de bugs malditos.</li>
-                    </ul>
-                  </div>
-                  : ''
-                }
-                {selecionado === 2 ?
-                  <div className="textDialog">
-                    <h3>Personalidade</h3>
-                    <br />
-                    Classe : Estrategista Criativo
-                    <br /><br />
-                    Atributos Dominantes: Curiosidade +4, Resiliência +3, Pensamento Analítico +5
-                    <br /><br />
-                    Traço de Personalidade: Sempre pronto para aprender uma nova habilidade ou aceitar uma missão desafiadora. Gosto de explorar ideias fora da rota principal e encontrar soluções que surpreendam até os NPCs mais experientes.
-                    <br /><br />
-                    <h3>Interesses</h3>
-                    <br />
-                    🔧 Tecnologia & Desenvolvimento: Especialista em React, com afinidade por criar interfaces envolventes e experiências interativas. Gosto de construir sistemas modulares, como se estivesse montando um inventário eficiente para longas jornadas.
-                    <br /><br />
-                    🎨 Design & Narrativa Visual: Fascinado por contar histórias através da estética. Acredito que cada detalhe visual carrega lore — desde a tipografia até a paleta de cores.
-                    <br /><br />
-                    🕹️ Games & RPGs: RPGs moldaram minha visão de mundo: colaboração, estratégia, progressão e liberdade criativa. São mais que um hobby — são uma linguagem.
-                    <br /><br />
-                    📚 Exploração Intelectual: Leio, estudo, pesquiso. Curto aprender frameworks, teorias de design, arquitetura de sistemas ou mesmo filosofia — tudo pode virar XP para a próxima missão.
-                  </div>
-                  :
-                  ''
-                }
-              </div>
-            </div>
-          </section>
-          <div ref={projetosRef} className="divDialogMain">~Projetos~</div>
-          <img
-            src={Luta}
-            alt="combate"
-            style={{ width: '100%', height: '450px' }}
-          />
-          <section className="container-animated-warrior">
-            <div className="divDialog" >
-              <div className="textDialog">
-                Ao longo da minha jornada como desenvolvedor⚔️, enfrentei desafios dignos de um verdadeiro aventureiro digital.
-                Cada projeto aqui é uma missão concluída 🧾 — com planejamento estratégico🧠,
-                batalhas contra bugs épicos🐉 e a criação de soluções encantadas✨.
-                <br /><br />
-                Nesta seção, você encontrará relíquias do meu progresso📜: sistemas interativos🔧,
-                interfaces mágicas🧙‍♂️, componentes reutilizáveis🧩 e códigos otimizados⚙️. Cada linha
-                escrita é como uma escolha em combate entre performance⚡, acessibilidade🧿 e experiência do usuário💡.
-                <br /><br />
-                Prepare sua ficha🎲, equipe suas habilidades💼 e explore meus projetos.
-                Quem sabe não encontramos uma nova quest para embarcar juntos? 🗺️
-              </div>
-              <button
-                onClick={toggleAudio5}
-                style={{
-                  background: 'rgba(0,0,0,0.5)',
-                  border: 'none',
-                  borderRadius: '50%',
-                  padding: '12px',
-                  cursor: 'pointer',
-                  color: 'white',
-                  fontSize: '20px',
-                  transition: 'background 0.3s',
-                }}
-                title={isPlaying5 ? 'Parar música' : 'Tocar música'}
-              >
-                {isPlaying5 ? <FaStop style={{ color: 'red', fontSize: '50px' }} /> : <FaPlay style={{ color: 'green', opacity: 0.5, fontSize: '50px' }} />}
-              </button>
-            </div>
-          </section>
-          <div className="divDialog">
-            <div className="lista-projetos">
-              {projetos.map((projeto, index) => {
-                const ordem = index % 2 === 0 ? 'normal' : 'invertido';
-                return (
-                  <div key={projeto.id} className={`projeto-linha ${ordem}`}>
-                    <SliderProjeto imagens={projeto.imagens} />
-                    <div className="projeto-texto">
-                      <h3 className="textDialog">{projeto.titulo}</h3>
-                      <p className="textDialog">{projeto.descricao}</p>
-
-                      <div className="projeto-botoes">
-                        {projeto.github && (
-                          <a
-                            href={projeto.github}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="botao"
-                          >
-                            Ver no GitHub
-                          </a>
-                        )}
-                        {projeto.link && (
-                          <a
-                            href={projeto.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="botao"
-                          >
-                            Ver Publicação
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-              <a href="https://github.com/felipe-santos-swengineer?tab=repositories" target="_blank" class="ver-mais-btn"  rel="noreferrer">
-                <div>Ver mais</div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" >
-                  <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-4.147-4.146a.5.5 0 1 1 .708-.708l5 5a.5.5 0 0 1 0 .708l-5 5a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z" />
-                </svg>
-              </a>
-            </div>
-          </div>
-          <div ref={contatoRef} className="divDialogMain">~Contato~</div>
-          <div className="divDialog" >
-            <div className="textDialog">
-              <table class="tabela-contato">
-                <tbody>
-                  <tr>
-                    <td>📧 Email</td>
-                    <td>felipesantosswengineer@email.com</td>
-                  </tr>
-                  <tr>
-                    <td>📞 Telefone</td>
-                    <td>(88) 99837-8028</td>
-                  </tr>
-                  <tr>
-                    <td>💼 LinkedIn</td>
-                    <td><a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" target="_blank"  rel="noreferrer">linkedin.com/in/felipesantos</a></td>
-                  </tr>
-                  <tr>
-                    <td>📸 Instagram</td>
-                    <td><a href="https://www.instagram.com/felipe_santos_swengineer/" target="_blank"  rel="noreferrer">@felipe_santos_swengineer</a></td>
-                  </tr>
-                </tbody>
-              </table>
-              <br></br>
-              <div className="textDialog">
-                🛡️⚔️ Obrigado, bravo aventureiro! ⚔️🛡️
-                <br></br>
-                <br></br>
-                Sua jornada por estas terras chegou a uma pausa, mas as portas estarão sempre abertas para você voltar!
-                Que a sorte dos dados esteja ao seu favor 🍀, e que suas quests futuras sejam épicas! 🗡️✨
-                <br></br>
-                <br></br>
-                Volte sempre para novas aventuras e desafios — a guilda agradece sua visita! Se deseja rever, use a função lateral para voltar ao  mapa.🏰🎉
-              </div>
-            </div>
-          </div>
-        </div >
-      </div >
-      <audio ref={audioRef} loop>
-        <source src={temaAudio} type="audio/mpeg" />
-      </audio>
-      <audio ref={audioRef2} onEnded={() => setIsPlaying2(false)}>
-        <source src={bemVindoAudio} type="audio/mpeg" />
-      </audio>
-      <audio ref={audioRef3} onEnded={() => setIsPlaying3(false)}>
-        <source src={inicioAudio} type="audio/mpeg" />
-      </audio>
-      <audio ref={audioRef4} onEnded={() => setIsPlaying4(false)}>
-        <source src={motivacaoAudio} type="audio/mpeg" />
-      </audio>
-      <audio ref={audioRef5} onEnded={() => setIsPlaying5(false)}>
-        <source src={projetosAudio} type="audio/mpeg" />
-      </audio>
-    </div >
-  );
+        <div className="quest"><span className="quest-icon"><Footprints size={20} /></span><div><small>SUA MISSÃO</small><p>Conhecer as histórias desta vila</p><div className="progress">{places.map((p, i) => <i key={p.name} className={visited.includes(i) ? 'done' : ''} />)}</div></div><strong>{visited.length}<span> / 4</span></strong></div>
+        <nav className="destinations" aria-label="Destinos da vila">{places.map((p, i) => <button key={p.name} aria-label={`Entrar: ${p.section}`} onClick={() => open(i)}><span className="destination-icon">{p.icon}</span><span><small>0{i + 1} / {visited.includes(i) ? 'EXPLORADO' : p.name.split(' ')[0].toUpperCase()}</small><strong>{p.section}</strong></span><ArrowUpRight size={17} /></button>)}</nav>
+        <div className="walk-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou setas para passear</span><span><kbd>E</kbd> para entrar · arraste para girar a câmera</span>{near >= 0 && <button onClick={() => open(near)}>Entrar: {places[near].name} ↗</button>}</div>
+        <nav className="villagers-nav" aria-label="Moradores da vila"><span>UM OLÁ PELO CAMINHO</span>{VILLAGERS.map((p, i) => <button key={p.name} onClick={() => talk(i)} aria-label={`Conversar com ${p.name}`}><i style={{ background: p.color }} />{p.name}</button>)}{nearNpc >= 0 && <button className="npc-near" onClick={() => talk(nearNpc)}><kbd>F</kbd> Conversar com {VILLAGERS[nearNpc].name}</button>}</nav>
+        <div className="touch-controls" aria-label="Controles de caminhada">{[['↑','w'],['←','a'],['↓','s'],['→','d']].map(([label, key]) => <button key={key} aria-label={`Caminhar ${label}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); keys.current.add(key); }} onPointerUp={() => keys.current.delete(key)} onPointerCancel={() => keys.current.delete(key)}>{label}</button>)}</div>
+      </>}
+    </main>
+    <footer><span>FEITO DE CÓDIGO, CAFÉ E UM POUCO DE MAGIA.</span><span>CEARÁ, BRASIL · EXPLORE NO SEU RITMO</span></footer>
+    {selected !== null && <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) close(); }}><article className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabIndex={-1} ref={dialog}><button className="close" onClick={close} aria-label="Fechar seção"><X /></button><span className="eyebrow">0{selected + 1} · {places[selected].name}</span><button className="section-audio-button" onClick={() => setAudioPanelOpen(true)}>Configurar áudio</button><h2 id="dialog-title">{places[selected].section}</h2><Content index={selected} narrationEnabled={sound && audioSettings.narration} /></article></div>}
+    {audioPanelOpen && <AudioSettings settings={audioSettings} onChange={updateAudio} onClose={closeAudioPanel} notice={audioNotice} />}
+    <audio ref={bg} src={music} loop preload="none" />
+  </div>;
 }

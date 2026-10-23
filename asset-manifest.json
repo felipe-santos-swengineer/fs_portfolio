@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/fs_portfolio/static/css/main.7dfbc500.css",
+    "main.css": "/fs_portfolio/static/css/main.c6292996.css",
     "main.js": "/fs_portfolio/static/js/main.7915102e.js",
     "static/css/157.ce7e8307.chunk.css": "/fs_portfolio/static/css/157.ce7e8307.chunk.css",
     "static/js/157.f1c2af58.chunk.js": "/fs_portfolio/static/js/157.f1c2af58.chunk.js",
@@ -37,14 +37,14 @@
     "static/media/talkdoor4.png": "/fs_portfolio/static/media/talkdoor4.5ce7273bc6706fc16450.png",
     "static/media/ldc1.png": "/fs_portfolio/static/media/ldc1.6c3ffdbb9971994b20dc.png",
     "index.html": "/fs_portfolio/index.html",
-    "main.7dfbc500.css.map": "/fs_portfolio/static/css/main.7dfbc500.css.map",
+    "main.c6292996.css.map": "/fs_portfolio/static/css/main.c6292996.css.map",
     "main.7915102e.js.map": "/fs_portfolio/static/js/main.7915102e.js.map",
     "157.ce7e8307.chunk.css.map": "/fs_portfolio/static/css/157.ce7e8307.chunk.css.map",
     "157.f1c2af58.chunk.js.map": "/fs_portfolio/static/js/157.f1c2af58.chunk.js.map",
     "712.ffa4820c.chunk.js.map": "/fs_portfolio/static/js/712.ffa4820c.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.7dfbc500.css",
+    "static/css/main.c6292996.css",
     "static/js/main.7915102e.js"
   ]
 }

@@ -11,15 +11,24 @@ test('a cena contém quatro edifícios selecionáveis e um personagem articulado
     const village = createVillage(scene);
     expect(village.buildings.map(b => b.userData.site)).toEqual([0, 1, 2, 3]);
     expect(village.limbs).toHaveLength(4);
+    expect(village.player.getObjectByName('Detalhes do rosto')).toBeTruthy();
     expect(village.player.position.x).toBe(0);
     expect(village.player.position.z).toBe(19);
     expect(village.npcs).toHaveLength(4);
     expect(village.castleGuards).toHaveLength(2);
     expect(village.castleArchers).toHaveLength(2);
     expect(village.castleTowers).toHaveLength(8);
-    expect(village.performers.map(actor => actor.kind)).toEqual(['watch', 'watch', 'drink', 'read', 'forge', 'salute']);
+    expect(village.performers.map(actor => actor.kind)).toEqual(['watch', 'watch', 'drink', 'read', 'forge', 'vendor', 'vendor', 'vendor']);
+    expect(village.performers.find(actor => actor.kind === 'drink').group.rotation.y).toBe(0);
+    expect(village.performers.find(actor => actor.kind === 'forge').group.rotation.y).toBe(0);
+    expect(village.marketStall.userData.site).toBe(6);
+    expect(village.marketFood.userData.site).toBe(7);
+    expect(village.marketPotions.userData.site).toBe(8);
+    expect(village.marketVendors).toHaveLength(3);
+    expect(village.marketVendors.every(vendor => vendor.group.userData.npc === undefined)).toBe(true);
     expect(village.npcs.map(n => n.group.userData.npc)).toEqual([0, 1, 2, 3]);
-    village.npcs.forEach(n => expect(n.limbs).toHaveLength(4));
+    village.npcs.forEach(n => { expect(n.limbs).toHaveLength(4); expect(n.group.getObjectByName('Detalhes do rosto')).toBeTruthy(); });
+    village.castleGuards.forEach(guard => expect(guard.player.getObjectByName('Detalhes do rosto')).toBeTruthy());
     let meshes = 0;
     scene.traverse(object => {
       if (object.isMesh) {

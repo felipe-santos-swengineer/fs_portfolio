@@ -1,0 +1,20 @@
+import english from '../content.en.json';
+import bia1 from '../assets/audio/en/bia-1.mp3';
+import bia2 from '../assets/audio/en/bia-2.mp3';
+import tom1 from '../assets/audio/en/tom-1.mp3';
+import tom2 from '../assets/audio/en/tom-2.mp3';
+import lia1 from '../assets/audio/en/lia-1.mp3';
+import lia2 from '../assets/audio/en/lia-2.mp3';
+import rui1 from '../assets/audio/en/rui-1.mp3';
+import rui2 from '../assets/audio/en/rui-2.mp3';
+import felipe1 from '../assets/audio/en/felipe-1.mp3';
+import felipe2 from '../assets/audio/en/felipe-2.mp3';
+import narration1 from '../assets/audio/en/narration-1.mp3';
+import narration2 from '../assets/audio/en/narration-2.mp3';
+import narration3 from '../assets/audio/en/narration-3.mp3';
+import narration4 from '../assets/audio/en/narration-4.mp3';
+
+const files = [[bia1,bia2],[tom1,tom2],[lia1,lia2],[rui1,rui2]];
+export const ENGLISH_VOICES = Object.fromEntries(english.VILLAGERS.map((person, i) => [person.name, { clips: person.lines.map((text,j) => ({ text, src: files[i][j] })) }]));
+export const ENGLISH_FELIPE_VOICE = { clips: english.felipe.map((text, i) => ({ text, src: [felipe1,felipe2][i] })) };
+export const ENGLISH_NARRATION = [narration1,narration2,narration3,narration4];

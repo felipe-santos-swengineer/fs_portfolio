@@ -14,6 +14,7 @@ Um portfólio interativo em forma de vilarejo: explore o cenário com um persona
 | Correio | Contato e redes profissionais |
 | Castelo | Salão do trono e conversa com Felipe |
 | Portal a oeste | Calabouço com minijogos e combate |
+| Mercado a leste | Alimentos, misturas de poções e vitrine de tecnologias |
 
 - Personagem articulado, obstáculos e câmera com rotação e zoom. A jornada começa na doca ao sul da vila.
 - Castelo com salão do trono e falas gravadas de Felipe; portal com celas de jogos, soldados e ondas de criaturas.
@@ -121,3 +122,8 @@ Consulte [VILAREJO.md](VILAREJO.md) para detalhes do cenário, áudio, controles
 **Felipe Santos**
 
 [E-mail](mailto:felipesantosswengineer@gmail.com) · [LinkedIn](https://www.linkedin.com/in/felipe-santos-rodrigues/)
+
+### Musicas de ambiente
+
+- Vila: [The Bard's Tale, de RandomMind](https://opengameart.org/content/medieval-the-bards-tale), CC0.
+- Castelo: [King's Feast, de RandomMind](https://opengameart.org/content/medieval-kings-feast), CC0.

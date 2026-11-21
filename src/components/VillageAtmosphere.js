@@ -38,53 +38,92 @@ export function createDragon(scene) {
   const horn = new THREE.MeshStandardMaterial({ color: '#ded0ad', roughness: .7 });
   const membrane = new THREE.MeshStandardMaterial({ color: '#875567', side: THREE.DoubleSide, roughness: .85, flatShading: true });
   const eye = new THREE.MeshStandardMaterial({ color: '#f5c472', emissive: '#e5a341', emissiveIntensity: 1.2 });
+  const dark = new THREE.MeshStandardMaterial({ color: '#213d39', roughness: .8 });
+  const ridge = new THREE.MeshStandardMaterial({ color: '#86a997', roughness: .78 });
+  const wingBone = new THREE.MeshStandardMaterial({ color: '#365f58', roughness: .7 });
   const add = (parent, geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
   const oval = (parent, radius, mat, x, y, z, sx, sy, sz) => { const m = add(parent, new THREE.IcosahedronGeometry(radius, 1), mat, x, y, z); m.scale.set(sx, sy, sz); return m; };
-  oval(body, .72, scales, 0, 1.02, 0, .8, .85, 1.5);
+  const torso = oval(body, .72, scales, 0, 1.02, 0, .8, .85, 1.5); torso.name = 'Corpo do dragao';
   oval(body, .6, belly, 0, .85, .15, .66, .7, 1.2);
   const neck = oval(body, .4, scales, 0, 1.45, .78, .8, 1.35, .9); neck.rotation.x = -.38;
-  oval(body, .42, scales, 0, 1.82, 1.12, 1, .85, 1.2);
-  oval(body, .3, scales, 0, 1.65, 1.54, 1.1, .65, 1.35);
-  oval(body, .25, belly, 0, 1.51, 1.49, 1, .3, 1.4);
+  const head = new THREE.Group(); head.name = 'Cabeca do dragao'; head.position.set(0, 1.45, .78); body.add(head);
+  const headOval = (...args) => { const part=oval(body,...args); head.attach(part); return part; };
+  const headAdd = (...args) => { const part=add(body,...args); head.attach(part); return part; };
+  headOval(.42, scales, 0, 1.82, 1.12, 1, .85, 1.2);
+  headOval(.3, scales, 0, 1.65, 1.54, 1.1, .65, 1.35);
+  headOval(.25, belly, 0, 1.51, 1.49, 1, .3, 1.4);
+  // Layered throat plates and muzzle details make the head readable at a distance.
+  for(let i=0;i<4;i++){const plate=oval(body,.16,belly,0,1.13+i*.12,.68+i*.15,1.2,.32,1.1);plate.rotation.x=-.32;}
+  [-1,1].forEach(side=>{
+    headOval(.045,dark,side*.16,1.72,1.87,1,.5,.6);
+    const whisker=headAdd(new THREE.ConeGeometry(.035,.35,5),horn,side*.3,1.6,1.65);whisker.rotation.z=side*-.7;whisker.rotation.x=1.15;
+    const cheek=headAdd(new THREE.ConeGeometry(.09,.35,5),ridge,side*.38,1.7,1.03);cheek.rotation.z=side*-.9;
+  });
+  const legs = [];
   [-1, 1].forEach(side => {
-    oval(body, .085, eye, side * .34, 1.91, 1.29, .65, 1, 1);
-    const h = add(body, new THREE.ConeGeometry(.1, .55, 6), horn, side * .27, 2.2, .87); h.rotation.x = -.42; h.rotation.z = side * -.24;
+    headOval( .085, eye, side * .34, 1.91, 1.29, .65, 1, 1);
+    headOval( .035, dark, side * .388, 1.91, 1.32, .4, 1.15, .55);
+    const brow=headOval(.12,ridge,side*.34,2.02,1.28,1,.38,1.2);brow.rotation.z=side*-.25;
+    const h = headAdd(new THREE.ConeGeometry(.1, .55, 6), horn, side * .27, 2.2, .87); h.rotation.x = -.42; h.rotation.z = side * -.24;
     [-.55, .5].forEach(z => {
-      oval(body, .23, scales, side * .42, .48, z, 1, 1.6, 1);
-      oval(body, .22, scales, side * .46, .14, z + .13, 1, .5, 1.5);
-      for (let i = 0; i < 3; i++) { const claw = add(body, new THREE.ConeGeometry(.035, .2, 5), horn, side * .46 + (i - 1) * .09, .1, z + .4); claw.rotation.x = Math.PI / 2; }
+      const joint=new THREE.Group();joint.position.set(side*.42,.75,z);body.add(joint);
+      oval(joint,.23,scales,0,-.27,0,1,1.6,1);
+      oval(joint,.22,scales,side*.04,-.61,.13,1,.5,1.5);
+      for(let i=0;i<3;i++){const claw=add(joint,new THREE.ConeGeometry(.035,.2,5),horn,side*.04+(i-1)*.09,-.65,.4);claw.rotation.x=Math.PI/2;}
+      legs.push({joint,side,front:z>0});
     });
   });
-  for (let i = 0; i < 7; i++) add(body, new THREE.ConeGeometry(.12, .27, 4), horn, 0, 1.65 - i * .07, .55 - i * .26);
+  for (let i = 0; i < 9; i++) { const spike=add(body, new THREE.ConeGeometry(.12-i*.006, .33-i*.012, 4), ridge, 0, 1.7-i*.06, .7-i*.24); spike.rotation.x=-.25; }
+  [-1,1].forEach(side=>{for(let i=0;i<4;i++){const scale=oval(body,.16,ridge,side*(.43-i*.025),1.28-i*.045,.45-i*.34,.6,.45,1.1);scale.rotation.z=side*-.5;}});
   const tail = []; let parent = body;
   for (let i = 0; i < 6; i++) {
     const joint = new THREE.Group(); joint.position.set(0, i ? 0 : .87, i ? -.4 : -.86); parent.add(joint);
     const section = add(joint, new THREE.ConeGeometry(.24 * (1 - i / 7), .6, 7), scales, 0, 0, -.25); section.rotation.x = -Math.PI / 2;
     tail.push(joint); parent = joint;
   }
+  const tailTip=add(tail[tail.length-1],new THREE.ConeGeometry(.24,.5,4),ridge,0,0,-.62);tailTip.rotation.x=-Math.PI/2;tailTip.scale.y=1.3;
   const wings = [-1, 1].map(side => {
     const pivot = new THREE.Group(); pivot.position.set(side * .4, 1.44, -.2); body.add(pivot);
-    const vertices = new Float32Array([0, 0, 0, side * 1.2, .2, -.6, side * 3.1, .05, -1.1, side * 2.3, -.08, .2, side * 1.4, -.13, .65, side * .6, -.15, .65]);
-    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3)); geo.setIndex([0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5]); geo.computeVertexNormals(); add(pivot, geo, membrane, 0, 0, 0);
-    for (const index of [1, 2, 3, 4]) {
+    // A scalloped membrane and several fingers form a more recognisable wing.
+    const vertices = new Float32Array([0,0,0, side*1.05,.18,-.6, side*2.1,.2,-1.02, side*3.4,.15,-1.3, side*2.95,-.04,-.24, side*2.5,-.08,.02, side*2.15,-.12,.56, side*1.58,-.17,.34, side*1.15,-.2,.96, side*.55,-.13,.66]);
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    const indices=[];for(let i=1;i<9;i++)indices.push(0,i,i+1);geo.setIndex(indices);geo.computeVertexNormals();
+    const web=add(pivot,geo,membrane,0,0,0);web.name='Membrana da asa';
+    for (const index of [1,2,3,5,7,8]) {
       const end = new THREE.Vector3(vertices[index * 3], vertices[index * 3 + 1], vertices[index * 3 + 2]);
-      const bone = add(pivot, new THREE.CylinderGeometry(.035, .055, end.length(), 6), scales, end.x / 2, end.y / 2, end.z / 2); bone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), end.normalize());
+      const bone = add(pivot, new THREE.CylinderGeometry(.025, .055, end.length(), 6), wingBone, end.x / 2, end.y / 2, end.z / 2); bone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), end.normalize());
     }
     return { pivot, side };
   });
   group.scale.setScalar(.9);
   return {
-    group, wings, tail,
+    group, wings, tail, head, legs,
     update(seconds, dt, reducedMotion = false) {
       const pose = reducedMotion ? dragonPoseAt(46) : dragonPoseAt(seconds);
       const next = reducedMotion || pose.perched ? { x: pose.x + 1, z: pose.z } : dragonPoseAt(seconds + .05);
-      group.position.set(pose.x, pose.y, pose.z);
+      const airborne = 1 - pose.fold;
+      const bob = reducedMotion ? 0 : Math.sin(seconds * 5.2 - .5) * .1 * airborne;
+      group.position.set(pose.x, pose.y + bob, pose.z);
       const yaw = Math.atan2(next.x - pose.x, next.z - pose.z);
       group.rotation.y += Math.atan2(Math.sin(yaw - group.rotation.y), Math.cos(yaw - group.rotation.y)) * Math.min(1, dt * 4);
       const flap = reducedMotion ? 0 : Math.sin(seconds * 5.2) * .4;
-      wings.forEach(({ pivot, side }) => { pivot.rotation.z = side * (flap * (1 - pose.fold) + pose.fold * 1.25); pivot.rotation.y = side * pose.fold * .75; });
-      tail.forEach((joint, i) => { joint.rotation.y = reducedMotion ? 0 : Math.sin(seconds * 2 - i * .55) * .12 * (1 - pose.fold * .7); });
-      body.rotation.x = reducedMotion ? 0 : -.08 * (1 - pose.fold);
+      wings.forEach(({ pivot, side }) => {
+        pivot.rotation.z = side * (flap * airborne + pose.fold * 1.25);
+        pivot.rotation.y = side * (pose.fold * .75 + (reducedMotion ? 0 : Math.sin(seconds * 5.2 - .5) * .12 * airborne));
+        pivot.rotation.x = reducedMotion ? 0 : Math.sin(seconds * 5.2 + .5) * .1 * airborne;
+      });
+      tail.forEach((joint, i) => {
+        joint.rotation.y = reducedMotion ? 0 : Math.sin(seconds * 2 - i * .55) * .2 * (1 - pose.fold * .7);
+        joint.rotation.x = reducedMotion ? 0 : Math.sin(seconds * 2.4 - i * .45) * .06 * airborne;
+      });
+      legs.forEach(({joint,side,front}) => {
+        joint.rotation.x = reducedMotion ? 0 : (front ? .35 : -.28) * airborne + Math.sin(seconds * 5.2 + (front ? 0 : 1.2)) * .09 * airborne;
+        joint.rotation.z = reducedMotion ? 0 : side * .08 * airborne;
+      });
+      head.rotation.x = reducedMotion ? 0 : Math.sin(seconds * 1.5) * .08 - .08 * airborne;
+      head.rotation.y = reducedMotion ? 0 : Math.sin(seconds * .8) * .12;
+      body.rotation.x = reducedMotion ? 0 : (-.08 + Math.sin(seconds * 5.2 - .5) * .045) * airborne;
+      body.rotation.z = reducedMotion ? 0 : Math.sin(seconds * .9) * .1 * airborne;
       return pose;
     },
   };

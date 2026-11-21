@@ -38,7 +38,19 @@ test('a cena ajusta iluminação e estrelas e mantém o dragão estático com mo
   environment.update(72);
   expect(lamp.intensity).toBeLessThan(nightLamp); expect(environment.stars.visible).toBe(false);
   expect(scene.background.equals(nightSky)).toBe(false);
+  expect(dragon.group.getObjectByName('Corpo do dragao')).toBeTruthy();
+  expect(dragon.wings.every(wing => wing.pivot.getObjectByName('Membrana da asa'))).toBe(true);
   const position = dragon.update(0, .016, true); const later = dragon.update(120, .016, true);
   expect(position).toEqual(later); expect(later.perched).toBe(true);
   scene.traverse(object => { if (object.geometry) { object.geometry.computeBoundingBox(); expect([...object.geometry.boundingBox.min.toArray(), ...object.geometry.boundingBox.max.toArray()].every(Number.isFinite)).toBe(true); object.geometry.dispose(); } });
+});
+
+test('cabeca e patas acompanham o voo e param com movimento reduzido', () => {
+  const scene = new THREE.Scene(); const dragon = createDragon(scene);
+  dragon.update(2, .016); const firstHead = dragon.head.rotation.y; const firstLeg = dragon.legs[0].joint.rotation.x;
+  dragon.update(3, .016); expect(dragon.head.rotation.y).not.toBeCloseTo(firstHead); expect(dragon.legs[0].joint.rotation.x).not.toBeCloseTo(firstLeg);
+  dragon.update(46, .016); expect(dragon.legs.every(leg => Math.abs(leg.joint.rotation.x) < .001)).toBe(true);
+  dragon.update(3, .016, true); expect(dragon.head.rotation.x).toBe(0); expect(dragon.head.rotation.y).toBe(0);
+  expect(dragon.legs.every(leg => leg.joint.rotation.x === 0 && leg.joint.rotation.z === 0)).toBe(true);
+  scene.traverse(object => { object.geometry?.dispose(); if(object.material) object.material.dispose(); });
 });

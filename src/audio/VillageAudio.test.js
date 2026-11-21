@@ -74,3 +74,16 @@ test('os sons de fogos respeitam o canal de efeitos e podem ser cancelados sem i
   const count = audio.context.created.length; audio.firework('burst'); expect(audio.context.created).toHaveLength(count);
   audio.dispose();
 });
+
+
+test('o som de chuva respeita os efeitos e para ao silenciar', async () => {
+  const audio = new VillageAudio(); await audio.enable();
+  audio.setWeather(.5); const rain = audio.weatherSource;
+  expect(rain).toBeTruthy(); expect(rain.loop).toBe(true);
+  audio.setWeather(.8); expect(audio.weatherSource).toBe(rain);
+  audio.setChannels({ interactions: false });
+  expect(rain.stop).toHaveBeenCalledTimes(1); expect(audio.weatherSource).toBeNull();
+  audio.setChannels({ interactions: true }); audio.setWeather(1); const next = audio.weatherSource;
+  audio.mute(); expect(next.stop).toHaveBeenCalledTimes(1); expect(audio.weatherSource).toBeNull();
+  audio.dispose();
+});

@@ -2,9 +2,13 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import App from './App';
 import VillageAudio from './audio/VillageAudio';
 
-jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, onOpen, zoom, missionRound }) => <div data-testid="village-canvas" data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onTalk(0)}>Conversar com Bia</button></div> }));
+jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, onOpen, zoom, missionRound, weatherMode }) => <div data-testid="village-canvas" data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
+jest.mock('./assets/audio/village-bards-tale.mp3', () => 'village-track.mp3');
+jest.mock('./assets/audio/castle-kings-feast.mp3', () => 'castle-track.mp3');
+jest.mock('./assets/audio/dungeon.wav', () => 'dungeon-track.wav');
 jest.mock('./components/ThroneHall', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do salao de teste</button> }));
+jest.mock('./components/Dungeon', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do calabouco de teste</button> }));
 
 beforeEach(() => {
   localStorage.clear();
@@ -132,4 +136,123 @@ test('o castelo abre o salao e permite voltar sem registrar uma visita extra', a
   fireEvent.click(exit);
   expect(screen.queryByRole('button', { name: 'Sair do salao de teste' })).toBeNull();
   expect(screen.getByRole('progressbar', { name: 'Destinos explorados' }).getAttribute('aria-valuenow')).toBe('0');
+});
+
+test('a vitrine do mercado apresenta tecnologias sem alterar a missao', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular vitrine do mercado' }));
+  const dialog = screen.getByRole('dialog', { name: 'Tecnologias' });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Back-end e APIs' }));
+  expect(within(dialog).getByRole('status').textContent).toMatch(/Node.js.*Laravel/);
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.getByRole('progressbar', { name: 'Destinos explorados' }).getAttribute('aria-valuenow')).toBe('0');
+});
+
+test('as outras barracas abrem experiências e formação', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular alimentos' }));
+  let dialog = screen.getByRole('dialog', { name: 'Experiência profissional' });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'FUNCAP' }));
+  expect(within(dialog).getByRole('status').textContent).toMatch(/PostgreSQL/);
+  fireEvent.keyDown(document, { key: 'Escape' });
+  fireEvent.click(screen.getByRole('button', { name: 'Simular pocoes' }));
+  dialog = screen.getByRole('dialog', { name: 'Formação e cursos' });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Engenharia de Software' }));
+  expect(within(dialog).getByRole('status').textContent).toMatch(/Universidade Federal do Ceará/);
+});
+
+
+test('a musica acompanha a entrada e a saida do castelo', async () => {
+  await start();
+  const background = document.querySelector('audio[loop]');
+  expect(background.getAttribute('src')).toBe('village-track.mp3');
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no castelo' }));
+  expect(background.getAttribute('src')).toBe('castle-track.mp3');
+  fireEvent.click(await screen.findByRole('button', { name: 'Sair do salao de teste' }));
+  expect(background.getAttribute('src')).toBe('village-track.mp3');
+});
+
+
+test.each([
+  ['Simular entrada no castelo', 'Sair do salao de teste'],
+  ['Simular entrada no portal', 'Sair do calabouco de teste'],
+])('modo leitura funciona em %s e permite retornar ao cenario', async (entrance, exit) => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: entrance }));
+  expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' }));
+  expect(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: exit })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Modo 3D' }));
+  expect(screen.getByRole('button', { name: exit })).toBeTruthy();
+});
+
+test('configuracoes de acessibilidade permitem abrir leitura dentro do castelo', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no castelo' }));
+  await screen.findByRole('button', { name: 'Sair do salao de teste' });
+  fireEvent.click(screen.getByRole('button', { name: 'Abrir acessibilidade' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: /^Modo leitura sem 3D/ }));
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' })).toBeTruthy();
+});
+
+
+test('o menu do modo leitura pode ser recolhido e reaberto', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' }));
+  const menu = within(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' }));
+  const collapse = menu.getByRole('button', { name: 'Recolher menu' });
+  expect(collapse.getAttribute('aria-expanded')).toBe('true');
+  expect(menu.getByRole('link', { name: 'Projetos' })).toBeTruthy();
+  fireEvent.click(collapse);
+  expect(menu.queryByRole('link', { name: 'Projetos' })).toBeNull();
+  const expand = menu.getByRole('button', { name: 'Abrir menu' });
+  expect(expand.getAttribute('aria-expanded')).toBe('false');
+  fireEvent.click(expand);
+  expect(menu.getByRole('link', { name: 'Projetos' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Modo 3D' })).toBeTruthy();
+});
+
+
+test('a troca de idioma persiste e apresenta conteudo e vozes em ingles', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'English (United States)' }));
+  expect(localStorage.getItem('village-language')).toBe('en-US');
+  expect(screen.getByRole('button', { name: 'English (United States)' }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByRole('button', { name: 'Portugu\u00eas (Brasil)' }).getAttribute('aria-pressed')).toBe('false');
+  expect(document.documentElement.lang).toBe('en-US');
+  fireEvent.click(screen.getByRole('button', { name: 'Reading mode' }));
+  expect(screen.getByRole('navigation', { name: 'Portfolio sections' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'My story' })).toBeTruthy();
+  expect(screen.getByText(/Felipe Santos, software engineer/i)).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Portugu\u00eas (Brasil)' }));
+  expect(document.documentElement.lang).toBe('pt-BR');
+  expect(screen.getByRole('heading', { name: 'Minha hist\u00f3ria' })).toBeTruthy();
+});
+
+
+test.each([
+  ['Simular entrada no castelo', 'Sair do salao de teste'],
+  ['Simular entrada no portal', 'Sair do calabouco de teste'],
+])('trocar o idioma durante %s preserva o cenario e o modo leitura', async (entry, exit) => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: entry }));
+  expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'English (United States)' }));
+  expect(screen.getByRole('button', { name: exit })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Reading mode' }));
+  expect(screen.getByRole('navigation', { name: 'Portfolio sections' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Modo 3D' }));
+  expect(screen.getByRole('button', { name: exit })).toBeTruthy();
+});
+
+
+test('o controle alterna os climas e retorna ao ciclo automatico', async () => {
+  await start();
+  const scene = screen.getByTestId('village-canvas');
+  for (const [current, next] of [['Autom\u00e1tico','clear'], ['Limpo','rain'], ['Chuva','snow'], ['Neve','auto']]) {
+    fireEvent.click(screen.getByRole('button', { name: `Alterar clima: ${current}` }));
+    expect(scene.getAttribute('data-weather')).toBe(next);
+  }
 });

@@ -1,4 +1,4 @@
-import { canWalk, nearbySite, SITES, PORTAL, isCastleThreshold, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
+import { canWalk, nearbySite, SITES, PORTAL, MARKET_DISPLAY, MARKET_FOOD, MARKET_POTIONS, isCastleThreshold, isThroneExit, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
 
 test('o viajante pode caminhar nas ruas e se aproximar de todas as entradas', () => {
   expect(canWalk(0, 5)).toBe(true);
@@ -47,4 +47,30 @@ test('a porta do castelo e acessivel sem atravessar a parede', () => {
   expect(nearbySite(0, -17)).toBe(5);
   expect(isCastleThreshold(3, -17)).toBe(false);
   expect(canWalk(0, -17.5)).toBe(false);
+});
+
+test('a vitrine do mercado pode ser aberta sem bloquear a rua', () => {
+  expect(canWalk(MARKET_DISPLAY.x, MARKET_DISPLAY.z)).toBe(true);
+  expect(nearbySite(MARKET_DISPLAY.x, MARKET_DISPLAY.z)).toBe(6);
+  expect(canWalk(MARKET_FOOD.x, MARKET_FOOD.z)).toBe(true);
+  expect(nearbySite(MARKET_FOOD.x, MARKET_FOOD.z)).toBe(7);
+  expect(canWalk(MARKET_POTIONS.x, MARKET_POTIONS.z)).toBe(true);
+  expect(nearbySite(MARKET_POTIONS.x, MARKET_POTIONS.z)).toBe(8);
+  expect(canWalk(13, 0)).toBe(true);
+  expect(canWalk(22, 0)).toBe(true);
+  expect(canWalk(18.5, 0)).toBe(true);
+  expect(canWalk(18.5, 5)).toBe(false);
+  expect(canWalk(30, 0)).toBe(false);
+});
+
+
+test('as portas permitem entrar pelas laterais e sair sem explorar o salao', () => {
+  expect(isCastleThreshold(1.2, -16.6)).toBe(true);
+  expect(isCastleThreshold(-1.2, -16.6)).toBe(true);
+  expect(isCastleThreshold(1.5, -16.6)).toBe(false);
+  expect(isCastleThreshold(0, -16.3)).toBe(false);
+  expect(isThroneExit(0, 10)).toBe(false);
+  expect(isThroneExit(1.9, 13.2)).toBe(true);
+  expect(isThroneExit(-1.9, 13.2)).toBe(true);
+  expect(isThroneExit(2.2, 13.2)).toBe(false);
 });

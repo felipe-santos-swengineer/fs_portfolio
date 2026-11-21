@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { createAdventurer } from './VillageScene';
-import { advanceFootsteps } from './villageNavigation';
+import { createAdventurer, addFaceDetails } from './VillageScene';
+import { advanceFootsteps, isThroneExit } from './villageNavigation';
 import { FELIPE_LINES } from '../audio/felipeVoice';
+import english from '../content.en.json';
 import { guardBowAtDistance } from './guardBow';
 import './ThroneHall.css';
 
-export default function ThroneHall({ keys, onExit, onStep, onSpeak, onStop, speaking, voiceEnabled, voiceNotice, paused, reduceMotion }) {
+export default function ThroneHall({ language = 'pt-BR', keys, onExit, onStep, onSpeak, onStop, speaking, voiceEnabled, voiceNotice, paused, reduceMotion }) {
   const mount = useRef(null);
   const live = useRef({ onExit, onStep, paused, reduceMotion });
   live.current = { onExit, onStep, paused, reduceMotion };
@@ -27,6 +28,7 @@ export default function ThroneHall({ keys, onExit, onStep, onSpeak, onStop, spea
     renderer.domElement.tabIndex = 0;
     renderer.domElement.setAttribute('aria-label', 'Sal\u00e3o do trono tridimensional. Use WASD ou setas para caminhar.');
     container.appendChild(renderer.domElement);
+    renderer.domElement.focus({ preventScroll: true });
     const scene = new THREE.Scene(); scene.background = new THREE.Color('#101722'); scene.fog = new THREE.Fog('#101722', 25, 57);
     scene.add(new THREE.HemisphereLight('#b7c9d9', '#594232', 1.55));
     const sun = new THREE.DirectionalLight('#f4d5a6', 1.8); sun.position.set(-4, 16, 12); scene.add(sun);
@@ -53,6 +55,7 @@ export default function ThroneHall({ keys, onExit, onStep, onSpeak, onStop, spea
     const felipe=new THREE.Group();felipe.position.set(0,1.52,-13.15);scene.add(felipe);
     box(felipe,.72,.86,.42,'#405c68',0,.92,0);box(felipe,.76,.12,.46,'#8a6b49',0,.56,0);
     sphere(felipe,.3,'#efd0b3',0,1.62,0);
+    addFaceDetails(felipe,{box,sphere},{headY:1.62,skin:'#efd0b3',radius:.3,brow:'#a88452'});
     const hair=mesh(felipe,new THREE.SphereGeometry(.31,16,10,0,Math.PI*2,0,Math.PI*.46),'#c7a05d',0,1.67,0);hair.scale.set(1.02,.9,1.02);
     box(felipe,.46,.33,.1,'#b99559',0,1.55,-.25);
     [-1,1].forEach(side=>{const lock=box(felipe,.09,.3,.12,'#c7a05d',side*.265,1.57,-.08);lock.rotation.z=side*-.08;sphere(felipe,.028,'#14212b',side*.1,1.66,.28);const lens=mesh(felipe,new THREE.TorusGeometry(.09,.018,6,16),'#37424b',side*.11,1.67,.3);lens.scale.y=.85;box(felipe,.25,.25,.75,'#303b48',side*.22,.23,.35);box(felipe,.28,.18,.34,'#514639',side*.22,.12,.73);});
@@ -93,8 +96,8 @@ export default function ThroneHall({ keys, onExit, onStep, onSpeak, onStop, spea
     const guards=[];
     for(const z of [-7,-2,3,8]) for(const side of [-1,1]) {
       const guard=createAdventurer(scene,{box,sphere,mesh,cylinder},{armored:true});guard.player.position.set(side*3.1,.2,z);guard.player.rotation.y=side<0?Math.PI/2:-Math.PI/2;
-      box(guard.body,.79,.76,.49,'#768b91',0,1.2,0);box(guard.body,.12,.68,.51,'#b4c3c4',0,1.2,.01);sphere(guard.body,.36,'#74868a',0,1.94,-.02);
-      box(guard.body,.62,.34,.18,'#65787e',0,1.86,.23);box(guard.body,.42,.05,.2,'#202c33',0,1.92,.33);[-1,1].forEach(s=>box(guard.body,.34,.22,.5,'#99a9aa',s*.49,1.55,0));box(guard.limbs[1],.48,.7,.13,'#5e6d7b',0,-.35,.25);
+      box(guard.body,.79,.76,.49,'#768b91',0,1.2,0);box(guard.body,.12,.68,.51,'#b4c3c4',0,1.2,.01);mesh(guard.body,new THREE.SphereGeometry(.36,12,8,0,Math.PI*2,0,Math.PI*.48),'#74868a',0,1.94,-.02);
+      [-1,1].forEach(side=>box(guard.body,.12,.3,.15,'#65787e',side*.31,1.85,.18));box(guard.body,.65,.1,.18,'#65787e',0,2.01,.2);[-1,1].forEach(s=>box(guard.body,.34,.22,.5,'#99a9aa',s*.49,1.55,0));box(guard.limbs[1],.48,.7,.13,'#5e6d7b',0,-.35,.25);
       guards.push(guard);
     }
     // The entrance stays visibly identifiable from inside.
@@ -110,7 +113,7 @@ export default function ThroneHall({ keys, onExit, onStep, onSpeak, onStop, spea
     const pointerUp=e=>{if(live.current.paused || !pointerStart || Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>6)return;const rect=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(pointer,camera);if(raycaster.intersectObject(felipe,true).length)talkRef.current?.();};
     renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);
     renderer.domElement.addEventListener('keydown',down);renderer.domElement.addEventListener('blur',clear);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
-    const forward=new THREE.Vector3(),right=new THREE.Vector3(),movement=new THREE.Vector3(),delta=new THREE.Vector3();let frame=0,previous=0,clock=0,steps=0,entered=false,wasNear=false;
+    const forward=new THREE.Vector3(),right=new THREE.Vector3(),movement=new THREE.Vector3(),delta=new THREE.Vector3();let frame=0,previous=0,clock=0,steps=0,wasNear=false;
     const draw=time=>{
       if(document.hidden){frame=0;previous=0;return;}
       const dt=Math.min((time-previous)/1000||0,.04);previous=time;if(!live.current.paused)clock+=dt;
@@ -120,8 +123,7 @@ export default function ThroneHall({ keys, onExit, onStep, onSpeak, onStop, spea
         const p=player.position,oldX=p.x,oldZ=p.z;p.x=THREE.MathUtils.clamp(p.x+movement.x,-9.1,9.1);p.z=THREE.MathUtils.clamp(p.z+movement.z,-10.1,13.7);
         const distance=Math.hypot(p.x-oldX,p.z-oldZ);walking=distance>.001;const next=advanceFootsteps(steps,distance);steps=next.distance;if(next.steps)live.current.onStep?.();
         if(walking){const yaw=Math.atan2(movement.x,movement.z);player.rotation.y+=Math.atan2(Math.sin(yaw-player.rotation.y),Math.cos(yaw-player.rotation.y))*Math.min(1,dt*14);delta.set(p.x-controls.target.x,1.5-controls.target.y,p.z-controls.target.z).multiplyScalar(Math.min(1,dt*2));controls.target.add(delta);camera.position.add(delta);}
-        if(p.z<8)entered=true;
-        if(entered && p.z>13 && Math.abs(p.x)<1.7){live.current.onExit();return;}
+        if(isThroneExit(p.x,p.z)){live.current.onExit();return;}
       }
       if(!live.current.paused) guards.forEach(guard=>{
         const distance=Math.hypot(player.position.x-guard.player.position.x,player.position.z-guard.player.position.z);
@@ -140,5 +142,6 @@ export default function ThroneHall({ keys, onExit, onStep, onSpeak, onStop, spea
     document.addEventListener('visibilitychange',visibility);if(!document.hidden)frame=requestAnimationFrame(draw);
     return ()=>{document.removeEventListener('visibilitychange',visibility);cancelAnimationFrame(frame);observer.disconnect();controls.dispose();clear();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('keydown',down);renderer.domElement.removeEventListener('blur',clear);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);window.removeEventListener('keydown',escape);scene.traverse(o=>{o.geometry?.dispose();if(o.isSprite){o.material.map?.dispose();o.material.dispose();}});materials.forEach(m=>m.dispose());plaqueMaterials.forEach(m=>{m.map.dispose();m.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[keys]);
-  return <div className="throne-hall"><h1 className="sr-only">Sal&#227;o do trono</h1><div className="throne-viewport viewport"><div className="throne-canvas" ref={mount}/>{error && <div className="scene-error">N&#227;o foi poss&#237;vel abrir o sal&#227;o 3D neste navegador.</div>}<div className="scene-guide throne-guide"><div className="scene-caption"><span className="live-dot"/> SAL&#195;O DO TRONO</div><div className="walk-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou setas para caminhar</span><span className="keyboard-guide">Arraste para girar a c&#226;mera</span><span className="touch-guide">Use as setas para caminhar &#183; arraste para girar</span></div><small>Retorne pela porta para voltar &#224; vila.</small></div>{nearFelipe && dialogue===null && <button className="felipe-talk" onClick={()=>talkRef.current?.()}>Conversar com Felipe <kbd>F</kbd></button>}{dialogue!==null && <section className="npc-dialogue felipe-dialogue" aria-label="Conversa com Felipe Santos"><div className="npc-dialogue-heading"><span className="npc-avatar">F</span><div><h2>Felipe Santos</h2><small>Engenheiro de software</small></div><button onClick={closeDialogue} aria-label="Encerrar conversa">&#215;</button></div><p aria-live="polite">{FELIPE_LINES[dialogue]}</p><div className="npc-dialogue-actions"><button disabled={!voiceEnabled} onClick={()=>speaking?onStop?.():onSpeak?.(dialogue)}>{speaking?'Parar voz':'Ouvir mensagem'}</button><button onClick={()=>talkRef.current?.()}>Outra mensagem &#8599;</button></div><small className="npc-voice-note">{voiceNotice || (!voiceEnabled ? 'Ative as vozes nas configura\u00e7\u00f5es de \u00e1udio.' : 'Voz em portugu\u00eas')}</small></section>}<button className="throne-exit" onClick={onExit}>Voltar &#224; vila</button></div><div className="throne-touch" role="group" aria-label="Controles de caminhada">{[['\u2191','w','para frente'],['\u2190','a','para a esquerda'],['\u2193','s','para tr\u00e1s'],['\u2192','d','para a direita']].map(([label,key,direction])=><button key={key} aria-label={`Caminhar ${direction}`} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);keys.current.add(key);}} onPointerUp={()=>keys.current.delete(key)} onPointerCancel={()=>keys.current.delete(key)} onBlur={()=>keys.current.delete(key)}>{label}</button>)}</div></div>;
+  useEffect(() => { mount.current?.querySelector('canvas')?.setAttribute('aria-label', language === 'en-US' ? '3D throne room. Use WASD or arrow keys to walk.' : 'Sal\u00e3o do trono tridimensional. Use WASD ou setas para caminhar.'); }, [language]);
+  return <div className="throne-hall"><h1 className="sr-only">{language === 'en-US' ? 'Throne room' : 'Salão do trono'}</h1><div className="throne-viewport viewport"><div className="throne-canvas" ref={mount}/>{error && <div className="scene-error">{language === 'en-US' ? 'Could not open the 3D throne room in this browser.' : 'Não foi possível abrir o salão 3D neste navegador.'}</div>}<div className="scene-guide throne-guide"><div className="scene-caption"><span className="live-dot"/> {language === 'en-US' ? 'THRONE ROOM' : 'SALÃO DO TRONO'}</div><div className="walk-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> {language === 'en-US' ? 'or arrow keys to walk' : 'ou setas para caminhar'}</span><span className="keyboard-guide">{language === 'en-US' ? 'Drag to turn the camera' : 'Arraste para girar a câmera'}</span><span className="touch-guide">{language === 'en-US' ? 'Use the arrows to walk · drag to turn' : 'Use as setas para caminhar · arraste para girar'}</span></div><small>{language === 'en-US' ? 'Return through the door to the village.' : 'Retorne pela porta para voltar à vila.'}</small></div>{nearFelipe && dialogue===null && <button className="felipe-talk" onClick={()=>talkRef.current?.()}>{language === 'en-US' ? 'Talk to Felipe' : 'Conversar com Felipe'} <kbd>F</kbd></button>}{dialogue!==null && <section className="npc-dialogue felipe-dialogue" aria-label={language === 'en-US' ? 'Conversation with Felipe Santos' : 'Conversa com Felipe Santos'}><div className="npc-dialogue-heading"><span className="npc-avatar">F</span><div><h2>Felipe Santos</h2><small>{language === 'en-US' ? 'Software engineer' : 'Engenheiro de software'}</small></div><button onClick={closeDialogue} aria-label={language === 'en-US' ? 'End conversation' : 'Encerrar conversa'}>&#215;</button></div><p aria-live="polite">{language === 'en-US' ? english.felipe[dialogue] : FELIPE_LINES[dialogue]}</p><div className="npc-dialogue-actions"><button disabled={!voiceEnabled} onClick={()=>speaking?onStop?.():onSpeak?.(dialogue)}>{speaking ? (language === 'en-US' ? 'Stop voice' : 'Parar voz') : (language === 'en-US' ? 'Listen' : 'Ouvir mensagem')}</button><button onClick={()=>talkRef.current?.()}>{language === 'en-US' ? 'Next message' : 'Outra mensagem'} &#8599;</button></div><small className="npc-voice-note">{voiceNotice || (!voiceEnabled ? (language === 'en-US' ? 'Enable voices in audio settings.' : 'Ative as vozes nas configura\u00e7\u00f5es de \u00e1udio.') : (language === 'en-US' ? 'American English voice' : 'Voz em portugu\u00eas'))}</small></section>}<button className="throne-exit" onClick={onExit}>{language === 'en-US' ? 'Back to the village' : 'Voltar à vila'}</button></div><div className="throne-touch" role="group" aria-label={language === 'en-US' ? 'Walking controls' : 'Controles de caminhada'}>{[['\u2191','w','para frente'],['\u2190','a','para a esquerda'],['\u2193','s','para tr\u00e1s'],['\u2192','d','para a direita']].map(([label,key,direction])=><button key={key} aria-label={language === 'en-US' ? ({w:'Walk forward',a:'Walk left',s:'Walk backward',d:'Walk right'}[key]) : `Caminhar ${direction}`} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);keys.current.add(key);}} onPointerUp={()=>keys.current.delete(key)} onPointerCancel={()=>keys.current.delete(key)} onBlur={()=>keys.current.delete(key)}>{label}</button>)}</div></div>;
 }

@@ -11,6 +11,7 @@ export default class VillageAudio {
 
   setChannels(channels) {
     this.channels = { ...this.channels, ...channels };
+    if (!this.channels.interactions) this.stopWeather();
     for (const source of this.sources) if (!this.channels[source.villageChannel]) { try { source.stop(); } catch { /* Already ended. */ } }
   }
 
@@ -34,6 +35,7 @@ export default class VillageAudio {
   }
 
   mute() {
+    this.stopWeather();
     this.enabled = false;
     for (const source of [...this.sources]) { try { source.stop(); } catch { /* Already ended. */ } }
     this.sources.clear();
@@ -72,6 +74,25 @@ export default class VillageAudio {
     const nodes = [filter, gain];
     if (ctx.createStereoPanner) { const stereo = ctx.createStereoPanner(); stereo.pan.value = pan; gain.connect(stereo); stereo.connect(this.master); nodes.push(stereo); } else gain.connect(this.master);
     this.track(source, nodes, start, duration, true);
+  }
+
+  setWeather(strength) {
+    if (!this.ready() || !this.channels.interactions || strength <= .005) { this.stopWeather(); return; }
+    if (!this.weatherSource) {
+      const source = this.context.createBufferSource(), filter = this.context.createBiquadFilter(), gain = this.context.createGain();
+      source.buffer = this.noise; source.loop = true;
+      filter.type = 'lowpass'; filter.frequency.value = 850;
+      source.connect(filter); filter.connect(gain); gain.connect(this.master);
+      source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
+      source.start(); this.weatherSource = source; this.weatherGain = gain;
+    }
+    this.weatherGain.gain.value = Math.min(1, strength) * .035;
+  }
+
+  stopWeather() {
+    if (!this.weatherSource) return;
+    const source = this.weatherSource; this.weatherSource = null; this.weatherGain = null;
+    try { source.stop(); } catch { /* Already stopped. */ }
   }
 
   step(surface) {

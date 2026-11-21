@@ -97,7 +97,7 @@ O script `predeploy` executa o build antes da publicação. A versão exibida no
 
 A URL base já está definida em `package.json` para `/fs_portfolio/`. Após publicar, aguarde o processamento do GitHub Pages. Se a versão anterior continuar aparecendo, atualize a página com Ctrl + F5.
 
-O deploy publica os arquivos compilados. Para salvar o código-fonte, faça também commit e push das alterações na branch `main`; apenas enviar um commit para `main` não executa o deploy neste projeto.
+Ao enviar um commit para `main`, o GitHub Actions executa os testes, gera um novo build com a contagem atual de commits e publica automaticamente na branch `gh-pages`. A publicação manual continua disponível pelo comando acima.
 
 ## Organização do código
 

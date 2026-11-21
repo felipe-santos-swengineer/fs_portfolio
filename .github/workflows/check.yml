@@ -1,12 +1,19 @@
-name: Verificação
+name: Verificação e publicação
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+concurrency:
+  group: portfolio-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,3 +25,23 @@ jobs:
       - run: npm ci
       - run: npm test -- --watchAll=false --runInBand
       - run: npm run build
+      - name: Abrir branch de publicação
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: .pages-publish
+      - name: Publicar versão no GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          rsync -a --delete --exclude='.git' build/ .pages-publish/
+          git -C .pages-publish config user.name 'github-actions[bot]'
+          git -C .pages-publish config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C .pages-publish add -A
+          if git -C .pages-publish diff --cached --quiet; then
+            echo 'A versão publicada já está atualizada.'
+          else
+            git -C .pages-publish commit -m "Publicar ${GITHUB_SHA}"
+            git -C .pages-publish push origin HEAD:gh-pages
+          fi

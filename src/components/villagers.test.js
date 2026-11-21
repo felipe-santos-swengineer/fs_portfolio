@@ -1,5 +1,5 @@
 import { VILLAGERS, createWalkingGraph, randomRoute, advanceVillager } from './villagers';
-import { canWalk } from './villageNavigation';
+import { canWalk, SITES } from './villageNavigation';
 
 test('os moradores escolhem rotas transitáveis sem atravessar casas ou a fonte', () => {
   const graph = createWalkingGraph();
@@ -24,4 +24,11 @@ test('a caminhada não ultrapassa o destino e as pausas são respeitadas', () =>
   expect(advanceVillager(npc, 2, graph)).toBe(true);
   expect(npc.group.position.z).toBe(6);
   expect(npc.route).toHaveLength(0);
+});
+
+test('os moradores iniciam junto das entradas das quatro casas', () => {
+  [1, 2, 3, 0].forEach((siteIndex, index) => {
+    expect(VILLAGERS[index].x).toBe(SITES[siteIndex].x);
+    expect(VILLAGERS[index].z).toBe(SITES[siteIndex].z + 3);
+  });
 });

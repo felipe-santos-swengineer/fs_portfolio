@@ -1,11 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { SITES, canWalk, nearbySite, walkingSurface, advanceFootsteps } from './villageNavigation';
+import { SITES, PORTAL, isCastleThreshold, canWalk, nearbySite, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
 import { VILLAGERS, createWalkingGraph, advanceVillager } from './villagers';
 import { createDragon, createDayNight } from './VillageAtmosphere';
 import { createMissionFireworks } from './MissionFireworks';
 import './VillageScene.css';
+
+export function createAdventurer(scene, { box, sphere, mesh, cylinder }, { armored = false } = {}) {
+  // Articulated, fully volumetric adventurer.
+  const player = new THREE.Group(); scene.add(player); player.position.set(0, .2, 5);
+  const body = new THREE.Group(); player.add(body);
+  box(body, .65, .85, .4, '#496e76', 0, 1.12, 0);
+  box(body, .71, .13, .45, '#9e8054', 0, .87, 0); box(body, .13, .17, .48, '#dec38c', 0, .87, .02);
+  sphere(body, .28, '#c5a27f', 0, 1.82, 0); sphere(body, .29, '#463c39', 0, 1.94, -.06);
+  [-1, 1].forEach(s => sphere(body, .035, '#17232d', s * .11, 1.83, .285));
+  const hat = mesh(body, new THREE.ConeGeometry(.43, .5, 8), '#345360', 0, 2.22, 0); hat.rotation.z = -.16;
+  hat.visible = !armored;
+  const brim = cylinder(body, .47, .08, '#345360', 0, 2.02, 0); brim.visible = !armored;
+  const cape = box(body, .7, 1.05, .08, '#933e4d', 0, 1.1, -.29); cape.rotation.x = -.13;
+  const pack = box(body, .42, .5, .25, '#7e6248', 0, 1.3, -.42); pack.visible = !armored;
+  cape.visible = !armored;
+  const limbs = [];
+  [-1, 1].forEach(s => {
+    const leg = new THREE.Group(); leg.position.set(s * .19, .8, 0); body.add(leg); box(leg, .24, .62, .25, '#303846', 0, -.3, 0); box(leg, .28, .2, .42, '#514737', 0, -.61, .07); limbs.push(leg);
+    const arm = new THREE.Group(); arm.position.set(s * .46, 1.5, 0); body.add(arm); box(arm, .22, .62, .25, '#496e76', 0, -.28, 0); sphere(arm, .12, '#c5a27f', 0, -.61, 0); limbs.push(arm);
+  });
+  // A espada acompanha o movimento do braço do aventureiro.
+  const sword = new THREE.Group(); sword.position.set(0, -.6, .12); sword.rotation.z = Math.PI; sword.rotation.x = .15; limbs[3].add(sword);
+  box(sword, .11, .35, .11, '#6e4b35', 0, -.13, 0);
+  box(sword, .38, .09, .13, '#c6a968', 0, -.3, 0);
+  box(sword, .15, .8, .07, '#cbd8dc', 0, -.74, 0);
+  const tip = mesh(sword, new THREE.ConeGeometry(.105, .22, 4), '#dce8e8', 0, -1.23, 0); tip.rotation.z = Math.PI;
+  sphere(sword, .075, '#c6a968', 0, .08, 0);
+  const ring = mesh(player, new THREE.TorusGeometry(.55, .025, 5, 36), '#a9d4ba', 0, .03, 0, true); ring.rotation.x = Math.PI / 2;
+  const travelerLight = new THREE.PointLight('#c6e0d3', 2.4, 4); travelerLight.position.set(0, 1.4, 1); player.add(travelerLight);
+
+  return { player, body, limbs, cape, sword };
+}
 
 export function createVillage(scene) {
   const materials = new Map();
@@ -39,19 +71,58 @@ export function createVillage(scene) {
     [.17, .75].forEach(y => cylinder(p, .415, .09, '#27343c', x, y, z, 10));
   };
 
-  // A raised island, stone retaining wall and individual cobblestones.
-  cylinder(scene, 19, 1.5, '#17232c', 0, -.9, 0, 64);
-  cylinder(scene, 18.8, .22, '#253b36', 0, -.06, 0, 64);
-  cylinder(scene, 17.6, .12, '#293b36', 0, .04, 0, 64);
-  for (let i = 0; i < 90; i++) {
-    const angle = i * Math.PI * 2 / 90;
-    const rock = box(scene, 1.05, .65 + (i % 3) * .13, .7, i % 2 ? '#33424b' : '#2c3b43', Math.cos(angle) * 18.5, .08, Math.sin(angle) * 18.5); rock.rotation.y = -angle;
+  // Decorative figures belong to the buildings and have no conversation state.
+  const performers = [];
+  const person = (parent, x, z, coat, seated = false) => {
+    const group = new THREE.Group(); group.position.set(x, 0, z); parent.add(group);
+    const torso = new THREE.Group(); torso.position.y = seated ? .42 : .2; group.add(torso);
+    box(torso,.65,.8,.4,coat,0,1.05,0); sphere(torso,.29,'#c9a789',0,1.75,0);
+    [-1,1].forEach(side=>{
+      sphere(torso,.028,'#14212b',side*.1,1.79,.27);
+      box(torso,.12,.025,.04,'#514139',side*.11,1.88,.27);sphere(torso,.055,'#bd957e',side*.3,1.75,0);
+      box(torso,.22,.55,.24,'#3a4148',side*.18,.38,seated?.2:0);
+    });
+    sphere(torso,.055,'#d3ad90',0,1.72,.3);box(torso,.13,.025,.035,'#805e56',0,1.62,.27);
+    const arm = new THREE.Group();arm.position.set(.42,1.36,0);torso.add(arm);box(arm,.2,.55,.23,coat,0,-.25,0);sphere(arm,.11,'#c9a789',0,-.56,0);
+    box(torso,.2,.55,.23,coat,-.42,1.08,0);
+    return {group, torso, arm};
+  };
+
+  // Rectangular island, shoreline and a dock south of the portal.
+  box(scene, 38, 1.5, 30, '#17232c', 0, -.9, 0);
+  box(scene, 37.6, .22, 29.6, '#253b36', 0, -.06, 0);
+  box(scene, 37, .12, 29, '#293b36', 0, .04, 0);
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(85, 70), new THREE.MeshStandardMaterial({ color:'#214c58', roughness:.55, metalness:.12 }));
+  water.rotation.x = -Math.PI / 2; water.position.set(0, -.62, 16); scene.add(water);
+  const dock=new THREE.Group();dock.rotation.y=-Math.PI/2;dock.position.z=-4;scene.add(dock);
+  for(let x=18;x<=25;x+=.5) box(dock,.43,.18,3,'#806345',x,.18,0);
+  [18.5,21.5,24.5].forEach(x=>[-1.3,1.3].forEach(z=>{cylinder(dock,.12,1.1,'#564737',x,-.28,z);sphere(dock,.14,'#bda477',x,.36,z);}));
+  const boat=new THREE.Group();boat.position.set(25,-.31,3.6);dock.add(boat);
+  const hull=mesh(boat,new THREE.CylinderGeometry(.85,.45,3.4,6,1,false,0,Math.PI),'#76513a',0,.25,0);hull.rotation.z=Math.PI/2;hull.rotation.y=Math.PI/2;
+  box(boat,2.5,.18,1.2,'#876244',0,.45,0);box(boat,.22,.17,1.3,'#b58a59',-.6,.57,0);box(boat,.22,.17,1.3,'#b58a59',.6,.57,0);
+  box(boat,.11,1.9,.11,'#b4956d',0,1.4,0);const sail=box(boat,.05,1.15,1.25,'#d9cdae',.03,1.65,0);sail.rotation.x=.12;
+  // Group static stones into instances to reduce draw calls and shadow work.
+  const stoneGroups = new Map();
+  const addStone = (w, h, d, color, x, y, z, rotation) => {
+    const key = [w, h, d, color].join(':');
+    if (!stoneGroups.has(key)) stoneGroups.set(key, { w, h, d, color, transforms: [] });
+    const transform = new THREE.Object3D(); transform.position.set(x, y, z); transform.rotation.y = rotation; transform.updateMatrix();
+    stoneGroups.get(key).transforms.push(transform.matrix.clone());
+  };
+  for (let x=-18;x<=18;x++) for (const z of [-14.5,14.5]) { if (z>0 && Math.abs(x)<2) continue; addStone(1,.7,.7,'#33424b',x,.08,z,0); }
+  for (let z=-13;z<=13;z++) for (const x of [-18.5,18.5]) {
+    addStone(1,.7,.7,'#2c3b43',x,.08,z,Math.PI/2);
   }
-  for (let x = -13; x <= 13; x++) for (let z = -13; z <= 13; z++) {
+  for (let x = -17; x <= 17; x++) for (let z = -13; z <= 13; z++) {
     if ((Math.abs(x) <= 1 || Math.abs(z) <= 1 || (Math.abs(z - 9) < 1 && Math.abs(x) < 10)) && Math.hypot(x, z) > 1.8) {
-      const stone = box(scene, .88, .1, .86, (x + z) % 3 ? '#455056' : '#535c5e', x, .16, z); stone.rotation.y = Math.sin(x * 4 + z) * .08;
+      addStone(.88, .1, .86, (x + z) % 3 ? '#455056' : '#535c5e', x, .16, z, Math.sin(x * 4 + z) * .08);
     }
   }
+  stoneGroups.forEach(({w, h, d, color, transforms}) => {
+    const stones = new THREE.InstancedMesh(new THREE.BoxGeometry(w, h, d), material(color), transforms.length);
+    transforms.forEach((matrix, i) => stones.setMatrixAt(i, matrix));
+    stones.castShadow = true; stones.receiveShadow = true; stones.instanceMatrix.needsUpdate = true; stones.computeBoundingSphere(); scene.add(stones);
+  });
   // Fountain with luminous water and central crystal.
   cylinder(scene, 1.65, .45, '#53616a', 0, .32, 0, 16);
   cylinder(scene, 1.4, .08, '#3b939e', 0, .59, 0, 32);
@@ -61,6 +132,41 @@ export function createVillage(scene) {
 
   const buildings = [];
   const flames = [];
+  const portal = new THREE.Group(); portal.position.set(PORTAL.x, 0, PORTAL.z); portal.rotation.y = Math.PI / 2; portal.userData.site = 4; scene.add(portal);
+  cylinder(portal, 2.1, .25, '#4a5268', 0, .3, 0, 24);
+  mesh(portal, new THREE.TorusGeometry(1.65, .2, 12, 40), '#86c9e7', 0, 2.25, 0, true);
+  const portalSurface = new THREE.Mesh(new THREE.CircleGeometry(1.46, 40), new THREE.MeshBasicMaterial({ color: '#5b8fd5', transparent: true, opacity: .8, side: THREE.DoubleSide })); portalSurface.position.set(0, 2.25, 0); portal.add(portalSurface);
+  label(portal, 'PORTAL', 'Playground', '#a8d9f0', 0, 5.1, 0);
+  const portalLight = new THREE.PointLight('#78aaff', 14, 8); portalLight.position.set(0, 2, 1); portal.add(portalLight);
+  // A castle anchors the north end of the village, opposite the dock.
+  const castle = new THREE.Group(); castle.position.set(0, 0, -13); scene.add(castle);
+  box(castle, 8.5, 7.5, 3.8, '#59636d', 0, 3.85, 0);
+  box(castle, 9.2, .45, 4.3, '#3d4b57', 0, 7.75, 0);
+  for(let x=-4;x<=4;x+=1.15) box(castle,.62,.9,.65,'#6d7780',x,8.35,2);
+  [-1,1].forEach(side=>{
+    cylinder(castle,1.65,10,'#53616d',side*4.2,5,-.1,12);
+    mesh(castle,new THREE.ConeGeometry(2.1,3.6,12),'#46546c',side*4.2,11.75,-.1);
+    box(castle,.45,1.5,.12,'#d9ad68',side*4.2,6,1.55,true);
+    box(castle,.35,1.15,.12,'#e4ba7a',side*2,5.2,1.98,true);
+    cylinder(castle,.07,2.4,'#9aa9aa',side*4.2,14,-.1);
+    box(castle,.8,.5,.05,'#a14d51',side*4.6,14.8,-.1);
+  });
+  const castleDoor = box(castle,2.45,3.4,.18,'#322c2a',0,1.9,2.03); castleDoor.userData.site = 5;
+  const castleArch=mesh(castle,new THREE.TorusGeometry(1.25,.22,8,24,Math.PI),'#a99b7d',0,3.6,2.15);castleArch.rotation.z=0;
+  [-1,1].forEach(side=>box(castle,.22,3.2,.25,'#a99b7d',side*1.2,1.95,2.15));
+  // Silent armored sentries stand beside the castle gate.
+  const castleGuards = [-1, 1].map(side => {
+    const guard = createAdventurer(castle, { box, sphere, mesh, cylinder }, { armored: true });
+    guard.player.position.set(side * 2.1, .2, 2.7);
+    box(guard.body,.79,.76,.49,'#768b91',0,1.2,0);
+    box(guard.body,.12,.68,.51,'#b4c3c4',0,1.2,.01);
+    sphere(guard.body,.36,'#74868a',0,1.94,-.02);
+    box(guard.body,.62,.34,.18,'#65787e',0,1.86,.23);
+    box(guard.body,.42,.05,.2,'#202c33',0,1.92,.33);
+    [-1,1].forEach(s=>box(guard.body,.34,.22,.5,'#99a9aa',s*.49,1.55,0));
+    box(guard.limbs[1],.48,.7,.13,'#5e6d7b',0,-.35,.25);
+    return guard;
+  });
   SITES.forEach((site, index) => {
     const g = new THREE.Group(); g.position.set(site.x, 0, site.z); g.userData.site = index; scene.add(g); buildings.push(g);
     box(g, 5.6, .35, 4.7, '#3e4a51', 0, .25, 0);
@@ -93,17 +199,16 @@ export function createVillage(scene) {
       cylinder(g, .85, .16, '#7b6047', 3.6, 1.1, 2.6); cylinder(g, .1, 1, '#423930', 3.6, .55, 2.6);
       [-1, 1].forEach(s => box(g, 1.2, .22, .45, '#64513e', 3.6, .55, 2.6 + s));
       box(g, 1.3, .13, .13, '#77654a', 2.6, 3.6, 2.6);
+      const elder=person(g,3.6,3.65,'#6f5e4d',true);elder.group.rotation.y=Math.PI;box(elder.torso,.46,.32,.16,'#c9c6b4',0,1.55,.24);sphere(elder.torso,.31,'#b9b7a8',0,1.95,-.05);
+      cylinder(elder.arm,.14,.3,'#9e764d',0,-.64,.12);cylinder(elder.arm,.145,.04,'#e6c376',0,-.49,.12);performers.push({kind:'drink',arm:elder.arm});
       cylinder(g, .32, .55, '#dfb46e', 3.1, 3.1, 2.6); const handle = mesh(g, new THREE.TorusGeometry(.23, .07, 6, 12), '#d9b168', 3.45, 3.1, 2.6); handle.rotation.y = 0;
     }
     if (index === 1) {
-      // Library: tower and a clearly visible outdoor bookshelf with colored spines.
+      // Library tower and open book above the entrance.
       cylinder(g, 1, 6.3, '#455464', 2.4, 3.35, -1.25, 12);
       mesh(g, new THREE.ConeGeometry(1.45, 2.2, 12), '#374e69', 2.4, 7.5, -1.25);
-      box(g, 2.4, 2.6, .7, '#292f39', -3.6, 1.5, 1);
-      [0, 1, 2].forEach(row => {
-        box(g, 2.5, .12, .8, '#827055', -3.6, .42 + row * .8, 1);
-        for (let b = 0; b < 8; b++) { const book = box(g, .2, .4 + (b % 3) * .1, .45, ['#a57454', '#688a98', '#ae9d6d', '#6b7c63'][b % 4], -4.6 + b * .28, .8 + row * .8, 1.1); book.rotation.z = b % 3 === 0 ? .12 : 0; }
-      });
+      const reader=person(g,-3.6,2.15,'#526d88');reader.group.rotation.y=.3;sphere(reader.torso,.29,'#594738',0,1.94,-.09);box(reader.torso,.12,.42,.18,'#594738',-.27,1.7,-.08);box(reader.torso,.12,.42,.18,'#594738',.27,1.7,-.08);
+      [-1,1].forEach(side=>{const lens=mesh(reader.torso,new THREE.TorusGeometry(.105,.025,6,16),'#30383d',side*.13,1.8,.29);lens.rotation.y=0;});box(reader.torso,.5,.35,.1,'#e6d7b7',0,1.24,.45);box(reader.torso,.04,.36,.11,'#a98458',0,1.24,.46);reader.arm.rotation.x=-1;performers.push({kind:'read',torso:reader.torso});
       // Open book above the entrance, rendered as two angled pages.
       [-1, 1].forEach(s => { const page = box(g, .7, .08, .9, '#e0c895', s * .32, 3.55, 2.5); page.rotation.z = s * .25; });
     }
@@ -114,6 +219,7 @@ export function createVillage(scene) {
       const flame = sphere(g, .4, '#ffb350', -3.5, 1.2, 1.2, true); flames.push(flame);
       const fire = new THREE.PointLight('#ff7837', 19, 7); fire.position.set(-3.4, 1.4, 1.8); g.add(fire);
       box(g, .8, .5, .8, '#645542', 3.7, .6, 1.5); box(g, .6, .5, .6, '#46515a', 3.7, 1.1, 1.5); box(g, 1.3, .25, .65, '#8c9697', 3.7, 1.45, 1.5);
+      const smith=person(g,3.6,3,'#62504a');smith.group.rotation.y=Math.PI;box(smith.torso,.4,.2,.1,'#564137',0,1.59,.27);sphere(smith.torso,.28,'#443b36',0,1.96,-.06);box(smith.torso,.5,.55,.12,'#9a7956',0,1.02,.25);box(smith.arm,.1,.7,.1,'#9b794f',0,-.6,.12);box(smith.arm,.55,.24,.25,'#889698',0,-.95,.12);box(g,.12,.06,.9,'#c5d0d0',3.7,1.62,1.5);performers.push({kind:'forge',arm:smith.arm});
       const horn = mesh(g, new THREE.ConeGeometry(.3, .75, 4), '#8c9697', 4.55, 1.45, 1.5); horn.rotation.z = -Math.PI / 2;
       box(g, .13, 1.2, .13, '#a17c50', 1.2, 3.4, 2.3); box(g, .7, .35, .4, '#a3a6a4', 1.2, 3.9, 2.3);
       barrel(g, 3.4, -1);
@@ -124,6 +230,7 @@ export function createVillage(scene) {
       [-1, 1].forEach(s => { const line = box(g, .82, .04, .06, '#826b4c', s * .32, 3.55, 2.31); line.rotation.z = s * .55; });
       cylinder(g, .12, 1.6, '#445252', 3.4, .8, 2.3); box(g, .85, .8, .65, '#638e7c', 3.4, 1.6, 2.3); box(g, .55, .09, .05, '#17252b', 3.4, 1.65, 2.65);
       [0, 1, 2].forEach(i => { box(g, .6, .5 + i % 2 * .2, .65, '#a0845c', -3.3 + i * .45, .45 + (i === 2 ? .5 : 0), 2); box(g, .1, .53, .68, '#d0ba88', -3.3 + i * .45, .45 + (i === 2 ? .5 : 0), 2); });
+      const pigeon=new THREE.Group();pigeon.position.set(0,6.18,0);g.add(pigeon);const bird=sphere(pigeon,.34,'#94a4ab',0,.38,0);bird.scale.set(.8,.8,1.2);sphere(pigeon,.2,'#aebdc1',0,.68,.25);[-1,1].forEach(side=>{sphere(pigeon,.028,'#14212b',side*.13,.72,.38);});const beak=mesh(pigeon,new THREE.ConeGeometry(.08,.25,6),'#d4aa6c',0,.63,.51);beak.rotation.x=Math.PI/2;box(pigeon,.26,.2,.12,'#e1d5b9',0,.38,-.39);const wing=new THREE.Group();wing.position.set(.25,.45,0);pigeon.add(wing);const feather=sphere(wing,.22,'#738a96',.1,0,0);feather.scale.set(.55,1,1.3);wing.rotation.z=-1.25;performers.push({kind:'salute',arm:wing});
       cylinder(g, .065, 4, '#7d8581', 3.3, 2, -.8); box(g, 1.1, .65, .05, '#84aa8e', 3.85, 3.5, -.8);
     }
   });
@@ -131,31 +238,15 @@ export function createVillage(scene) {
   // Pine forest, rocks, mushrooms and lanterns make the surroundings readable in the dark.
   for (let i = 0; i < 44; i++) {
     const a = i * 2.39996, r = 14.5 + (i % 5) * .7, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (overlapsRoad(x, z, 1.3) || Math.hypot(x - PORTAL.x, z - PORTAL.z) < 4.5 || (Math.abs(x)<6.5 && z < -9) || Math.abs(x)>17 || Math.abs(z)>13.5 || (z>10 && Math.abs(x)<4)) continue;
     const tree = new THREE.Group(); tree.position.set(x, 0, z); scene.add(tree); const h = 2.6 + i % 4 * .55;
     cylinder(tree, .16, h, '#493c36', 0, h / 2, 0);
     for (let j = 0; j < 3; j++) mesh(tree, new THREE.ConeGeometry(1.2 - j * .23, 2.1, 7), ['#253f39', '#2d4a41', '#36574b'][j], 0, h * .6 + j * .75, 0);
-    if (i % 3 === 0) { const rock = mesh(scene, new THREE.DodecahedronGeometry(.45 + i % 2 * .3), '#4a555c', x * .88, .35, z * .88); rock.scale.y = .65; }
+    if (i % 3 === 0 && !overlapsRoad(x * .88, z * .88, .8) && Math.hypot(x * .88 - PORTAL.x, z * .88 - PORTAL.z) >= 3.5 && !(Math.abs(x*.88)<6.5 && z*.88 < -9)) { const rock = mesh(scene, new THREE.DodecahedronGeometry(.45 + i % 2 * .3), '#4a555c', x * .88, .35, z * .88); rock.scale.y = .65; }
   }
-  [[-2.8, -9], [2.8, -9], [-2.8, 9], [2.8, 9], [-11, 0], [11, 0]].forEach(([x, z]) => { cylinder(scene, .08, 2.6, '#39434b', x, 1.3, z); lamp(scene, x, 2.8, z); });
-  // Articulated, fully volumetric adventurer.
-  const player = new THREE.Group(); scene.add(player); player.position.set(0, .2, 5);
-  const body = new THREE.Group(); player.add(body);
-  box(body, .65, .85, .4, '#496e76', 0, 1.12, 0);
-  box(body, .71, .13, .45, '#9e8054', 0, .87, 0); box(body, .13, .17, .48, '#dec38c', 0, .87, .02);
-  sphere(body, .28, '#c5a27f', 0, 1.82, 0); sphere(body, .29, '#463c39', 0, 1.94, -.06);
-  box(body, .5, .15, .1, '#c5a27f', 0, 1.79, .22);
-  [-1, 1].forEach(s => sphere(body, .035, '#17232d', s * .11, 1.83, .285));
-  const hat = mesh(body, new THREE.ConeGeometry(.43, .5, 8), '#345360', 0, 2.22, 0); hat.rotation.z = -.16;
-  cylinder(body, .47, .08, '#345360', 0, 2.02, 0);
-  const cape = box(body, .7, 1.05, .08, '#933e4d', 0, 1.1, -.29); cape.rotation.x = -.13;
-  box(body, .42, .5, .25, '#7e6248', 0, 1.3, -.42);
-  const limbs = [];
-  [-1, 1].forEach(s => {
-    const leg = new THREE.Group(); leg.position.set(s * .19, .8, 0); body.add(leg); box(leg, .24, .62, .25, '#303846', 0, -.3, 0); box(leg, .28, .2, .42, '#514737', 0, -.61, .07); limbs.push(leg);
-    const arm = new THREE.Group(); arm.position.set(s * .46, 1.5, 0); body.add(arm); box(arm, .22, .62, .25, '#496e76', 0, -.28, 0); sphere(arm, .12, '#c5a27f', 0, -.61, 0); limbs.push(arm);
-  });
-  const ring = mesh(player, new THREE.TorusGeometry(.55, .025, 5, 36), '#a9d4ba', 0, .03, 0, true); ring.rotation.x = Math.PI / 2;
-  const travelerLight = new THREE.PointLight('#c6e0d3', 2.4, 4); travelerLight.position.set(0, 1.4, 1); player.add(travelerLight);
+  [[-2.8, -9], [2.8, -9], [-2.8, 11.3], [2.8, 11.3], [-11, 2.8], [11, 2.8]].forEach(([x, z]) => { cylinder(scene, .08, 2.6, '#39434b', x, 1.3, z); lamp(scene, x, 2.8, z); });
+  const { player, body, limbs, cape } = createAdventurer(scene, { box, sphere, mesh, cylinder });
+  player.position.set(0, .2, 19); player.rotation.y = Math.PI;
 
   const npcs = VILLAGERS.map((person, index) => {
     const group = new THREE.Group(); group.position.set(person.x, .2, person.z); group.userData.npc = index; scene.add(group);
@@ -220,20 +311,22 @@ export function createVillage(scene) {
   for (let i = 0; i < 160; i++) positions.push(Math.sin(i * 134.8) * 21, 1 + (i % 19) * .55, Math.cos(i * 82.3) * 21);
   const particleGeo = new THREE.BufferGeometry(); particleGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   const fireflies = new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: '#b3caaa', size: .055, transparent: true, opacity: .65 })); scene.add(fireflies);
-  return { buildings, player, body, limbs, crystal, flames, fireflies, cape, npcs };
+  return { buildings, portal, castleDoor, player, body, limbs, crystal, flames, fireflies, cape, npcs, performers, castleGuards };
 }
 
-export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, cameraTurn = 0 }) {
+export default function VillageScene({ keys, compassRef, paused, sceneHidden = false, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, cameraTurn = 0 }) {
   const mount = useRef(null);
-  const live = useRef({ paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn });
-  live.current = { paused, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn };
+  const wake = useRef(null);
+  const live = useRef({ paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn });
+  live.current = { paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, cameraTurn };
   const [error, setError] = useState(false);
+  useEffect(() => { if (!sceneHidden) wake.current?.(); }, [sceneHidden]);
 
   useEffect(() => {
     const container = mount.current;
     let renderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); } catch { setError(true); return; }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, container.clientWidth < 800 ? 1.15 : 1.5));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
     renderer.domElement.tabIndex = 0;
@@ -256,8 +349,8 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
     let oldCameraTurn = live.current.cameraTurn;
     const verticalAxis = new THREE.Vector3(0, 1, 0);
     const portrait = container.clientWidth < 600;
-    const camera = new THREE.PerspectiveCamera(44, 1, .1, 260); camera.position.set(24, 24, 32).multiplyScalar(portrait ? 1.4 : 1);
-    const controls = new OrbitControls(camera, renderer.domElement); controls.target.set(0, 1.1, 0); controls.enableDamping = true; controls.dampingFactor = .07; controls.enablePan = false;
+    const camera = new THREE.PerspectiveCamera(44, 1, .1, 260); const initialOffset = new THREE.Vector3(0, 12, 16).multiplyScalar(portrait ? 1.25 : 1); camera.position.copy(world.player.position).add(initialOffset);
+    const controls = new OrbitControls(camera, renderer.domElement); controls.target.set(0, 3.2, 11); controls.enableDamping = true; controls.dampingFactor = .07; controls.enablePan = false;
     controls.minDistance = 7; controls.maxDistance = 78; controls.minPolarAngle = .25; controls.maxPolarAngle = Math.PI / 2 - .09; controls.update();
     const resize = () => { const { width, height } = container.getBoundingClientRect(); renderer.setSize(width, height); camera.aspect = width / Math.max(height, 1); camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
@@ -266,7 +359,7 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
     const pointerup = e => {
       if (!start || live.current.paused || Math.hypot(start.x - e.clientX, start.y - e.clientY) > 6) return;
       const rect = renderer.domElement.getBoundingClientRect(); pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1); raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects([...world.buildings, ...world.npcs.map(n => n.group)], true)[0]; if (!hit) return;
+      const hit = raycaster.intersectObjects([...world.buildings, world.portal, world.castleDoor, ...world.npcs.map(n => n.group)], true)[0]; if (!hit) return;
       let object = hit.object; while (object && object.userData.site === undefined && object.userData.npc === undefined) object = object.parent;
       if (object?.userData.npc !== undefined) live.current.onTalk?.(object.userData.npc);
       else if (object) live.current.onOpen(object.userData.site);
@@ -277,8 +370,9 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
     const up = e => keys.current.delete(e.key.toLowerCase()); const clear = () => keys.current.clear();
     renderer.domElement.addEventListener('keydown', down); renderer.domElement.addEventListener('blur', clear); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
     const forward = new THREE.Vector3(), right = new THREE.Vector3(), movement = new THREE.Vector3(); const target = new THREE.Vector3(); const delta = new THREE.Vector3();
-    let frame, previous = 0, clock = 0, environmentTime = 0, stepDistance = 0, oldNear = -2, oldNearNpc = -2, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
+    let frame, previous = 0, clock = 0, environmentTime = 0, stepDistance = 0, portalContact = false, castleContact = false, oldNear = -2, oldNearNpc = -2, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
     const draw = time => {
+      if (document.hidden || live.current.sceneHidden) { frame = 0; previous = 0; return; }
       const reducedMotion = live.current.reduceMotion, ambientPaused = live.current.ambientPaused;
       const dt = Math.min((time - previous) / 1000 || 0, .04); previous = time; clock += dt;
       if (oldMissionRound !== live.current.missionRound) { oldMissionRound = live.current.missionRound; celebrated = false; fireworks.stop(); }
@@ -307,7 +401,7 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
         stepDistance = footsteps.distance;
         if (footsteps.steps) live.current.onStep?.(walkingSurface(p.x, p.z));
         if (walking) { const yaw = Math.atan2(movement.x, movement.z); world.player.rotation.y += Math.atan2(Math.sin(yaw - world.player.rotation.y), Math.cos(yaw - world.player.rotation.y)) * Math.min(1, dt * 14);
-          target.set(p.x * .65, 1.1, p.z * .65); delta.subVectors(target, controls.target).multiplyScalar(Math.min(1, dt * 2)); controls.target.add(delta); camera.position.add(delta);
+          target.set(p.x, 1.1, p.z); delta.subVectors(target, controls.target).multiplyScalar(Math.min(1, dt * 2)); controls.target.add(delta); camera.position.add(delta);
         }
       }
       world.limbs.forEach((limb, i) => { limb.rotation.x = walking ? Math.sin(clock * 10) * .65 * (i < 2 ? 1 : -1) * (i % 2 ? -1 : 1) : THREE.MathUtils.damp(limb.rotation.x, 0, 14, dt); });
@@ -320,8 +414,21 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
         npc.body.position.y = moving ? Math.abs(Math.sin(clock * 6.5 + npc.phase)) * .045 : 0;
         if (fireworks.active && fireworks.elapsed < 1 && !reducedMotion) npc.limbs[3].rotation.x = -2.3;
       });
+      if (!live.current.paused && !reducedMotion && !ambientPaused) world.performers.forEach(actor => {
+        if (actor.kind === 'drink') actor.arm.rotation.x = -.35 - Math.max(0, Math.sin(clock * .7)) * 1.1;
+        if (actor.kind === 'forge') actor.arm.rotation.x = -.5 - Math.abs(Math.sin(clock * 2.6)) * 1.25;
+        if (actor.kind === 'read') actor.torso.rotation.x = .12 + Math.sin(clock * .6) * .04;
+        if (actor.kind === 'salute') actor.arm.rotation.z = -1.25 + Math.sin(clock * 1.5) * .13;
+      });
       if (!reducedMotion && !ambientPaused) { world.crystal.rotation.y += dt * .45; world.crystal.position.y = 2.2 + Math.sin(clock * 1.4) * .1; world.cape.rotation.x = -.13 + Math.sin(clock * (walking ? 10 : 2)) * (walking ? .13 : .025); world.fireflies.rotation.y += dt * .012; world.flames.forEach(f => { f.scale.y = 1 + Math.sin(clock * 9) * .18; }); }
-      const p = world.player.position; const near = nearbySite(p.x, p.z);
+      const p = world.player.position;
+      const touchingCastle = isCastleThreshold(p.x, p.z);
+      if (!live.current.paused && touchingCastle && !castleContact) { castleContact = true; live.current.onOpen(5); }
+      if (!touchingCastle) castleContact = false;
+      const touchingPortal = Math.hypot(p.x - PORTAL.x, p.z - PORTAL.z) < 1.1;
+      if (!live.current.paused && touchingPortal && !portalContact) { portalContact = true; live.current.onOpen(4); }
+      if (!touchingPortal) portalContact = false;
+      const near = nearbySite(p.x, p.z);
       if (near !== oldNear) { oldNear = near; live.current.onNear(near); }
       let closestNpc = -1, closestDistance = 2.7;
       world.npcs.forEach((npc, index) => { const d = Math.hypot(npc.group.position.x - p.x, npc.group.position.z - p.z); if (d < closestDistance) { closestNpc = index; closestDistance = d; } });
@@ -329,16 +436,19 @@ export default function VillageScene({ keys, paused, onOpen, onNear, onStep, onT
       if (live.current.cameraTurn !== oldCameraTurn) { camera.position.sub(controls.target).applyAxisAngle(verticalAxis, (live.current.cameraTurn - oldCameraTurn) * Math.PI / 6).add(controls.target); oldCameraTurn = live.current.cameraTurn; }
       if (live.current.zoom !== oldZoom) { camera.position.sub(controls.target).multiplyScalar(oldZoom / live.current.zoom).add(controls.target); oldZoom = live.current.zoom; }
       if (live.current.resetKey !== oldReset) { controls.target.set(p.x, 1.1, p.z); camera.position.set(p.x + 13, 15, p.z + 18); oldReset = live.current.resetKey; }
-      controls.enabled = !live.current.paused; controls.enableDamping = !reducedMotion; controls.update(); renderer.render(scene, camera); frame = requestAnimationFrame(draw);
-    }; frame = requestAnimationFrame(draw);
+      controls.enabled = !live.current.paused; controls.enableDamping = !reducedMotion; controls.update(); if (compassRef?.current) compassRef.current.style.transform = `rotate(${-controls.getAzimuthalAngle()}rad)`; renderer.render(scene, camera); frame = requestAnimationFrame(draw);
+    };
+    const resume = () => { if (!frame && !document.hidden && !live.current.sceneHidden) { if (isCastleThreshold(world.player.position.x, world.player.position.z)) castleContact = true; previous = 0; frame = requestAnimationFrame(draw); } };
+    const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; previous = 0; keys.current.clear(); } else resume(); };
+    wake.current = resume; document.addEventListener('visibilitychange', visibility); resume();
     return () => {
-      cancelAnimationFrame(frame); observer.disconnect(); controls.dispose(); clear();
+      wake.current = null; document.removeEventListener('visibilitychange', visibility); cancelAnimationFrame(frame); observer.disconnect(); controls.dispose(); clear();
       renderer.domElement.removeEventListener('keydown', down); renderer.domElement.removeEventListener('blur', clear); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear);
       renderer.domElement.removeEventListener('pointerdown', pointerdown); renderer.domElement.removeEventListener('pointerup', pointerup); renderer.domElement.removeEventListener('webglcontextlost', lost);
-      scene.traverse(o => { o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.map?.dispose(); m.dispose(); }); });
+      scene.traverse(o => { if (o.isInstancedMesh) o.dispose(); o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.map?.dispose(); m.dispose(); }); });
       renderer.dispose(); renderer.domElement.remove();
     };
-  }, [keys]);
+  }, [keys, compassRef]);
 
   return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para entrar em um edifício próximo e F para conversar com um morador próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.</p>{error && <div className="scene-error"><strong>O cenário 3D precisa de WebGL 2.</strong><p>Você pode acessar todas as histórias pelo modo leitura ou pelos destinos abaixo.</p></div>}</div>;
 }

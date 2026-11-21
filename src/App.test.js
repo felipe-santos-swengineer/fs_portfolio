@@ -4,6 +4,7 @@ import VillageAudio from './audio/VillageAudio';
 
 jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, zoom, missionRound }) => <div data-testid="village-canvas" data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onTalk(0)}>Conversar com Bia</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
+jest.mock('./components/ThroneHall', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do salao de teste</button> }));
 
 beforeEach(() => {
   localStorage.clear();
@@ -122,4 +123,13 @@ test('concluir os quatro destinos substitui a missão por Recomeçar e reinicia 
   expect(originalScene.getAttribute('data-zoom')).toBe(zoom);
   expect(originalScene.getAttribute('data-round')).toBe('1');
   expect(engine().stopFireworks).toHaveBeenCalledTimes(1);
+});
+
+test('o castelo abre o salao e permite voltar sem registrar uma visita extra', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: /Entrar: Sal/ }));
+  const exit = await screen.findByRole('button', { name: 'Sair do salao de teste' });
+  fireEvent.click(exit);
+  expect(screen.queryByRole('button', { name: 'Sair do salao de teste' })).toBeNull();
+  expect(screen.getByRole('progressbar', { name: 'Destinos explorados' }).getAttribute('aria-valuenow')).toBe('0');
 });

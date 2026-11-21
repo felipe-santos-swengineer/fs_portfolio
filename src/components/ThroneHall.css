@@ -1,0 +1,15 @@
+.throne-hall { padding: 0 0 24px; }
+.throne-viewport { height:max(620px,70vh); max-height:900px; }
+.throne-canvas { position:absolute; inset:0; }
+.throne-canvas canvas { display:block; width:100%; height:100%; touch-action:none; }
+.throne-guide { z-index:3; text-align:center; color:#becac2; }
+.throne-guide small { font-size:11px; }
+.throne-exit { position:absolute; z-index:4; top:22px; right:5%; padding:10px 14px; background:#111e28e8; border:1px solid #79958a; border-radius:5px; color:#e4eee6; }
+.throne-touch { display:none; justify-content:center; gap:10px; margin:16px 5%; }
+.throne-touch button { width:52px; height:52px; border:1px solid #607b6b; background:#20332c; color:#c0dfcc; border-radius:8px; touch-action:none; font-size:22px; }
+@media(max-width:800px) { .throne-viewport { height:55svh; min-height:430px; } .throne-touch { display:flex; } .throne-guide { left:5%; bottom:16px; transform:none; width:90%; max-width:90%; } }
+
+.felipe-talk { position:absolute; z-index:4; left:50%; bottom:105px; transform:translateX(-50%); background:#20392ef2; border:1px solid #9dbca9; color:#e5f2e6; border-radius:5px; padding:10px 14px; }
+.throne-hall .felipe-dialogue { z-index:5; bottom:95px; right:5%; }
+.throne-hall .felipe-dialogue .npc-avatar { background:#86704f; }
+@media(max-width:800px) { .throne-hall .felipe-dialogue { bottom:120px; max-height:55%; overflow:auto; } .felipe-talk { bottom:125px; } }

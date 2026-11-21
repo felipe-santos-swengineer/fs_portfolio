@@ -79,8 +79,8 @@ export default class VillageAudio {
     this.channel = 'steps';
     const stone = surface === 'stone';
     this.foot = 1 - this.foot;
-    this.rustle(stone ? .1 : .16, stone ? 1850 : 650, stone ? .14 : .17, 0, this.foot ? .15 : -.15);
-    this.tone(stone ? 145 : 88, .09, .075, 0, 'sine', stone ? 65 : 48);
+    this.rustle(stone ? .1 : .16, stone ? 1850 : 650, stone ? .07 : .085, 0, this.foot ? .15 : -.15);
+    this.tone(stone ? 145 : 88, .09, .0375, 0, 'sine', stone ? 65 : 48);
   }
 
   interact(site) {
@@ -98,6 +98,18 @@ export default class VillageAudio {
       [880, 1760, 2376].forEach((f, i) => this.tone(f, .7, .065 / (i + 1), 0));
       this.rustle(.1, 950, .06, .12);
     }
+  }
+
+  dungeon(event) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions';
+    if (event === 'attack') { this.rustle(.16, 6500, .16); this.rustle(.08, 9500, .07, .025); this.tone(1900, .13, .025, .015, 'sine', 680); }
+    else if (event === 'monsterAttack') { this.rustle(.22, 480, .12); this.tone(145, .25, .085, 0, 'sawtooth', 65); this.tone(93, .2, .05, .025, 'triangle', 55); }
+    else if (event === 'defeat') { this.tone(230, .24, .09, 0, 'sawtooth', 70); this.rustle(.2, 900, .1); }
+    else if (event === 'collect') { this.tone(660, .18, .06, 0, 'sine', 1000); }
+    else if (event === 'wrong') { this.tone(190, .3, .08, 0, 'triangle', 90); }
+    else if (event === 'win') { [523,659,784].forEach((f,i)=>this.tone(f,.35,.06,i*.1,'triangle')); }
+    else if (event === 'start') { this.tone(300,.25,.055,0,'triangle',620); }
   }
 
   closeDoor() { if (!this.channels.interactions) return; this.channel = 'interactions'; this.rustle(.1, 600, .08); this.tone(100, .12, .045, 0, 'triangle', 55); }

@@ -12,8 +12,11 @@ Um portfólio interativo em forma de vilarejo: explore o cenário com um persona
 | Biblioteca | Formação, experiências, habilidades e interesses |
 | Oficina | Projetos, galerias de imagens e links |
 | Correio | Contato e redes profissionais |
+| Castelo | Salão do trono e conversa com Felipe |
+| Portal a oeste | Calabouço com minijogos e combate |
 
-- Personagem articulado, obstáculos e câmera com rotação e zoom.
+- Personagem articulado, obstáculos e câmera com rotação e zoom. A jornada começa na doca ao sul da vila.
+- Castelo com salão do trono e falas gravadas de Felipe; portal com celas de jogos, soldados e ondas de criaturas.
 - Quatro moradores passeando pela vila, com diálogos em texto e gravações de vozes distintas.
 - Dragão que sobrevoa o cenário e pousa nos telhados, com transição gradual entre dia e noite.
 - Missão de visitar os quatro destinos, com uma breve celebração de fogos ao concluir.
@@ -30,7 +33,8 @@ O botão **Recomeçar** reinicia o progresso da missão e a celebração, preser
 | Rotacionar a câmera | Arrastar com o mouse ou um dedo; botões de rotação |
 | Aproximar ou afastar | Roda do mouse, gesto de pinça ou botões de zoom |
 | Abrir um edifício | Clicar nele ou pressionar E perto da entrada |
-| Conversar com um morador | Clicar nele ou pressionar F quando estiver próximo |
+| Conversar | Clicar no personagem ou pressionar F quando estiver próximo |
+| Atacar no calabouço | J ou espaço; botão de ataque no celular |
 | Fechar uma janela | Escape ou botão de fechar |
 | Centralizar a câmera | Botão Focar personagem |
 
@@ -42,7 +46,7 @@ O painel **Acessibilidade** oferece tamanho de texto, alto contraste, fonte simp
 
 O modo leitura permite acessar todas as seções e os diálogos dos moradores sem depender de WebGL. A experiência 3D requer um navegador com WebGL 2; o desempenho varia conforme o dispositivo.
 
-O som geral começa desligado a cada visita. No painel **Áudio**, é possível ativar ou silenciar tudo ou escolher cada categoria individualmente. As narrações originais foram preservadas; as falas dos moradores são arquivos locais, sem consulta a serviços de voz durante a visita.
+O som geral e todas as categorias começam ativados a cada visita; a reprodução pode começar após a primeira interação, conforme o navegador. No painel **Áudio**, é possível ativar ou silenciar tudo ou escolher cada categoria individualmente. As narrações originais foram preservadas; as falas dos moradores são arquivos locais, sem consulta a serviços de voz durante a visita.
 
 ## Tecnologias
 
@@ -75,8 +79,9 @@ Abra `http://localhost:3000`.
 | `npm run build` | Gerar a versão de produção em `build/` |
 | `npm run deploy` | Gerar o build e publicá-lo na branch `gh-pages` |
 | `npm run generate:npc-voices` | Regenerar as gravações dos moradores |
+| `npm run generate:felipe-voice` | Regenerar as falas de Felipe no salão |
 
-A geração de vozes é uma ferramenta de desenvolvimento: exige internet e envia os textos ao serviço de síntese da Microsoft por meio de `msedge-tts`. As gravações já estão incluídas no projeto; esse comando não é necessário para executar ou publicar o site.
+A geração de vozes é uma ferramenta de desenvolvimento: exige internet e envia os textos ao serviço de síntese da Microsoft por meio de `msedge-tts`. O comando de Felipe também envia os textos ao mesmo serviço. As gravações já estão incluídas no projeto; esse comando não é necessário para executar ou publicar o site.
 
 As verificações de acessibilidade automatizadas não substituem a avaliação visual e os testes com leitores de tela reais.
 
@@ -88,7 +93,7 @@ Com acesso de escrita ao repositório e autenticação Git configurada:
 npm run deploy
 ```
 
-O script `predeploy` executa o build antes da publicação. No repositório, em **Settings → Pages**, configure a origem como **Deploy from a branch**, selecionando **gh-pages** e **/ (root)**.
+O script `predeploy` executa o build antes da publicação. A versão exibida no cabeçalho corresponde ao número de commits acessíveis no histórico Git no momento do build. No repositório, em **Settings → Pages**, configure a origem como **Deploy from a branch**, selecionando **gh-pages** e **/ (root)**.
 
 A URL base já está definida em `package.json` para `/fs_portfolio/`. Após publicar, aguarde o processamento do GitHub Pages. Se a versão anterior continuar aparecendo, atualize a página com Ctrl + F5.
 

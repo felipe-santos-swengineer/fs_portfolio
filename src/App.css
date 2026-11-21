@@ -94,3 +94,22 @@
   .app .modal-backdrop{padding:6px}
   .app :is(.modal,.audio-panel){max-height:calc(100dvh - 12px)}
 }
+
+.intro-actions { pointer-events: auto; display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+.intro-actions button { display: inline-flex; align-items: center; gap: .35rem; padding: .6rem .85rem; border: 1px solid currentColor; border-radius: .35rem; background: transparent; color: inherit; cursor: pointer; font: inherit; }
+.project-details { display: grid; gap: .75rem; margin: 1rem 0; }
+.project-details div { border-left: 2px solid currentColor; padding-left: .75rem; }
+.project-details dt { font-weight: 700; }
+.project-details dd { margin: .25rem 0 0; }
+
+@media(min-width:801px){.destinations{grid-template-columns:repeat(5,minmax(0,1fr))}.destinations strong{font-size:clamp(17px,1.7vw,25px)}}
+
+.compass-dial{display:flex;align-items:center;flex-direction:column;gap:5px;transform-origin:center;will-change:transform}
+
+.app .compass { gap:3px; color:#d3c49e; }
+.compass-north { font-size:11px; font-weight:700; color:#e7c785; }
+.compass-face { position:relative; display:grid; place-items:center; width:62px; height:62px; border:1px solid #8fa8a2; border-radius:50%; background:#101c27d9; box-shadow:inset 0 0 0 4px #253843,0 3px 14px #0006; }
+.compass-needle { width:40px; height:40px; transform-origin:center; will-change:transform; }
+.compass-cardinal { position:absolute; color:#a9bab3; font-size:8px; font-weight:700; line-height:1; }
+.compass-cardinal.east{right:5px;top:27px}.compass-cardinal.west{left:5px;top:27px}.compass-cardinal.south{bottom:4px;left:27px}
+@media(max-width:600px){.compass-face{width:52px;height:52px}.compass-cardinal.east,.compass-cardinal.west{top:22px}.compass-cardinal.south{left:22px}.app .compass .compass-needle{width:34px;height:34px}}

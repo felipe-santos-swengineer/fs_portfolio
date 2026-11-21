@@ -7,14 +7,18 @@ import AccessibilitySettings, { loadAccessibilitySettings, useSystemReducedMotio
 import useModalFocus from './components/useModalFocus';
 import VillagerSpeech from './audio/VillagerSpeech';
 import { VILLAGER_VOICES } from './audio/villagerClips';
+import { FELIPE_LINES, FELIPE_VOICE } from './audio/felipeVoice';
 import { VILLAGERS } from './components/villagers';
 import welcome from './assets/audio/bem_vindo_bill_voice.mp3';
 import history from './assets/audio/inicio_bill_voice.mp3';
 import motivation from './assets/audio/motivacao_bill_voice.mp3';
 import projectsAudio from './assets/audio/projetos_bill_voice.mp3';
 import music from './assets/audio/dndAdventure_NCS.mp3';
+import dungeonMusic from './assets/audio/dungeon.wav';
 import './App.css';
 const VillageScene = lazy(() => import('./components/VillageScene'));
+const Dungeon = lazy(() => import('./components/Dungeon'));
+const ThroneHall = lazy(() => import('./components/ThroneHall'));
 
 
 const places = [
@@ -22,23 +26,29 @@ const places = [
   { name: 'Biblioteca do saber', section: 'Sobre mim', icon: '✧', texts: [3, 4, 5] },
   { name: 'Oficina das criações', section: 'Projetos', icon: '⚒', texts: [6], audio: [projectsAudio] },
   { name: 'Correio da vila', section: 'Contato', icon: '✉', texts: [7] },
+  { name: 'Portal do oeste', section: 'Playground', icon: '\u2726', texts: [] },
+  { name: 'Castelo da vila', section: 'Sal\u00e3o do trono', icon: '\u265c', texts: [] },
 ];
 
 function Content({ index, narrationEnabled }) {
   const place = places[index];
+  if (index === 5) return <p>O castelo abriga um sal&#227;o do trono que pode ser explorado em 3D.</p>;
+  if (index === 4) return <p>O portal leva a um calabou&#231;o 3D com desafios de movimenta&#231;&#227;o. Acesse-o pelo atalho Playground na vila.</p>;
   return <>
     {place.texts.map((n, i) => <section className="story" key={n}>
       <h3>{titulosTextos[n]}</h3>
       {place.audio?.[i] && <label className="narration">OUÇA A HISTÓRIA ORIGINAL<audio aria-label={`Narração: ${titulosTextos[n]}`} controls muted={!narrationEnabled} preload="none" src={place.audio[i]} onPlay={e => { if (!narrationEnabled) { e.target.pause(); return; } document.querySelectorAll('audio[data-narration]').forEach(a => { if (a !== e.target) a.pause(); }); }} data-narration /><small>{narrationEnabled ? 'A gravação original acompanha os temas desta seção; o texto foi revisado para esta edição.' : 'Narrações silenciadas. Você pode ativá-las nas configurações de áudio.'}</small></label>}
       {textos[n]?.split(/\n\s*\n/).map((p, j) => <p key={j}>{p.trim()}</p>)}
     </section>)}
-    {index === 2 && projetos.map(p => <article className="project" key={p.id}><h3>{p.titulo}</h3><p>{p.descricao}</p><div className="gallery" role="region" aria-label={`Imagens do projeto ${p.titulo}`} tabIndex={0}>{p.imagens.map((src, i) => <img src={src} alt={`${p.titulo} — tela ${i + 1}`} key={src} loading="lazy" />)}</div><a href={p.github || p.link} aria-label={`${p.github ? 'Ver código' : 'Visitar site'} do projeto ${p.titulo} (abre em nova aba)`} target="_blank" rel="noreferrer">{p.github ? 'Explorar no GitHub' : 'Visitar projeto'} <ArrowUpRight size={16} /></a></article>)}
+    {index === 2 && projetos.map(p => <article className="project" key={p.id}><h3>{p.titulo}</h3><p>{p.descricao}</p><dl className="project-details"><div><dt>Contexto e atuação</dt><dd>{p.contexto}</dd></div><div><dt>Desafio</dt><dd>{p.desafio}</dd></div>{p.tecnologias && <div><dt>Tecnologias</dt><dd>{p.tecnologias}</dd></div>}</dl><div className="gallery" role="region" aria-label={`Imagens do projeto ${p.titulo}`} tabIndex={0}>{p.imagens.map((src, i) => <img src={src} alt={`${p.titulo} — tela ${i + 1}`} key={src} loading="lazy" />)}</div><a href={p.github || p.link} aria-label={`${p.github ? 'Ver código' : 'Visitar site'} do projeto ${p.titulo} (abre em nova aba)`} target="_blank" rel="noreferrer">{p.github ? 'Explorar no GitHub' : 'Visitar projeto'} <ArrowUpRight size={16} /></a></article>)}
     {index === 3 && <div className="contact-links"><a href="mailto:felipesantosswengineer@email.com">Enviar email ↗</a><a href="tel:+5588998378028">Ligar ↗</a><a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" aria-label="LinkedIn (abre em nova aba)" target="_blank" rel="noreferrer">LinkedIn ↗</a><a href="https://www.instagram.com/felipe_santos_swengineer/" aria-label="Instagram (abre em nova aba)" target="_blank" rel="noreferrer">Instagram ↗</a></div>}
   </>;
 }
 
 export default function App() {
   const [selected, setSelected] = useState(null);
+  const [inDungeon, setInDungeon] = useState(false);
+  const [inThrone, setInThrone] = useState(false);
   const [visited, setVisited] = useState([]);
   const [missionRound, setMissionRound] = useState(0);
   const celebrationDone = useRef(false);
@@ -48,6 +58,7 @@ export default function App() {
   const [audioPanelOpen, setAudioPanelOpen] = useState(false);
   const preferences = useRef(audioSettings);
   const audioRevision = useRef(0);
+  const audioInitiated = useRef(false);
   const closeAudioPanel = useCallback(() => setAudioPanelOpen(false), []);
   const [conversation, setConversation] = useState(null);
   const [nearNpc, setNearNpc] = useState(-1);
@@ -66,6 +77,7 @@ export default function App() {
   const [resetKey, setResetKey] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [cameraTurn, setCameraTurn] = useState(0);
+  const compassDial = useRef(null);
   const keys = useRef(new Set());
   const bg = useRef(null);
   const effects = useRef(null);
@@ -74,10 +86,10 @@ export default function App() {
   const visits = useRef(VILLAGERS.map(() => 0));
   const npcPanel = useRef(null);
   if (!effects.current) effects.current = new VillageAudio();
-  const soundRequested = useRef(false);
+  const soundRequested = useRef(audioSettings.master);
   const dialog = useRef(null);
   const previousFocus = useRef(null);
-  const open = i => { speech.current.stop(); setConversation(null); previousFocus.current = document.activeElement; keys.current.clear(); if (preferences.current.master && preferences.current.interactions) effects.current.interact(i); setSelected(i); setVisited(v => [...new Set([...v, i])]); };
+  const open = i => { if (i === 5) { keys.current.clear(); setConversation(null); setNear(-1); setInThrone(true); return; } if (i === 4) { keys.current.clear(); setConversation(null); setNear(-1); setInDungeon(true); return; } speech.current.stop(); setConversation(null); previousFocus.current = document.activeElement; keys.current.clear(); if (preferences.current.master && preferences.current.interactions) effects.current.interact(i); setSelected(i); if (i < 4) setVisited(v => [...new Set([...v, i])]); };
   const close = () => { if (preferences.current.master && preferences.current.interactions) effects.current.closeDoor(); setSelected(null); previousFocus.current?.focus(); };
   const speakNpc = useCallback((index, line) => {
     if (!soundRequested.current || !preferences.current.voices) return;
@@ -88,6 +100,17 @@ export default function App() {
     speech.current.speak(person.lines[line], VILLAGER_VOICES[person.name], success => {
       setSpeaking(false); if (bg.current) bg.current.volume = .09;
       if (!success) setVoiceNotice('Não foi possível reproduzir a fala. Tente ouvir novamente ou acompanhe a mensagem em texto.');
+    });
+  }, []);
+  const speakFelipe = useCallback(line => {
+    if (!soundRequested.current || !preferences.current.voices) return;
+    speech.current.stop();
+    document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
+    if (bg.current) bg.current.volume = .025;
+    setSpeaking(true); setVoiceNotice('');
+    speech.current.speak(FELIPE_LINES[line], FELIPE_VOICE, success => {
+      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      if (!success) setVoiceNotice('N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe a mensagem em texto.');
     });
   }, []);
   const talk = useCallback(index => {
@@ -128,6 +151,7 @@ export default function App() {
   useEffect(() => { const enter = e => { if (!anyPanelOpen && !e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement?.tagName === 'CANVAS' && e.key.toLowerCase() === 'e' && !e.repeat && near >= 0 && selected === null && !reading) open(near); }; window.addEventListener('keydown', enter); return () => window.removeEventListener('keydown', enter); }, [near, selected, reading, anyPanelOpen]);
   useModalFocus(dialog, close, selected !== null && !anyPanelOpen);
   const updateAudio = async next => {
+    audioInitiated.current = true;
     const revision = ++audioRevision.current;
     preferences.current = next; soundRequested.current = next.master; setAudioSettings(next); setAudioNotice('');
     try { localStorage.setItem('village-audio', JSON.stringify(next)); } catch { /* Private mode can block storage. */ }
@@ -145,6 +169,25 @@ export default function App() {
     if (!effectsReady || !musicReady) setAudioNotice('Alguns sons não puderam ser iniciados. Suas escolhas foram mantidas; tente ativar o som geral novamente.');
   };
 
+  useEffect(() => {
+    const activate = event => {
+      if (!event.isTrusted) return;
+      window.removeEventListener('pointerdown', activate, true);
+      window.removeEventListener('keydown', activate, true);
+      if (preferences.current.master) updateAudio(preferences.current);
+    };
+    window.addEventListener('pointerdown', activate, true);
+    window.addEventListener('keydown', activate, true);
+    return () => { window.removeEventListener('pointerdown', activate, true); window.removeEventListener('keydown', activate, true); };
+    // Audio is initialized only after the first browser interaction.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const audio = bg.current;
+    if (audio && audioInitiated.current && preferences.current.master && preferences.current.music) audio.play().catch(() => setAudioNotice('Não foi possível iniciar a música. Tente ativá-la nas configurações de áudio.'));
+  }, [inDungeon]);
+
   const updateAccessibility = next => {
     keys.current.clear();
     if (next.readingMode !== accessibility.readingMode) endConversation();
@@ -159,16 +202,19 @@ export default function App() {
   return <div className={`app text-${accessibility.textSize}${accessibility.highContrast ? ' high-contrast' : ''}${accessibility.simpleFont ? ' simple-font' : ''}${reduceMotion ? ' reduce-motion' : ''}`}>
     <a className="skip-link" href="#portfolio" tabIndex={backgroundInert ? -1 : 0} aria-hidden={backgroundInert || undefined} onClick={e => { e.preventDefault(); document.getElementById('portfolio')?.focus(); }}>Pular para o conteúdo</a>
     <div inert={backgroundInert || undefined} aria-hidden={backgroundInert || undefined}>
-    <header><a className="brand" href="#portfolio" aria-label="Felipe Santos, início"><span className="brand-mark">F<span>.</span></span><span>FELIPE SANTOS<small>ENGENHEIRO DE SOFTWARE</small></span></a><div className="header-actions"><span className="edition">PORTFÓLIO 3D · VOL. 02</span><button onClick={() => { endConversation(); setReading(!reading); }}><BookOpen size={16} /><span>{reading ? 'Voltar à vila' : 'Modo leitura'}</span></button><button onClick={() => { keys.current.clear(); setAccessibilityOpen(false); setAudioPanelOpen(true); }} aria-label="Configurações de áudio" aria-haspopup="dialog">{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>Áudio</span></button><button onClick={openAccessibility} aria-label="Abrir acessibilidade" aria-haspopup="dialog"><Accessibility size={18} /><span>Acessibilidade</span></button></div></header>
+    <header><a className="brand" href="#portfolio" aria-label="Felipe Santos, início"><span className="brand-mark">F<span>.</span></span><span>FELIPE SANTOS<small>ENGENHEIRO DE SOFTWARE</small></span></a><div className="header-actions"><span className="edition">PORTFÓLIO 3D · V {process.env.REACT_APP_BUILD_VERSION || 'indisponível'}</span><button onClick={() => { endConversation(); setReading(!reading); }}><BookOpen size={16} /><span>{reading ? 'Voltar à vila' : 'Modo leitura'}</span></button><button onClick={() => { keys.current.clear(); setAccessibilityOpen(false); setAudioPanelOpen(true); }} aria-label="Configurações de áudio" aria-haspopup="dialog">{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>Áudio</span></button><button onClick={openAccessibility} aria-label="Abrir acessibilidade" aria-haspopup="dialog"><Accessibility size={18} /><span>Acessibilidade</span></button></div></header>
     <main id="portfolio" tabIndex={-1} className={!showIntro && !reading ? 'intro-collapsed' : ''}>
+      {inThrone && <Suspense fallback={<div className="scene-loading">Abrindo o castelo...</div>}><ThroneHall keys={keys} onSpeak={speakFelipe} onStop={() => speech.current.stop()} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} paused={anyPanelOpen} reduceMotion={reduceMotion} onStep={() => effects.current.step('stone')} onExit={() => { speech.current.stop(); keys.current.clear(); setInThrone(false); }} /></Suspense>}
+      {inDungeon && <Suspense fallback={<div className="scene-loading">Abrindo o portal...</div>}><Dungeon keys={keys} onStep={() => effects.current.step('stone')} onSound={event => effects.current.dungeon(event)} paused={anyPanelOpen} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setInDungeon(false); }} /></Suspense>}
+      <div hidden={inDungeon || inThrone}>
       <div className="intro">
         {!showIntro && !reading && <h1 className="sr-only">Portfólio de Felipe Santos</h1>}
         {!reading && <button className="intro-toggle" aria-expanded={showIntro} aria-controls="intro-copy" onClick={() => setShowIntro(visible => !visible)}>{showIntro ? <EyeOff size={15} /> : <Eye size={15} />}{showIntro ? 'Ocultar texto' : 'Mostrar texto'}</button>}
-        <div id="intro-copy" hidden={!showIntro && !reading}><span className="eyebrow"><span /> FELIPE SANTOS · ENGENHARIA DE SOFTWARE</span><h1>Ideias ganham vida.<br />Histórias, <em>caminhos.</em></h1><p>Uma vila para conhecer quem sou e o que construo.<br /> Explore os projetos, descubra minha trajetória<br /> e encontre um ponto de partida para nossa conversa.</p><div className="intro-note"><Compass size={18} /><span>Arraste para olhar ao redor. Escolha uma porta para começar.</span></div></div>
+        <div id="intro-copy" hidden={!showIntro && !reading}><span className="eyebrow"><span /> FELIPE SANTOS · ENGENHARIA DE SOFTWARE</span><h1>Ideias ganham vida.<br />Histórias, <em>caminhos.</em></h1><p>Uma vila para conhecer quem sou e o que construo.<br /> Explore os projetos, descubra minha trajetória<br /> e encontre um ponto de partida para nossa conversa.</p><div className="intro-actions" aria-label="Acesso rápido">{[[2, "Ver projetos"], [1, "Experiência"], [3, "Contato"]].map(([i, label]) => <button key={i} onClick={() => { if (reading) document.getElementById(`reading-section-${i}`)?.scrollIntoView(); else open(i); }}>{label} <ArrowUpRight size={15} /></button>)}</div><div className="intro-note"><Compass size={18} /><span>Arraste para olhar ao redor. Escolha uma porta para começar.</span></div></div>
       </div>
       {reading ? <div className="reading-list"><nav className="reading-navigation" aria-label="Seções do portfólio">{places.map((p, i) => <a href={`#reading-section-${i}`} key={p.name}>{p.section}</a>)}<a href="#reading-villagers">Moradores da vila</a></nav>{places.map((p, i) => <section id={`reading-section-${i}`} tabIndex={-1} key={p.name}><span className="eyebrow">0{i + 1} · {p.name}</span><h2>{p.section}</h2><Content index={i} narrationEnabled={sound && audioSettings.narration} /></section>)}<section id="reading-villagers" tabIndex={-1}><h2>Moradores da vila</h2><p>Conheça as saudações dos moradores sem navegar pelo cenário.</p>{VILLAGERS.map((person, i) => <details className="reading-villager" key={person.name}><summary>{person.name} · {person.role}</summary>{person.lines.map((line, j) => <div key={line}><p>{line}</p><button disabled={!sound || !audioSettings.voices} onClick={() => speakNpc(i, j)}>Ouvir mensagem {j + 1} de {person.name}</button></div>)}</details>)}{speaking && <button onClick={() => speech.current.stop()}>Parar voz</button>}</section></div> : <>
         <div className="viewport" aria-label="Vilarejo tridimensional do portfólio">
-          <Suspense fallback={<div className="scene-loading">Acendendo as lanternas da vila…</div>}><VillageScene keys={keys} paused={selected !== null || anyPanelOpen} reduceMotion={reduceMotion} ambientPaused={accessibility.pauseScene} cameraTurn={cameraTurn} onOpen={open} onNear={setNear} onStep={surface => { if (preferences.current.master && preferences.current.steps) effects.current.step(surface); }} onTalk={talk} onNearNpc={setNearNpc} talkingNpc={conversation?.index} zoom={zoom} resetKey={resetKey} missionRound={missionRound} missionComplete={missionComplete && !celebrationDone.current} onFirework={stage => { if (preferences.current.master && preferences.current.interactions) effects.current.firework(stage); }} onCelebrate={() => { celebrationDone.current = true; }} /></Suspense>
+          <Suspense fallback={<div className="scene-loading">Acendendo as lanternas da vila…</div>}><VillageScene keys={keys} compassRef={compassDial} sceneHidden={inDungeon || inThrone} paused={selected !== null || anyPanelOpen || inDungeon || inThrone} reduceMotion={reduceMotion} ambientPaused={accessibility.pauseScene} cameraTurn={cameraTurn} onOpen={open} onNear={setNear} onStep={surface => { if (preferences.current.master && preferences.current.steps) effects.current.step(surface); }} onTalk={talk} onNearNpc={setNearNpc} talkingNpc={conversation?.index} zoom={zoom} resetKey={resetKey} missionRound={missionRound} missionComplete={missionComplete && !celebrationDone.current} onFirework={stage => { if (preferences.current.master && preferences.current.interactions) effects.current.firework(stage); }} onCelebrate={() => { celebrationDone.current = true; }} /></Suspense>
           {conversation && <section className="npc-dialogue" aria-label={`Conversa com ${VILLAGERS[conversation.index].name}`} tabIndex={-1} ref={npcPanel}>
             <div className="npc-dialogue-heading"><span className="npc-avatar" style={{ background: VILLAGERS[conversation.index].color }}>{VILLAGERS[conversation.index].name[0]}</span><div><h2>{VILLAGERS[conversation.index].name}</h2><small>{VILLAGERS[conversation.index].role}</small></div><button onClick={endConversation} aria-label="Encerrar conversa"><X size={18} /></button></div>
             <p aria-live="polite">{VILLAGERS[conversation.index].lines[conversation.line]}</p>
@@ -179,19 +225,20 @@ export default function App() {
             <div className="scene-caption"><span className="live-dot" /> VILA DOS CRIADORES <small>UM CÉU EM CONSTANTE MUDANÇA · CEARÁ</small></div>
             <div className="walk-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> ou setas para passear</span><span className="keyboard-guide"><kbd>E</kbd> entrar · <kbd>F</kbd> conversar · arraste para girar</span><span className="touch-guide">Arraste para girar · toque para interagir</span>{near >= 0 && <button onClick={() => open(near)}>Entrar: {places[near].name} ↗</button>}{nearNpc >= 0 && <button onClick={() => talk(nearNpc)}>Conversar com {VILLAGERS[nearNpc].name} ↗</button>}</div>
           </div>
-          <div className="compass"><span>N</span><Compass size={34} strokeWidth={1} /></div>
+          <div className="compass" aria-label="Bússola: a seta indica a direção da câmera"><span className="compass-north">N</span><div className="compass-face"><span className="compass-cardinal east">L</span><span className="compass-cardinal south">S</span><span className="compass-cardinal west">O</span><svg className="compass-needle" ref={compassDial} viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 L26 22 L20 19 L14 22 Z" fill="#e2b76c"/><path d="M20 37 L14 18 L20 21 L26 18 Z" fill="#849a9d"/><circle cx="20" cy="20" r="2.1" fill="#f1e4c7"/></svg></div></div>
           <div className="camera-tools"><button onClick={() => setResetKey(v => v + 1)}>Focar personagem</button><div className="camera-rotation"><button onClick={() => setCameraTurn(v => v - 1)} aria-label="Girar câmera para a esquerda"><RotateCcw size={18} /></button><button onClick={() => setCameraTurn(v => v + 1)} aria-label="Girar câmera para a direita"><RotateCw size={18} /></button></div><div className="zoom"><button onClick={() => setZoom(z => Math.min(2, z + .2))} aria-label="Aproximar">+</button><button onClick={() => setZoom(z => Math.max(.5, z - .2))} aria-label="Afastar">−</button></div></div>
         </div>
-        {missionComplete ? <div className="quest quest-complete"><div><small>JORNADA CONCLUÍDA</small><p>Obrigado por conhecer a vila!</p><button className="restart-mission" onClick={restartMission}><RotateCcw size={15} /> Recomeçar</button></div></div> : <div className="quest"><span className="quest-icon"><Footprints size={20} /></span><div><small>SUA MISSÃO</small><p>Conhecer as histórias desta vila</p><div className="progress" role="progressbar" aria-label="Destinos explorados" aria-valuemin={0} aria-valuemax={4} aria-valuenow={visited.length}>{places.map((p, i) => <i key={p.name} className={visited.includes(i) ? 'done' : ''} />)}</div></div><strong>{visited.length}<span> / 4</span></strong></div>}
+        {missionComplete ? <div className="quest quest-complete"><div><small>JORNADA CONCLUÍDA</small><p>Obrigado por conhecer a vila!</p><button className="restart-mission" onClick={restartMission}><RotateCcw size={15} /> Recomeçar</button></div></div> : <div className="quest"><span className="quest-icon"><Footprints size={20} /></span><div><small>SUA MISSÃO</small><p>Conhecer as histórias desta vila</p><div className="progress" role="progressbar" aria-label="Destinos explorados" aria-valuemin={0} aria-valuemax={4} aria-valuenow={visited.length}>{places.slice(0, 4).map((p, i) => <i key={p.name} className={visited.includes(i) ? 'done' : ''} />)}</div></div><strong>{visited.length}<span> / 4</span></strong></div>}
         <nav className="destinations" aria-label="Destinos da vila">{places.map((p, i) => <button key={p.name} aria-label={`Entrar: ${p.section}`} onClick={() => open(i)}><span className="destination-icon">{p.icon}</span><span><small>0{i + 1} / {visited.includes(i) ? 'EXPLORADO' : p.name.split(' ')[0].toUpperCase()}</small><strong>{p.section}</strong></span><ArrowUpRight size={17} /></button>)}</nav>
         <div className="touch-controls" role="group" aria-label="Controles de caminhada">{[['↑','w','para frente'],['←','a','para a esquerda'],['↓','s','para trás'],['→','d','para a direita']].map(([label, key, direction]) => <button key={key} aria-label={`Caminhar ${direction}`} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); keys.current.add(key); }} onPointerUp={() => keys.current.delete(key)} onPointerCancel={() => keys.current.delete(key)} onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); keys.current.add(key); } }} onKeyUp={e => { if (e.key === ' ' || e.key === 'Enter') keys.current.delete(key); }} onBlur={() => keys.current.delete(key)}>{label}</button>)}</div>
       </>}
+      </div>
     </main>
     <p className="sr-only" role="status" aria-live="polite">{missionComplete ? 'Jornada concluída. Você explorou os quatro destinos. O botão Recomeçar está disponível.' : `${visited.length} de 4 destinos explorados.`}</p>
     </div>
     {selected !== null && <div className="modal-backdrop" inert={anyPanelOpen || undefined} aria-hidden={anyPanelOpen || undefined} onClick={e => { if (e.target === e.currentTarget) close(); }}><article className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabIndex={-1} ref={dialog}><button className="close" onClick={close} aria-label="Fechar seção"><X /></button><span className="eyebrow">0{selected + 1} · {places[selected].name}</span><button className="section-audio-button" onClick={() => setAudioPanelOpen(true)}>Configurar áudio</button><button className="section-audio-button" onClick={openAccessibility}>Acessibilidade</button><h2 id="dialog-title">{places[selected].section}</h2><Content index={selected} narrationEnabled={sound && audioSettings.narration} /></article></div>}
     {accessibilityOpen && <AccessibilitySettings settings={accessibility} onChange={updateAccessibility} onClose={closeAccessibility} />}
     {audioPanelOpen && <AudioSettings settings={audioSettings} onChange={updateAudio} onClose={closeAudioPanel} notice={audioNotice} />}
-    <audio ref={bg} src={music} loop preload="none" />
+    <audio ref={bg} src={inDungeon ? dungeonMusic : music} loop preload="none" />
   </div>;
 }

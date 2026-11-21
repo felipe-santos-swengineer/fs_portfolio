@@ -11,8 +11,11 @@ test('a cena contém quatro edifícios selecionáveis e um personagem articulado
     const village = createVillage(scene);
     expect(village.buildings.map(b => b.userData.site)).toEqual([0, 1, 2, 3]);
     expect(village.limbs).toHaveLength(4);
-    expect(village.player.position.z).toBe(5);
+    expect(village.player.position.x).toBe(0);
+    expect(village.player.position.z).toBe(19);
     expect(village.npcs).toHaveLength(4);
+    expect(village.castleGuards).toHaveLength(2);
+    expect(village.performers.map(actor => actor.kind)).toEqual(['drink', 'read', 'forge', 'salute']);
     expect(village.npcs.map(n => n.group.userData.npc)).toEqual([0, 1, 2, 3]);
     village.npcs.forEach(n => expect(n.limbs).toHaveLength(4));
     let meshes = 0;
@@ -25,6 +28,8 @@ test('a cena contém quatro edifícios selecionáveis e um personagem articulado
       }
     });
     expect(meshes).toBeGreaterThan(450);
+    const stoneBatches = scene.children.filter(object => object.isInstancedMesh);
+    expect(stoneBatches.reduce((total, batch) => total + batch.count, 0)).toBeGreaterThan(200);
     expect(scene.children.some(o => o.isPointLight)).toBe(true);
   } finally {
     HTMLCanvasElement.prototype.getContext = original;

@@ -20,6 +20,8 @@ export const projetos = [
     {
       id: 1,
       titulo: "Talkdoor",
+      contexto: "Projeto de conclusão de curso",
+      desafio: "Aproximar estudantes, professores e pesquisadores em um espaço de colaboração acadêmica.",
       descricao: "Rede social acadêmica desenvolvida no meu TCC para aproximar estudantes, professores e pesquisadores. A plataforma reúne artigos, eventos, discussões de disciplinas, projetos de pesquisa e oportunidades acadêmicas.\n\nA proposta é facilitar a colaboração dentro da universidade, com um feed que prioriza conteúdos de acordo com os interesses de cada usuário.",
       imagens: [
         Talkdoor1,
@@ -34,6 +36,9 @@ export const projetos = [
     {
       id: 2,
       titulo: "Vitrine Funcap",
+      contexto: "Participação no desenvolvimento front-end",
+      tecnologias: "React e Node.js na primeira versão; PHP e Laravel em etapa posterior",
+      desafio: "Dar visibilidade a iniciativas de pesquisa e inovação e aproximá-las da sociedade.",
       descricao: "Plataforma de divulgação de iniciativas de pesquisa, inovação e empreendedorismo apoiadas pela Fundação Cearense de Apoio ao Desenvolvimento Científico e Tecnológico.\n\nA vitrine apresenta projetos desenvolvidos no Ceará, suas soluções e possibilidades de aplicação. O objetivo é tornar a produção científica mais acessível e aproximar pesquisadores, empresas, investidores e sociedade.",
       imagens: [
         Vitrine1,
@@ -47,6 +52,8 @@ export const projetos = [
     {
       id: 3,
       titulo: "Tetris para 2 jogadores",
+      contexto: "Jogo competitivo para duas pessoas",
+      desafio: "Combinar estratégia, raciocínio espacial e interação entre jogadores.",
       descricao: "Uma versão competitiva de Tetris para duas pessoas: cada jogador organiza suas peças, completa linhas e envia obstáculos ao adversário.\n\nO duelo combina raciocínio espacial, estratégia e reflexos em uma experiência compartilhada, com uma trilha inspirada nas batalhas de Naruto.",
       imagens: [
         Tetris1,
@@ -58,6 +65,8 @@ export const projetos = [
     {
       id: 4,
       titulo: "Chronos-UFC",
+      contexto: "Desenvolvimento full-stack para a UFC",
+      desafio: "Facilitar o registro e a avaliação de atividades complementares na graduação.",
       descricao: "Sistema de gestão de atividades complementares para alunos da Universidade Federal do Ceará. O estudante registra suas atividades, informa a carga horária e anexa os comprovantes.\n\nProfessores ou coordenadores avaliam os registros, aprovam as horas ou solicitam ajustes com comentários. O acompanhamento por categoria ajuda o aluno a entender o que já concluiu e o que falta para cumprir os requisitos de formação.",
       imagens: [
         Ldc0,

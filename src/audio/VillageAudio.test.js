@@ -43,8 +43,8 @@ test('cada edifício possui uma assinatura sonora e os passos diferenciam pedra 
     expect(audio.context.created.length - before).toBe(count);
   }
   const spy = jest.spyOn(audio, 'rustle');
-  audio.step('stone'); expect(spy).toHaveBeenLastCalledWith(.1, 1850, .14, 0, .15);
-  audio.step('grass'); expect(spy).toHaveBeenLastCalledWith(.16, 650, .17, 0, -.15);
+  audio.step('stone'); expect(spy).toHaveBeenLastCalledWith(.1, 1850, .07, 0, .15);
+  audio.step('grass'); expect(spy).toHaveBeenLastCalledWith(.16, 650, .085, 0, -.15);
   audio.dispose();
 });
 

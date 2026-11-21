@@ -10,12 +10,9 @@ export const AUDIO_CHANNELS = [
   ['narration', 'Narrações das seções', 'As gravações da história e dos projetos.'],
 ];
 
-export const DEFAULT_AUDIO = { master: false, music: true, steps: true, interactions: true, voices: true, narration: true };
+export const DEFAULT_AUDIO = { master: true, music: true, steps: true, interactions: true, voices: true, narration: true };
 export function loadAudioSettings() {
-  try {
-    const stored = JSON.parse(localStorage.getItem('village-audio') || '{}');
-    return Object.fromEntries(Object.entries(DEFAULT_AUDIO).map(([key, value]) => [key, key === 'master' ? false : typeof stored?.[key] === 'boolean' ? stored[key] : value]));
-  } catch { return { ...DEFAULT_AUDIO }; }
+  return { ...DEFAULT_AUDIO };
 }
 
 export default function AudioSettings({ settings, onChange, onClose, notice }) {

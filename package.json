@@ -29,11 +29,12 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "node scripts/run-with-version.cjs start",
+    "build": "node scripts/run-with-version.cjs build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "generate:npc-voices": "node scripts/generate-villager-voices.cjs"
+    "generate:npc-voices": "node scripts/generate-villager-voices.cjs",
+    "generate:felipe-voice": "node scripts/generate-felipe-voice.cjs"
   },
   "eslintConfig": {
     "extends": [

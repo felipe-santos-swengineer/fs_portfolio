@@ -1,0 +1,52 @@
+﻿.dungeon { padding: 24px 5% 40px; }
+.dungeon-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.dungeon-heading h2 { font: 38px Georgia,serif; color:#f0e3cb; margin:8px 0; }
+.dungeon-heading span { color:#c4ad77; font-size:12px; letter-spacing:.14em; }
+.dungeon p { color:#c2cbd0; line-height:1.6; }
+.dungeon-view { height: min(68vh,650px); min-height:400px; position:relative; overflow:hidden; border:1px solid #68717b; border-radius:8px; }
+.dungeon-canvas { position:absolute; inset:0; }.dungeon-canvas canvas { display:block; width:100%; height:100%; touch-action:none; }
+.dungeon-status { position:absolute; top:12px; left:12px; right:12px; padding:12px; background:#111a25e8; border:1px solid #697c7b; border-radius:5px; pointer-events:none; }
+.dungeon button { background:#20392e; border:1px solid #72917c; border-radius:5px; color:#eff9f1; padding:.7rem 1rem; }
+.dungeon-actions,.dungeon-touch { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }.dungeon-touch { justify-content:center; }.dungeon-touch button { min-width:50px; touch-action:none; font-size:20px; }
+
+.dungeon { padding: 24px 5% 40px; }
+.dungeon .dungeon-view { margin: 0 -5.55%; width: 111.1%; height: max(620px, 70vh); max-height: 900px; border: 0; border-radius: 0; }
+.dungeon .dungeon-status { left: 5%; right: auto; top: 32px; max-width: 340px; background: #111e28dd; border: 1px solid #3c5357; line-height: 1.6; }
+.dungeon .dungeon-quest { position: relative; inset: auto; margin: 16px 0; max-width: 400px; }
+.dungeon .dungeon-actions { margin: 0; display: flex; flex-wrap: wrap; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.dungeon .dungeon-actions button { flex: 1 1 170px; border: 0; border-right: 1px solid var(--line); background: transparent; text-align: left; border-radius: 0; padding: 18px; }
+.dungeon .dungeon-actions button:hover { background: #17232b; }
+@media(max-width:800px) { .dungeon .dungeon-view { height: 55svh; min-height: 400px; } .dungeon .dungeon-actions button { flex-basis: 45%; } }
+
+.dungeon-health { display:flex; align-items:center; gap:.7rem; margin:16px 0 0; color:#f0e3cb; }
+.dungeon-health strong { color:var(--gold); font-size:.75rem; letter-spacing:.12em; }
+.dungeon-health span { color:#ef8585; letter-spacing:.12em; font-size:1.25rem; }
+
+.dungeon .dungeon-health { position:absolute; top:16px; right:5%; z-index:4; padding:10px 14px; margin:0; background:#111e28ed; border:1px solid #8b655b; border-radius:7px; pointer-events:none; }
+.dungeon .dungeon-health span { display:inline-block; white-space:nowrap; }
+.dungeon .health-hit { animation: health-hit .5s ease-out; }
+.dungeon .health-regenerating span { animation: health-pulse 1.1s ease-in-out infinite; }
+@keyframes health-hit { 0% { background:#9e3434; transform:scale(1.12); } 100% { background:#111e28ed; transform:scale(1); } }
+@keyframes health-pulse { 50% { transform:scale(1.1); color:#ffb5a7; } }
+@media(max-width:600px) { .dungeon .dungeon-health { top:auto; bottom:12px; left:12px; right:auto; } }
+@media(prefers-reduced-motion:reduce) { .dungeon .health-hit,.dungeon .health-regenerating span { animation:none; } }
+.reduce-motion .dungeon .health-hit,.reduce-motion .dungeon .health-regenerating span { animation:none; }
+
+.dungeon .dungeon-guide { z-index:3; }
+.dungeon-guide-note { text-align:center; color:#b4c5c2; font-size:11px; line-height:1.5; }
+.dungeon .dungeon-touch-attack { min-width:100px; font-size:14px; }
+@media(max-width:800px) { .dungeon .dungeon-guide { left:5%; bottom:16px; transform:none; width:90%; max-width:90%; } .dungeon-guide-note { font-size:10px; } }
+
+.app .dungeon .dungeon-quest { position:absolute; z-index:3; left:5%; bottom:100px; top:auto; right:auto; margin:0; width:auto; max-width:320px; }
+@media(max-width:800px) { .app .dungeon .dungeon-quest { bottom:100px; left:5%; width:auto; max-width:260px; } }
+
+.dungeon .dungeon-touch { display:none; }
+@media(max-width:800px) { .dungeon .dungeon-touch { display:flex; } }
+
+.dungeon .health-bar { display:block; width:150px; height:14px; border:1px solid #deab9e; background:#40272d; border-radius:2px; overflow:hidden; }
+.dungeon .health-fill { display:block; height:100%; background:#d65f60; transition:width .25s ease; }
+.dungeon .health-regenerating .health-bar { animation:none; }
+.dungeon .health-regenerating .health-fill { animation:health-bar-pulse 1.1s ease-in-out infinite; }
+@keyframes health-bar-pulse { 50% { background:#ffac9e; } }
+@media(prefers-reduced-motion:reduce) { .dungeon .health-regenerating .health-fill { animation:none; transition:none; } }
+.reduce-motion .dungeon .health-regenerating .health-fill { animation:none; transition:none; }

@@ -102,7 +102,7 @@
 .project-details dt { font-weight: 700; }
 .project-details dd { margin: .25rem 0 0; }
 
-@media(min-width:801px){.destinations{grid-template-columns:repeat(5,minmax(0,1fr))}.destinations strong{font-size:clamp(17px,1.7vw,25px)}}
+@media(min-width:801px){.destinations{grid-template-columns:repeat(4,minmax(0,1fr))}.destinations strong{font-size:clamp(17px,1.7vw,25px)}}
 
 .compass-dial{display:flex;align-items:center;flex-direction:column;gap:5px;transform-origin:center;will-change:transform}
 
@@ -113,3 +113,5 @@
 .compass-cardinal { position:absolute; color:#a9bab3; font-size:8px; font-weight:700; line-height:1; }
 .compass-cardinal.east{right:5px;top:27px}.compass-cardinal.west{left:5px;top:27px}.compass-cardinal.south{bottom:4px;left:27px}
 @media(max-width:600px){.compass-face{width:52px;height:52px}.compass-cardinal.east,.compass-cardinal.west{top:22px}.compass-cardinal.south{left:22px}.app .compass .compass-needle{width:34px;height:34px}}
+
+.app .intro p { max-width: min(30ch, 90vw); overflow-wrap: break-word; }

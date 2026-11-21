@@ -6,21 +6,21 @@ export const SITES = [
 ];
 
 export const PORTAL = { x: -16, z: 0 };
-export const CASTLE_ENTRANCE = { x: 0, z: -10.3 };
+export const CASTLE_ENTRANCE = { x: 0, z: -17.3 };
 
 export function canWalk(x, z) {
-  const island = Math.abs(x) < 18 && Math.abs(z) < 14;
+  const island = Math.abs(x) < 18 && z > -32 && z < 14;
   const dock = z >= 14 && z < 21.5 && Math.abs(x) < 1.35;
-  const castle = Math.abs(x) < 5.2 && z < -10.3;
+  const castle = z < CASTLE_ENTRANCE.z;
   return (island || dock) && !castle && !SITES.some(b => Math.abs(x - b.x) < 3.05 && Math.abs(z - b.z) < 2.5) && Math.hypot(x, z) > 1.7;
 }
 
 export function isCastleThreshold(x, z) {
-  return Math.abs(x - CASTLE_ENTRANCE.x) < .9 && z > -10.4 && z < -9.8;
+  return Math.abs(x - CASTLE_ENTRANCE.x) < .9 && z > CASTLE_ENTRANCE.z - .1 && z < CASTLE_ENTRANCE.z + .5;
 }
 
 export function nearbySite(x, z) {
-  if (Math.abs(x - CASTLE_ENTRANCE.x) < 1.5 && z > -10.4 && z < -8.7) return 5;
+  if (Math.abs(x - CASTLE_ENTRANCE.x) < 1.5 && z > CASTLE_ENTRANCE.z - .1 && z < CASTLE_ENTRANCE.z + 1.6) return 5;
   if (Math.hypot(x - PORTAL.x, z - PORTAL.z) < 2.5) return 4;
   return SITES.findIndex(b => Math.hypot(x - b.x, z - (b.z + 3.1)) < 2.8);
 }

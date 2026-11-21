@@ -31,7 +31,7 @@ test('casas, fonte e limite do mapa bloqueiam a caminhada', () => {
   expect(nearbySite(0, 5)).toBe(-1);
   expect(canWalk(PORTAL.x, PORTAL.z)).toBe(true);
   expect(nearbySite(PORTAL.x, PORTAL.z)).toBe(4);
-  expect(canWalk(0, -12)).toBe(false);
+  expect(canWalk(0, -19)).toBe(false);
 });
 
 test('a margem das ruas protege o caminho das arvores e pedras', () => {
@@ -42,9 +42,9 @@ test('a margem das ruas protege o caminho das arvores e pedras', () => {
 });
 
 test('a porta do castelo e acessivel sem atravessar a parede', () => {
-  expect(canWalk(0, -10)).toBe(true);
-  expect(isCastleThreshold(0, -10)).toBe(true);
-  expect(nearbySite(0, -10)).toBe(5);
-  expect(isCastleThreshold(3, -10)).toBe(false);
-  expect(canWalk(0, -10.5)).toBe(false);
+  expect(canWalk(0, -17)).toBe(true);
+  expect(isCastleThreshold(0, -17)).toBe(true);
+  expect(nearbySite(0, -17)).toBe(5);
+  expect(isCastleThreshold(3, -17)).toBe(false);
+  expect(canWalk(0, -17.5)).toBe(false);
 });

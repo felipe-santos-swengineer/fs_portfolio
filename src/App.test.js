@@ -2,7 +2,7 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import App from './App';
 import VillageAudio from './audio/VillageAudio';
 
-jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, zoom, missionRound }) => <div data-testid="village-canvas" data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onTalk(0)}>Conversar com Bia</button></div> }));
+jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, onOpen, zoom, missionRound }) => <div data-testid="village-canvas" data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onTalk(0)}>Conversar com Bia</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
 jest.mock('./components/ThroneHall', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do salao de teste</button> }));
 
@@ -127,7 +127,7 @@ test('concluir os quatro destinos substitui a missão por Recomeçar e reinicia 
 
 test('o castelo abre o salao e permite voltar sem registrar uma visita extra', async () => {
   await start();
-  fireEvent.click(screen.getByRole('button', { name: /Entrar: Sal/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no castelo' }));
   const exit = await screen.findByRole('button', { name: 'Sair do salao de teste' });
   fireEvent.click(exit);
   expect(screen.queryByRole('button', { name: 'Sair do salao de teste' })).toBeNull();

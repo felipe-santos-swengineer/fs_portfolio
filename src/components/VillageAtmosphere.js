@@ -117,6 +117,7 @@ export function createDayNight(scene, hemisphere, keyLight, world) {
       const state = daylightAt(seconds), day = state.daylight;
       top.copy(palette.night).lerp(palette.day, day);
       horizon.copy(palette.night).lerp(palette.mist, day).lerp(state.phase < .25 || state.phase > .75 ? palette.dawn : palette.dusk, state.twilight * .75);
+      if (world.backdrop) world.backdrop.material.color.setScalar(THREE.MathUtils.lerp(.4, 1, day));
       scene.background.copy(horizon); scene.fog.color.copy(horizon); scene.fog.density = THREE.MathUtils.lerp(.009, .006, day);
       hemisphere.color.set('#9fb9df').lerp(palette.skyLight, day); hemisphere.groundColor.set('#28382d').lerp(palette.ground, day); hemisphere.intensity = 1.15 + day * 1.5;
       keyLight.color.set('#a9c6ef').lerp(palette.sunlight, day); keyLight.intensity = 1.8 + day * 1.4;

@@ -5,6 +5,7 @@ import { SITES, PORTAL, isCastleThreshold, canWalk, nearbySite, walkingSurface, 
 import { VILLAGERS, createWalkingGraph, advanceVillager } from './villagers';
 import { createDragon, createDayNight } from './VillageAtmosphere';
 import { createMissionFireworks } from './MissionFireworks';
+import mountainHorizon from '../assets/images/mountain-horizon.png';
 import './VillageScene.css';
 
 export function createAdventurer(scene, { box, sphere, mesh, cylinder }, { armored = false } = {}) {
@@ -89,11 +90,29 @@ export function createVillage(scene) {
   };
 
   // Rectangular island, shoreline and a dock south of the portal.
-  box(scene, 38, 1.5, 30, '#17232c', 0, -.9, 0);
-  box(scene, 37.6, .22, 29.6, '#253b36', 0, -.06, 0);
-  box(scene, 37, .12, 29, '#293b36', 0, .04, 0);
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(85, 70), new THREE.MeshStandardMaterial({ color:'#214c58', roughness:.55, metalness:.12 }));
-  water.rotation.x = -Math.PI / 2; water.position.set(0, -.62, 16); scene.add(water);
+  box(scene, 38, 1.5, 48, '#17232c', 0, -.9, -9);
+  box(scene, 37.6, .22, 47.6, '#253b36', 0, -.06, -9);
+  box(scene, 37, .12, 47, '#293b36', 0, .04, -9);
+  const waterMaterial = new THREE.MeshStandardMaterial({ color:'#214c58', roughness:.55, metalness:.12 });
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(58, 42), waterMaterial);
+  water.rotation.x = -Math.PI / 2; water.position.set(0, -.62, 10); water.name = 'Mar da doca'; scene.add(water);
+  const groundBackground = new THREE.Mesh(new THREE.PlaneGeometry(210, 210), waterMaterial);
+  groundBackground.rotation.x = -Math.PI / 2; groundBackground.position.y = -.66;
+  groundBackground.name = 'Fundo da agua'; scene.add(groundBackground);
+  // A flat panoramic image wraps the horizon; it never affects navigation.
+  const horizonTexture = new THREE.TextureLoader().load(mountainHorizon);
+  horizonTexture.colorSpace = THREE.SRGBColorSpace;
+  horizonTexture.wrapS = THREE.RepeatWrapping;
+  horizonTexture.repeat.y = .55;
+  const alphaPixels = new Uint8Array(256 * 4);
+  for (let y = 0; y < 256; y++) {
+    const opacity = Math.round(255 * Math.min(1, Math.max(0, (1 - y / 255) * 4)));
+    alphaPixels.set([opacity, opacity, opacity, 255], y * 4);
+  }
+  const horizonFade = new THREE.DataTexture(alphaPixels, 1, 256, THREE.RGBAFormat);
+  horizonFade.magFilter = THREE.LinearFilter; horizonFade.minFilter = THREE.LinearFilter; horizonFade.needsUpdate = true;
+  const backdrop = new THREE.Mesh(new THREE.CylinderGeometry(105, 105, 46, 48, 1, true), new THREE.MeshBasicMaterial({ map: horizonTexture, alphaMap: horizonFade, side: THREE.BackSide, transparent: true, depthWrite: false, fog: false, color: '#ffffff' }));
+  backdrop.name = 'Panorama de montanhas'; backdrop.position.y = 6; backdrop.renderOrder = -9; backdrop.frustumCulled = false; scene.add(backdrop);
   const dock=new THREE.Group();dock.rotation.y=-Math.PI/2;dock.position.z=-4;scene.add(dock);
   for(let x=18;x<=25;x+=.5) box(dock,.43,.18,3,'#806345',x,.18,0);
   [18.5,21.5,24.5].forEach(x=>[-1.3,1.3].forEach(z=>{cylinder(dock,.12,1.1,'#564737',x,-.28,z);sphere(dock,.14,'#bda477',x,.36,z);}));
@@ -109,11 +128,11 @@ export function createVillage(scene) {
     const transform = new THREE.Object3D(); transform.position.set(x, y, z); transform.rotation.y = rotation; transform.updateMatrix();
     stoneGroups.get(key).transforms.push(transform.matrix.clone());
   };
-  for (let x=-18;x<=18;x++) for (const z of [-14.5,14.5]) { if (z>0 && Math.abs(x)<2) continue; addStone(1,.7,.7,'#33424b',x,.08,z,0); }
-  for (let z=-13;z<=13;z++) for (const x of [-18.5,18.5]) {
+  for (let x=-18;x<=18;x++) for (const z of [-32.5,14.5]) { if (z>0 && Math.abs(x)<2) continue; addStone(1,.7,.7,'#33424b',x,.08,z,0); }
+  for (let z=-31;z<=13;z++) for (const x of [-18.5,18.5]) {
     addStone(1,.7,.7,'#2c3b43',x,.08,z,Math.PI/2);
   }
-  for (let x = -17; x <= 17; x++) for (let z = -13; z <= 13; z++) {
+  for (let x = -17; x <= 17; x++) for (let z = -20; z <= 13; z++) {
     if ((Math.abs(x) <= 1 || Math.abs(z) <= 1 || (Math.abs(z - 9) < 1 && Math.abs(x) < 10)) && Math.hypot(x, z) > 1.8) {
       addStone(.88, .1, .86, (x + z) % 3 ? '#455056' : '#535c5e', x, .16, z, Math.sin(x * 4 + z) * .08);
     }
@@ -138,26 +157,51 @@ export function createVillage(scene) {
   const portalSurface = new THREE.Mesh(new THREE.CircleGeometry(1.46, 40), new THREE.MeshBasicMaterial({ color: '#5b8fd5', transparent: true, opacity: .8, side: THREE.DoubleSide })); portalSurface.position.set(0, 2.25, 0); portal.add(portalSurface);
   label(portal, 'PORTAL', 'Playground', '#a8d9f0', 0, 5.1, 0);
   const portalLight = new THREE.PointLight('#78aaff', 14, 8); portalLight.position.set(0, 2, 1); portal.add(portalLight);
-  // A castle anchors the north end of the village, opposite the dock.
-  const castle = new THREE.Group(); castle.position.set(0, 0, -13); scene.add(castle);
-  box(castle, 8.5, 7.5, 3.8, '#59636d', 0, 3.85, 0);
-  box(castle, 9.2, .45, 4.3, '#3d4b57', 0, 7.75, 0);
-  for(let x=-4;x<=4;x+=1.15) box(castle,.62,.9,.65,'#6d7780',x,8.35,2);
-  [-1,1].forEach(side=>{
-    cylinder(castle,1.65,10,'#53616d',side*4.2,5,-.1,12);
-    mesh(castle,new THREE.ConeGeometry(2.1,3.6,12),'#46546c',side*4.2,11.75,-.1);
-    box(castle,.45,1.5,.12,'#d9ad68',side*4.2,6,1.55,true);
-    box(castle,.35,1.15,.12,'#e4ba7a',side*2,5.2,1.98,true);
-    cylinder(castle,.07,2.4,'#9aa9aa',side*4.2,14,-.1);
-    box(castle,.8,.5,.05,'#a14d51',side*4.6,14.8,-.1);
+  // The castle spans the island, with four towers on each long facade.
+  const castle = new THREE.Group(); castle.position.set(0, 0, -24); scene.add(castle);
+  box(castle,35,9.5,12,'#59636d',0,4.85,0);
+  box(castle,35.5,.45,12.5,'#3d4b57',0,9.75,0);
+  for(let offset=-17;offset<=17;offset+=1.25){
+    [-1,1].forEach(side=>box(castle,.7,1,.7,'#6d7780',offset,10.45,side*5.9));
+  }
+  for(let offset=-5;offset<=5;offset+=1.25){
+    [-1,1].forEach(side=>box(castle,.7,1,.7,'#6d7780',side*17.3,10.45,offset));
+  }
+  const castleTowers = [-16.3,-5.4,5.4,16.3].flatMap(x=>[-1,1].map(depth=>{
+    const z=depth*5.7, side=Math.sign(x);
+    const tower=cylinder(castle,1.5,12,'#53616d',x,6,z,12);
+    mesh(castle,new THREE.ConeGeometry(1.95,3.4,12),'#46546c',x,13.7,z);
+    box(castle,.4,1.35,.12,'#d9ad68',x,7,z+depth*1.5,true);
+    cylinder(castle,.07,2.2,'#9aa9aa',x,15.8,z);
+    box(castle,.8,.5,.05,'#a14d51',x+side*.4,16.5,z);
+    return tower;
+  }));
+  [-14,-11,-8,-2.4,2.4,8,11,14].forEach(x=>{
+    box(castle,.45,1.3,.12,'#e4ba7a',x,6,6.03,true);
+    box(castle,.45,1.3,.12,'#ddb77d',x,6,-6.04,true);
   });
-  const castleDoor = box(castle,2.45,3.4,.18,'#322c2a',0,1.9,2.03); castleDoor.userData.site = 5;
-  const castleArch=mesh(castle,new THREE.TorusGeometry(1.25,.22,8,24,Math.PI),'#a99b7d',0,3.6,2.15);castleArch.rotation.z=0;
-  [-1,1].forEach(side=>box(castle,.22,3.2,.25,'#a99b7d',side*1.2,1.95,2.15));
+  [-1,1].forEach(side=>box(castle,.12,1.3,.45,'#ddb77d',side*17.55,6,0,true));
+  const castleDoor=box(castle,2.7,3.8,.18,'#322c2a',0,2.1,6.03);castleDoor.userData.site=5;
+  const castleArch=mesh(castle,new THREE.TorusGeometry(1.37,.22,8,24,Math.PI),'#a99b7d',0,4,6.16);castleArch.rotation.z=0;
+  [-1,1].forEach(side=>box(castle,.22,3.6,.25,'#a99b7d',side*1.32,2.2,6.15));
+  // Two archers keep watch above the front battlements.
+  const castleArchers = [-1, 1].map(side => {
+    const archer = person(castle, side * 3.2, 4.8, '#536c54');
+    archer.group.name = side < 0 ? 'Arqueiro esquerdo' : 'Arqueiro direito';
+    archer.group.position.y = 10; archer.group.rotation.y = side * -.16;
+    cylinder(archer.torso,.32,.13,'#566a52',0,2.04,0);
+    mesh(archer.torso,new THREE.ConeGeometry(.33,.38,8),'#5c7358',0,2.28,0);
+    box(archer.torso,.3,.65,.22,'#6f5039',-.32,1.3,-.25);
+    for(let n=0;n<3;n++){const arrow=box(archer.torso,.035,.65,.035,'#cbb482',-.42+n*.09,1.72,-.25);arrow.rotation.z=-.12;}
+    const bow=mesh(archer.torso,new THREE.TorusGeometry(.5,.035,6,24,Math.PI),'#9c7047',.63,1.12,.2);bow.rotation.z=-Math.PI/2;
+    box(archer.torso,.025,1,.025,'#d4c8a1',.63,1.12,.2);
+    performers.push({kind:'watch',torso:archer.torso,phase:side});
+    return archer;
+  });
   // Silent armored sentries stand beside the castle gate.
   const castleGuards = [-1, 1].map(side => {
     const guard = createAdventurer(castle, { box, sphere, mesh, cylinder }, { armored: true });
-    guard.player.position.set(side * 2.1, .2, 2.7);
+    guard.player.position.set(side * 2.1, .2, 6.7);
     box(guard.body,.79,.76,.49,'#768b91',0,1.2,0);
     box(guard.body,.12,.68,.51,'#b4c3c4',0,1.2,.01);
     sphere(guard.body,.36,'#74868a',0,1.94,-.02);
@@ -238,11 +282,11 @@ export function createVillage(scene) {
   // Pine forest, rocks, mushrooms and lanterns make the surroundings readable in the dark.
   for (let i = 0; i < 44; i++) {
     const a = i * 2.39996, r = 14.5 + (i % 5) * .7, x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (overlapsRoad(x, z, 1.3) || Math.hypot(x - PORTAL.x, z - PORTAL.z) < 4.5 || (Math.abs(x)<6.5 && z < -9) || Math.abs(x)>17 || Math.abs(z)>13.5 || (z>10 && Math.abs(x)<4)) continue;
+    if (overlapsRoad(x, z, 1.3) || Math.hypot(x - PORTAL.x, z - PORTAL.z) < 4.5 || (z < -15.5) || Math.abs(x)>17 || z < -21.5 || z > 13.5 || (z>10 && Math.abs(x)<4)) continue;
     const tree = new THREE.Group(); tree.position.set(x, 0, z); scene.add(tree); const h = 2.6 + i % 4 * .55;
     cylinder(tree, .16, h, '#493c36', 0, h / 2, 0);
     for (let j = 0; j < 3; j++) mesh(tree, new THREE.ConeGeometry(1.2 - j * .23, 2.1, 7), ['#253f39', '#2d4a41', '#36574b'][j], 0, h * .6 + j * .75, 0);
-    if (i % 3 === 0 && !overlapsRoad(x * .88, z * .88, .8) && Math.hypot(x * .88 - PORTAL.x, z * .88 - PORTAL.z) >= 3.5 && !(Math.abs(x*.88)<6.5 && z*.88 < -9)) { const rock = mesh(scene, new THREE.DodecahedronGeometry(.45 + i % 2 * .3), '#4a555c', x * .88, .35, z * .88); rock.scale.y = .65; }
+    if (i % 3 === 0 && !overlapsRoad(x * .88, z * .88, .8) && Math.hypot(x * .88 - PORTAL.x, z * .88 - PORTAL.z) >= 3.5 && z*.88 >= -15.5) { const rock = mesh(scene, new THREE.DodecahedronGeometry(.45 + i % 2 * .3), '#4a555c', x * .88, .35, z * .88); rock.scale.y = .65; }
   }
   [[-2.8, -9], [2.8, -9], [-2.8, 11.3], [2.8, 11.3], [-11, 2.8], [11, 2.8]].forEach(([x, z]) => { cylinder(scene, .08, 2.6, '#39434b', x, 1.3, z); lamp(scene, x, 2.8, z); });
   const { player, body, limbs, cape } = createAdventurer(scene, { box, sphere, mesh, cylinder });
@@ -311,7 +355,7 @@ export function createVillage(scene) {
   for (let i = 0; i < 160; i++) positions.push(Math.sin(i * 134.8) * 21, 1 + (i % 19) * .55, Math.cos(i * 82.3) * 21);
   const particleGeo = new THREE.BufferGeometry(); particleGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   const fireflies = new THREE.Points(particleGeo, new THREE.PointsMaterial({ color: '#b3caaa', size: .055, transparent: true, opacity: .65 })); scene.add(fireflies);
-  return { buildings, portal, castleDoor, player, body, limbs, crystal, flames, fireflies, cape, npcs, performers, castleGuards };
+  return { buildings, portal, castleDoor, backdrop, player, body, limbs, crystal, flames, fireflies, cape, npcs, performers, castleGuards, castleArchers, castleTowers };
 }
 
 export default function VillageScene({ keys, compassRef, paused, sceneHidden = false, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, cameraTurn = 0 }) {
@@ -419,6 +463,7 @@ export default function VillageScene({ keys, compassRef, paused, sceneHidden = f
         if (actor.kind === 'forge') actor.arm.rotation.x = -.5 - Math.abs(Math.sin(clock * 2.6)) * 1.25;
         if (actor.kind === 'read') actor.torso.rotation.x = .12 + Math.sin(clock * .6) * .04;
         if (actor.kind === 'salute') actor.arm.rotation.z = -1.25 + Math.sin(clock * 1.5) * .13;
+        if (actor.kind === 'watch') actor.torso.rotation.y = Math.sin(clock * .35 + actor.phase) * .12;
       });
       if (!reducedMotion && !ambientPaused) { world.crystal.rotation.y += dt * .45; world.crystal.position.y = 2.2 + Math.sin(clock * 1.4) * .1; world.cape.rotation.x = -.13 + Math.sin(clock * (walking ? 10 : 2)) * (walking ? .13 : .025); world.fireflies.rotation.y += dt * .012; world.flames.forEach(f => { f.scale.y = 1 + Math.sin(clock * 9) * .18; }); }
       const p = world.player.position;
@@ -445,7 +490,7 @@ export default function VillageScene({ keys, compassRef, paused, sceneHidden = f
       wake.current = null; document.removeEventListener('visibilitychange', visibility); cancelAnimationFrame(frame); observer.disconnect(); controls.dispose(); clear();
       renderer.domElement.removeEventListener('keydown', down); renderer.domElement.removeEventListener('blur', clear); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear);
       renderer.domElement.removeEventListener('pointerdown', pointerdown); renderer.domElement.removeEventListener('pointerup', pointerup); renderer.domElement.removeEventListener('webglcontextlost', lost);
-      scene.traverse(o => { if (o.isInstancedMesh) o.dispose(); o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.map?.dispose(); m.dispose(); }); });
+      scene.traverse(o => { if (o.isInstancedMesh) o.dispose(); o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.map?.dispose(); m.alphaMap?.dispose(); m.dispose(); }); });
       renderer.dispose(); renderer.domElement.remove();
     };
   }, [keys, compassRef]);

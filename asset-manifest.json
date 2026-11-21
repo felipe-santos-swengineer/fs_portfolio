@@ -1,15 +1,16 @@
 {
   "files": {
-    "main.css": "/fs_portfolio/static/css/main.08fa8164.css",
-    "main.js": "/fs_portfolio/static/js/main.6e03c8be.js",
-    "static/css/538.bcbc9223.chunk.css": "/fs_portfolio/static/css/538.bcbc9223.chunk.css",
+    "main.css": "/fs_portfolio/static/css/main.d2812de0.css",
+    "main.js": "/fs_portfolio/static/js/main.6d4ddfbb.js",
+    "static/css/157.ce7e8307.chunk.css": "/fs_portfolio/static/css/157.ce7e8307.chunk.css",
     "static/css/372.452bf1af.chunk.css": "/fs_portfolio/static/css/372.452bf1af.chunk.css",
-    "static/js/372.457f380b.chunk.js": "/fs_portfolio/static/js/372.457f380b.chunk.js",
+    "static/js/372.f35c04e1.chunk.js": "/fs_portfolio/static/js/372.f35c04e1.chunk.js",
     "static/css/606.8be6010d.chunk.css": "/fs_portfolio/static/css/606.8be6010d.chunk.css",
-    "static/js/606.e6f6beb1.chunk.js": "/fs_portfolio/static/js/606.e6f6beb1.chunk.js",
-    "static/js/712.b6d55821.chunk.js": "/fs_portfolio/static/js/712.b6d55821.chunk.js",
-    "static/js/157.47146383.chunk.js": "/fs_portfolio/static/js/157.47146383.chunk.js",
+    "static/js/606.130a3d11.chunk.js": "/fs_portfolio/static/js/606.130a3d11.chunk.js",
+    "static/js/712.dc24edc7.chunk.js": "/fs_portfolio/static/js/712.dc24edc7.chunk.js",
+    "static/js/654.9c90b4be.chunk.js": "/fs_portfolio/static/js/654.9c90b4be.chunk.js",
     "static/media/dndAdventure_NCS.mp3": "/fs_portfolio/static/media/dndAdventure_NCS.8844c4a2307629088512.mp3",
+    "static/media/mountain-horizon.png": "/fs_portfolio/static/media/mountain-horizon.1988980f1b5982c2eb85.png",
     "static/media/vitrine1.png": "/fs_portfolio/static/media/vitrine1.63079bcfa81c08d64ccd.png",
     "static/media/inicio_bill_voice.mp3": "/fs_portfolio/static/media/inicio_bill_voice.d516d9d25411ad2427b7.mp3",
     "static/media/motivacao_bill_voice.mp3": "/fs_portfolio/static/media/motivacao_bill_voice.456236b4afeee45541f9.mp3",
@@ -44,18 +45,18 @@
     "static/media/talkdoor4.png": "/fs_portfolio/static/media/talkdoor4.5ce7273bc6706fc16450.png",
     "static/media/ldc1.png": "/fs_portfolio/static/media/ldc1.6c3ffdbb9971994b20dc.png",
     "index.html": "/fs_portfolio/index.html",
-    "main.08fa8164.css.map": "/fs_portfolio/static/css/main.08fa8164.css.map",
-    "main.6e03c8be.js.map": "/fs_portfolio/static/js/main.6e03c8be.js.map",
-    "538.bcbc9223.chunk.css.map": "/fs_portfolio/static/css/538.bcbc9223.chunk.css.map",
+    "main.d2812de0.css.map": "/fs_portfolio/static/css/main.d2812de0.css.map",
+    "main.6d4ddfbb.js.map": "/fs_portfolio/static/js/main.6d4ddfbb.js.map",
+    "157.ce7e8307.chunk.css.map": "/fs_portfolio/static/css/157.ce7e8307.chunk.css.map",
     "372.452bf1af.chunk.css.map": "/fs_portfolio/static/css/372.452bf1af.chunk.css.map",
-    "372.457f380b.chunk.js.map": "/fs_portfolio/static/js/372.457f380b.chunk.js.map",
+    "372.f35c04e1.chunk.js.map": "/fs_portfolio/static/js/372.f35c04e1.chunk.js.map",
     "606.8be6010d.chunk.css.map": "/fs_portfolio/static/css/606.8be6010d.chunk.css.map",
-    "606.e6f6beb1.chunk.js.map": "/fs_portfolio/static/js/606.e6f6beb1.chunk.js.map",
-    "712.b6d55821.chunk.js.map": "/fs_portfolio/static/js/712.b6d55821.chunk.js.map",
-    "157.47146383.chunk.js.map": "/fs_portfolio/static/js/157.47146383.chunk.js.map"
+    "606.130a3d11.chunk.js.map": "/fs_portfolio/static/js/606.130a3d11.chunk.js.map",
+    "712.dc24edc7.chunk.js.map": "/fs_portfolio/static/js/712.dc24edc7.chunk.js.map",
+    "654.9c90b4be.chunk.js.map": "/fs_portfolio/static/js/654.9c90b4be.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.08fa8164.css",
-    "static/js/main.6e03c8be.js"
+    "static/css/main.d2812de0.css",
+    "static/js/main.6d4ddfbb.js"
   ]
 }

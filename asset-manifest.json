@@ -1,10 +1,14 @@
 {
   "files": {
-    "main.css": "/fs_portfolio/static/css/main.c6292996.css",
-    "main.js": "/fs_portfolio/static/js/main.7915102e.js",
-    "static/css/157.ce7e8307.chunk.css": "/fs_portfolio/static/css/157.ce7e8307.chunk.css",
-    "static/js/157.f1c2af58.chunk.js": "/fs_portfolio/static/js/157.f1c2af58.chunk.js",
-    "static/js/712.ffa4820c.chunk.js": "/fs_portfolio/static/js/712.ffa4820c.chunk.js",
+    "main.css": "/fs_portfolio/static/css/main.08fa8164.css",
+    "main.js": "/fs_portfolio/static/js/main.6e03c8be.js",
+    "static/css/538.bcbc9223.chunk.css": "/fs_portfolio/static/css/538.bcbc9223.chunk.css",
+    "static/css/372.452bf1af.chunk.css": "/fs_portfolio/static/css/372.452bf1af.chunk.css",
+    "static/js/372.457f380b.chunk.js": "/fs_portfolio/static/js/372.457f380b.chunk.js",
+    "static/css/606.8be6010d.chunk.css": "/fs_portfolio/static/css/606.8be6010d.chunk.css",
+    "static/js/606.e6f6beb1.chunk.js": "/fs_portfolio/static/js/606.e6f6beb1.chunk.js",
+    "static/js/712.b6d55821.chunk.js": "/fs_portfolio/static/js/712.b6d55821.chunk.js",
+    "static/js/157.47146383.chunk.js": "/fs_portfolio/static/js/157.47146383.chunk.js",
     "static/media/dndAdventure_NCS.mp3": "/fs_portfolio/static/media/dndAdventure_NCS.8844c4a2307629088512.mp3",
     "static/media/vitrine1.png": "/fs_portfolio/static/media/vitrine1.63079bcfa81c08d64ccd.png",
     "static/media/inicio_bill_voice.mp3": "/fs_portfolio/static/media/inicio_bill_voice.d516d9d25411ad2427b7.mp3",
@@ -12,6 +16,7 @@
     "static/media/projetos_bill_voice.mp3": "/fs_portfolio/static/media/projetos_bill_voice.7ca37410592892d656c2.mp3",
     "static/media/vitrine3.png": "/fs_portfolio/static/media/vitrine3.e8c6e5fe2134e410f6ff.png",
     "static/media/talkdoor1.png": "/fs_portfolio/static/media/talkdoor1.e73abd41e4caf61de41a.png",
+    "static/media/dungeon.wav": "/fs_portfolio/static/media/dungeon.b91bdb16511f06c42462.wav",
     "static/media/vitrine5.png": "/fs_portfolio/static/media/vitrine5.8b78f3136d4f2b3b7169.png",
     "static/media/bem_vindo_bill_voice.mp3": "/fs_portfolio/static/media/bem_vindo_bill_voice.ccf02b52bf7c8ccce8cd.mp3",
     "static/media/tetris1.png": "/fs_portfolio/static/media/tetris1.fe43ae988356cb71e724.png",
@@ -23,6 +28,8 @@
     "static/media/talkdoor2.png": "/fs_portfolio/static/media/talkdoor2.fbb2f6ec461233c7dc49.png",
     "static/media/vitrine2.png": "/fs_portfolio/static/media/vitrine2.2d46e157de3175d35481.png",
     "static/media/talkdoor6.png": "/fs_portfolio/static/media/talkdoor6.e48e59ce8ed7c3a0c24d.png",
+    "static/media/felipe-2.mp3": "/fs_portfolio/static/media/felipe-2.fb2d963d9a263077ff93.mp3",
+    "static/media/felipe-1.mp3": "/fs_portfolio/static/media/felipe-1.c811fd237262d2357d31.mp3",
     "static/media/ldc0.png": "/fs_portfolio/static/media/ldc0.968e1f8d7780c2f7503f.png",
     "static/media/rui-1.mp3": "/fs_portfolio/static/media/rui-1.74bf80a1d9fdd441e0c9.mp3",
     "static/media/tom-2.mp3": "/fs_portfolio/static/media/tom-2.1b3ea95780f60766afec.mp3",
@@ -37,14 +44,18 @@
     "static/media/talkdoor4.png": "/fs_portfolio/static/media/talkdoor4.5ce7273bc6706fc16450.png",
     "static/media/ldc1.png": "/fs_portfolio/static/media/ldc1.6c3ffdbb9971994b20dc.png",
     "index.html": "/fs_portfolio/index.html",
-    "main.c6292996.css.map": "/fs_portfolio/static/css/main.c6292996.css.map",
-    "main.7915102e.js.map": "/fs_portfolio/static/js/main.7915102e.js.map",
-    "157.ce7e8307.chunk.css.map": "/fs_portfolio/static/css/157.ce7e8307.chunk.css.map",
-    "157.f1c2af58.chunk.js.map": "/fs_portfolio/static/js/157.f1c2af58.chunk.js.map",
-    "712.ffa4820c.chunk.js.map": "/fs_portfolio/static/js/712.ffa4820c.chunk.js.map"
+    "main.08fa8164.css.map": "/fs_portfolio/static/css/main.08fa8164.css.map",
+    "main.6e03c8be.js.map": "/fs_portfolio/static/js/main.6e03c8be.js.map",
+    "538.bcbc9223.chunk.css.map": "/fs_portfolio/static/css/538.bcbc9223.chunk.css.map",
+    "372.452bf1af.chunk.css.map": "/fs_portfolio/static/css/372.452bf1af.chunk.css.map",
+    "372.457f380b.chunk.js.map": "/fs_portfolio/static/js/372.457f380b.chunk.js.map",
+    "606.8be6010d.chunk.css.map": "/fs_portfolio/static/css/606.8be6010d.chunk.css.map",
+    "606.e6f6beb1.chunk.js.map": "/fs_portfolio/static/js/606.e6f6beb1.chunk.js.map",
+    "712.b6d55821.chunk.js.map": "/fs_portfolio/static/js/712.b6d55821.chunk.js.map",
+    "157.47146383.chunk.js.map": "/fs_portfolio/static/js/157.47146383.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.c6292996.css",
-    "static/js/main.7915102e.js"
+    "static/css/main.08fa8164.css",
+    "static/js/main.6e03c8be.js"
   ]
 }

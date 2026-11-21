@@ -77,7 +77,7 @@ Abra `http://localhost:3000`.
 | `npm start` | Iniciar o servidor de desenvolvimento |
 | `npm test -- --watchAll=false --runInBand` | Executar a suíte de testes uma vez |
 | `npm run build` | Gerar a versão de produção em `build/` |
-| `npm run deploy` | Gerar o build e publicá-lo na branch `gh-pages` |
+| `npm run deploy` | Publicar manualmente na branch `gh-pages` (legado; a hospedagem usa GitHub Actions) |
 | `npm run generate:npc-voices` | Regenerar as gravações dos moradores |
 | `npm run generate:felipe-voice` | Regenerar as falas de Felipe no salão |
 
@@ -87,17 +87,11 @@ As verificações de acessibilidade automatizadas não substituem a avaliação 
 
 ## Publicar no GitHub Pages
 
-Com acesso de escrita ao repositório e autenticação Git configurada:
+Ao enviar um commit para `main`, o GitHub Actions executa os testes, gera um novo build com a contagem atual de commits e publica automaticamente no GitHub Pages. Pull requests executam as verificações sem publicar.
 
-```sh
-npm run deploy
-```
+Em **Settings → Pages**, a origem deve estar configurada como **GitHub Actions**. A URL base já está definida em `package.json` para `/fs_portfolio/`.
 
-O script `predeploy` executa o build antes da publicação. A versão exibida no cabeçalho corresponde ao número de commits acessíveis no histórico Git no momento do build. No repositório, em **Settings → Pages**, configure a origem como **Deploy from a branch**, selecionando **gh-pages** e **/ (root)**.
-
-A URL base já está definida em `package.json` para `/fs_portfolio/`. Após publicar, aguarde o processamento do GitHub Pages. Se a versão anterior continuar aparecendo, atualize a página com Ctrl + F5.
-
-Ao enviar um commit para `main`, o GitHub Actions executa os testes, gera um novo build com a contagem atual de commits e publica automaticamente na branch `gh-pages`. A publicação manual continua disponível pelo comando acima.
+A versão exibida no cabeçalho corresponde ao número de commits acessíveis no histórico Git no momento do build. Caso a versão antiga continue aparecendo após a publicação, atualize a página com Ctrl + F5.
 
 ## Organização do código
 

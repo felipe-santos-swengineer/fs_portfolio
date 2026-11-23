@@ -13,7 +13,7 @@ Um portfólio interativo em forma de vilarejo: explore o cenário com um persona
 | Oficina | Projetos, galerias de imagens e links |
 | Correio | Contato e redes profissionais |
 | Castelo | Salão do trono e conversa com Felipe |
-| Portal a oeste | Lago, corredeiras, ruínas e ilha do dragão |
+| Portal a oeste | Campanhas do Dragão Maligno e do Castelo Amaldiçoado |
 | Mercado a leste | Alimentos, misturas de poções e vitrine de tecnologias |
 
 - Personagem articulado, obstáculos e câmera com rotação e zoom. A jornada começa na doca ao sul da vila.
@@ -26,16 +26,41 @@ Um portfólio interativo em forma de vilarejo: explore o cenário com um persona
 
 O botão **Recomeçar** reinicia o progresso da missão e a celebração, preservando a posição do personagem, dos moradores e da câmera.
 
+## Campanhas do portal
+
+O portal reúne os mapas em campanhas recolhíveis, com salas numeradas na ordem da jornada. É possível escolher uma sala diretamente; a última área visitada é restaurada ao recarregar a página durante a sessão. Os portais de retorno levam à vila inicial.
+
+### Campanha do Dragão Maligno
+
+1. **Lago das Interfaces:** explore de barco, conheça Marina e encontre a passagem para as corredeiras.
+2. **Corredeiras do Desfiladeiro:** conduza o barco pelo percurso e desvie dos obstáculos.
+3. **Enseada das Ruínas Submersas:** navegue pelas ruínas, converse com Duarte e ative as runas para alcançar a passagem ao templo.
+4. **Aldeia do Templo Antigo:** visite o templo, seus santuários e moradores, incluindo Abaré, antes de seguir para a caverna.
+5. **Caverna do Ancião:** enfrente criaturas e armadilhas, encontre a alavanca escondida, use o ponto de retorno e alcance a câmara do dragão. Há também um atalho direto para a câmara.
+6. **Câmara do Ancião:** após o despertar e o diálogo do dragão, desvie da chuva de bolas de fogo e da rajada em cone. Os avisos no chão indicam as áreas atingidas. Quando ele baixar a cabeça e ficar atordoado, aproxime-se e use a espada: a cada três golpes ele volta a ficar invulnerável; com 12, é derrotado. O aventureiro começa com três vidas e pode recuperar vidas com corações que aparecem na arena.
+
+Depois da vitória, converse com a princesa Elara para voltar à vila inicial ou enfrentar o dragão novamente. Também é possível pular o diálogo inicial, a luta ou a cena de morte usando os botões da experiência.
+
+### Campanha do Castelo Amaldiçoado
+
+1. **Arredores do Castelo:** caminhe pela passarela sob chuva e neblina, converse com o arquivista Alden e observe os soldados diante da fortaleza. Ao se aproximar, o portão se abre e os soldados fogem. O portal no início da passarela leva de volta à vila.
+2. **Interior do Castelo:** explore a primeira versão do salão, com colunas, vitrais, tochas, estandartes e trono. Risadas de bruxas alternam ao fundo; há uma saída para os arredores e um portal de retorno à vila.
+
+Marina, Duarte, Abaré, Elara e Alden acompanham o jogador com o olhar. Os personagens com balões de fala nos cenários comentam os acontecimentos sem abrir uma conversa.
+
 ## Controles
 
 | Ação | Controle |
 | --- | --- |
 | Caminhar | WASD ou setas, com o cenário em foco |
+| Correr | Shift enquanto caminha, nos mapas que oferecem corrida |
 | Rotacionar a câmera | Arrastar com o mouse ou um dedo; botões de rotação |
 | Aproximar ou afastar | Roda do mouse, gesto de pinça ou botões de zoom |
 | Abrir um edifício | Clicar nele ou pressionar E perto da entrada |
 | Conversar | Clicar no personagem ou pressionar F quando estiver próximo |
-| Atacar na caverna | J ou espaço; botão de ataque no celular |
+| Atacar na caverna ou no calabouço | J ou espaço; botão de ataque no celular |
+| Atacar o dragão | E, J ou espaço; botão de ataque no celular |
+| Usar portal ou entrada próxima | E; em portais de retorno também é possível tocar no portal ou atravessá-lo |
 | Fechar uma janela | Escape ou botão de fechar |
 | Centralizar a câmera | Botão Focar personagem |
 
@@ -48,6 +73,8 @@ O painel **Acessibilidade** oferece tamanho de texto, alto contraste, fonte simp
 O modo leitura permite acessar todas as seções e os diálogos dos moradores sem depender de WebGL. A experiência 3D requer um navegador com WebGL 2; o desempenho varia conforme o dispositivo.
 
 O som geral e todas as categorias começam ativados a cada visita; a reprodução pode começar após a primeira interação, conforme o navegador. No painel **Áudio**, é possível ativar ou silenciar tudo ou escolher cada categoria individualmente. As narrações originais foram preservadas; as falas dos moradores são arquivos locais, sem consulta a serviços de voz durante a visita.
+
+As campanhas têm trilhas próprias para exploração, caverna, batalha, vitória e castelo amaldiçoado. Os efeitos do portão, gritos e risadas usam o canal de efeitos; as falas de personagens usam o canal de vozes. Os créditos das músicas e efeitos CC0 usados nas campanhas estão em [MUSIC_CREDITS.md](MUSIC_CREDITS.md).
 
 ## Tecnologias
 
@@ -81,8 +108,10 @@ Abra `http://localhost:3000`.
 | `npm run deploy` | Publicar manualmente na branch `gh-pages` (legado; a hospedagem usa GitHub Actions) |
 | `npm run generate:npc-voices` | Regenerar as gravações dos moradores |
 | `npm run generate:felipe-voice` | Regenerar as falas de Felipe no salão |
+| `node scripts/generate-princess-voices.cjs` | Regenerar as falas da princesa Elara |
+| `node scripts/generate-cursed-castle-voices.cjs` | Regenerar as falas de Alden |
 
-A geração de vozes é uma ferramenta de desenvolvimento: exige internet e envia os textos ao serviço de síntese da Microsoft por meio de `msedge-tts`. O comando de Felipe também envia os textos ao mesmo serviço. As gravações já estão incluídas no projeto; esse comando não é necessário para executar ou publicar o site.
+A geração de vozes é uma ferramenta de desenvolvimento: exige internet e envia os textos ao serviço de síntese da Microsoft por meio de `msedge-tts`. As gravações já estão incluídas no projeto; esses comandos não são necessários para executar ou publicar o site.
 
 As verificações de acessibilidade automatizadas não substituem a avaliação visual e os testes com leitores de tela reais.
 
@@ -98,6 +127,8 @@ A versão exibida no cabeçalho corresponde aos primeiros 12 caracteres do ident
 
 ```text
 public/                         HTML e arquivos públicos
+AGENTS.md                       Padrões de interação e componentes para novas áreas
+MUSIC_CREDITS.md                Fontes e licenças de músicas e efeitos das campanhas
 scripts/generate-villager-voices.cjs
 src/
   assets/                       Imagens, música, narrações e vozes
@@ -108,11 +139,18 @@ src/
     MissionFireworks.js         Celebração da missão
     AccessibilitySettings.js    Preferências de acessibilidade
     AudioSettings.js            Preferências de áudio
+    Lake.js / Rapids.js         Lago e corredeiras
+    Ruins.js / TempleVillage.js Ruínas e aldeia do templo
+    DragonCave.js               Exploração e combate na caverna
+    DragonChamber.js            Cena, batalha e desfecho do dragão
+    CursedCastle.js             Arredores do castelo amaldiçoado
+    CursedCastleInterior.js     Salão inicial do castelo
+    returnPortal.js             Portal de retorno padronizado
+    facePlayer.js               Orientação de personagens para o jogador
     villageNavigation.js        Destinos e regras de movimentação
     villagers.js                Moradores, diálogos e rotas
   App.js                        Interface e estado da experiência
   content.js                    Textos e projetos do portfólio
-  OriginalPortfolio.js          Componente original preservado como referência
 ```
 
 Consulte [VILAREJO.md](VILAREJO.md) para detalhes do cenário, áudio, controles e comportamento dos recursos.

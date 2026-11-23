@@ -1,3 +1,3 @@
 export const LAKE_PORTAL_Z = 34;
-export const nearLakePortal = position => Math.hypot(position.x, position.z - LAKE_PORTAL_Z) < 3.6;
-export const touchingLakePortal = position => Math.hypot(position.x, position.z - LAKE_PORTAL_Z) <= 2.1;
+export const nearLakePortal = (position, portal = {x:0,z:LAKE_PORTAL_Z}) => Math.hypot(position.x-portal.x, position.z-portal.z) < 3.6;
+export const touchingLakePortal = (position, portal = {x:0,z:LAKE_PORTAL_Z}) => Math.hypot(position.x-portal.x, position.z-portal.z) <= 2.1;

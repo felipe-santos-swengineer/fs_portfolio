@@ -18,9 +18,10 @@ export function createElderDragon(scene) {
   const head=new THREE.Group();head.position.set(0,1.55,.9);body.add(head);
   oval(head,.55,scale,0,.38,.38,1.1,.85,1.3);oval(head,.42,scale,0,.18,.92,1.1,.56,1.4);
   const jaw=new THREE.Group();jaw.position.set(0,-.02,.42);head.add(jaw);oval(jaw,.39,plate,0,-.08,.45,1.1,.22,1.35);
+  const eyeParts=[];
   [-1,1].forEach(side=>{
     const socket=oval(head,.18,dark,side*.42,.44,.52,.9,.65,.75);socket.rotation.z=side*.25;
-    oval(head,.105,eye,side*.46,.45,.6,.8,.6,.6);oval(head,.045,dark,side*.49,.45,.66,.3,1,.3);
+    const eyeMesh=oval(head,.105,eye,side*.46,.45,.6,.8,.6,.6),pupil=oval(head,.045,dark,side*.49,.45,.66,.3,1,.3);eyeParts.push({mesh:eyeMesh,height:.6},{mesh:pupil,height:1});
     const brow=oval(head,.2,plate,side*.42,.58,.52,1.3,.35,.8);brow.rotation.z=side*.25;
     const h=spike(head,.16,1.1,horn,side*.34,1.05,.08);h.rotation.z=-side*.35;h.rotation.x=-.55;
     for(let j=0;j<3;j++){const h2=spike(head,.09,.5-j*.07,horn,side*(.48+j*.08),.38-j*.13,-.03-j*.08);h2.rotation.z=-side*1.15;}
@@ -37,5 +38,5 @@ export function createElderDragon(scene) {
     const verts=[];for(let i=1;i<points.length-1;i++)verts.push(...points[0],...points[i],...points[i+1]);const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.computeVertexNormals();add(pivot,geo,web,0,0,0);
     [1,2,3,5,7,8].forEach(i=>{const end=new THREE.Vector3(...points[i]),rib=add(pivot,new THREE.CylinderGeometry(.025,.07,end.length(),6),scale,end.x/2,end.y/2,end.z/2);rib.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),end.normalize());});
     return {pivot,side};});
-  return {group:root,body,head,jaw,wings,tail,eyes:eye};
+  return {group:root,body,head,jaw,wings,tail,eyes:eye,eyeParts};
 }

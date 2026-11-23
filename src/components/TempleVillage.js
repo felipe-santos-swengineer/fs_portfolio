@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { facePlayer } from './facePlayer';
 import { X } from 'lucide-react';
 import { addFaceDetails, createAdventurer } from './VillageScene';
 import { cameraRelativeDirection } from './cameraRelativeDirection';
@@ -189,6 +190,7 @@ export default function TempleVillage({language, paused, reduceMotion, onExit,on
         residents.forEach(npc=>{let moving=false;if(npc.elder){}else if(npc.wait>0)npc.wait-=dt;else{const target=npc.route[npc.next],dx=target[0]-npc.group.position.x,dz=target[1]-npc.group.position.z,d=Math.hypot(dx,dz),step=Math.min(d,dt*.8);if(d>.001){npc.group.position.x+=dx/d*step;npc.group.position.z+=dz/d*step;npc.group.rotation.y=Math.atan2(dx,dz);moving=true;}if(d<=step+.001){npc.next=(npc.next+1)%npc.route.length;npc.wait=1.3+(npc.next%3)*.65;}}
           const swing=moving?Math.sin(time*7+npc.phase)*.55:0;npc.legs[0].rotation.x=swing;npc.legs[1].rotation.x=-swing;npc.arms[0].rotation.x=-swing*.7;npc.arms[1].rotation.x=npc.route&&moving?swing*.5:Math.sin(time*1.5+npc.phase)*.04;npc.body.position.y=moving?Math.abs(Math.sin(time*7+npc.phase))*.05:Math.sin(time*1.7+npc.phase)*.015;});
       }
+      if(!state.current.paused){const elder=residents.find(npc=>npc.elder);if(elder)facePlayer(elder.group,player);}
       if(!state.current.paused&&!state.current.reduceMotion){fires.forEach(f=>{const flicker=1+Math.sin(time*8+f.phase)*.12;f.flame.scale.y=flicker;f.core.scale.y=1/flicker;f.light.intensity=(f.light.distance>8?12:7)*flicker;});wolves.forEach(w=>{const a=time*.3+w.phase;w.group.position.x=w.x+Math.sin(a)*1.1;w.group.position.z=w.z+Math.cos(a)*.7;w.group.rotation.y=Math.atan2(.7*Math.sin(a),1.1*Math.cos(a));w.legs.forEach((leg,i)=>{leg.rotation.z=Math.sin(time*4+w.phase+(i%3?Math.PI:0))*.28;});w.tail.rotation.y=Math.sin(time*2+w.phase)*.3;});}
       const target=new THREE.Vector3(player.position.x,1,player.position.z),shift=target.clone().sub(orbit.target);camera.position.add(shift);orbit.target.copy(target);orbit.enabled=!state.current.paused&&talkRef.current===null;orbit.enableDamping=!state.current.reduceMotion;orbit.update();renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);

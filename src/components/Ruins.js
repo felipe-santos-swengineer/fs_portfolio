@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { facePlayer } from './facePlayer';
 import { cameraRelativeDirection } from './cameraRelativeDirection';
 import { addFaceDetails, createAdventurer } from './VillageScene';
 import { createLakeBoat } from './lakeBoat';
@@ -218,6 +219,7 @@ export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel
         const closeToTunnel=nearTempleEntrance(boat.position,activeRef.current);
         if(closeToTunnel!==tunnelNearRef.current){tunnelNearRef.current=closeToTunnel;setNearTunnel(closeToTunnel);}
       }else clear();
+      if(!settings.current.paused)facePlayer(pirate,player);
       const reduced=settings.current.reduceMotion,open=activeRef.current.every(Boolean);
       if(!settings.current.paused) gate.position.y=reduced?(open?11:3.4):THREE.MathUtils.lerp(gate.position.y,open?11:3.4,Math.min(1,dt*2));
       beacons.forEach(({rune,glow,halo,ring,beam},i)=>{

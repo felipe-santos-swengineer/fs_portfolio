@@ -1,4 +1,16 @@
-// Short, locally synthesized effects: no network requests or audio downloads.
+import castleGateClip from '../assets/audio/cursed-gate.ogg';
+import castleScream1 from '../assets/audio/cursed-scream-1.ogg';
+import castleScream2 from '../assets/audio/cursed-scream-2.ogg';
+import castleScream3 from '../assets/audio/cursed-scream-3.ogg';
+import witch1 from '../assets/audio/witches/1.mp3';
+import witch2 from '../assets/audio/witches/2.mp3';
+import witch3 from '../assets/audio/witches/3.mp3';
+import witch4 from '../assets/audio/witches/4.mp3';
+import { nextWitchLaugh } from './witchAmbience';
+
+const WITCH_LAUGHS=[witch1,witch2,witch3,witch4];
+
+// Local effects, synthesized or played from bundled audio clips.
 export default class VillageAudio {
   constructor() {
     this.context = null;
@@ -7,11 +19,14 @@ export default class VillageAudio {
     this.foot = 0;
     this.channels = { steps: true, interactions: true };
     this.channel = 'interactions';
+    this.castleEffectRevision = 0;
+    this.castleSamples = new Map();
+    this.witchGeneration=0; this.witchActive=false; this.witchTimer=null; this.witchSource=null; this.witchPrevious=-1;
   }
 
   setChannels(channels) {
     this.channels = { ...this.channels, ...channels };
-    if (!this.channels.interactions) this.stopWeather();
+    if (!this.channels.interactions) { this.stopWeather(); this.stopCastleEffects(); this.stopWitchAmbience(); }
     for (const source of this.sources) if (!this.channels[source.villageChannel]) { try { source.stop(); } catch { /* Already ended. */ } }
   }
 
@@ -35,6 +50,8 @@ export default class VillageAudio {
   }
 
   mute() {
+    this.stopWitchAmbience();
+    this.stopCastleEffects();
     this.stopWeather();
     this.enabled = false;
     for (const source of [...this.sources]) { try { source.stop(); } catch { /* Already ended. */ } }
@@ -153,6 +170,75 @@ export default class VillageAudio {
     if (!this.ready() || !this.channels.interactions) return;
     this.channel = 'interactions';
     if (event === 'anger') { this.rustle(.6, 420, .055); this.tone(88, .65, .045, 0, 'sawtooth', 54); }
+    else if (event === 'attack') { this.rustle(.16, 6500, .16); this.rustle(.08, 9500, .07, .025); this.tone(1900, .13, .025, .015, 'sine', 680); }
+    else if (event === 'fireball') { this.rustle(.3, 1300, .09); this.tone(340, .3, .035, 0, 'sawtooth', 120); }
+    else if (event === 'inhale') { this.rustle(.5, 500, .07); this.tone(105, .5, .045, 0, 'triangle', 175); }
+    else if (event === 'impact') { this.rustle(.5, 650, .18); this.rustle(.35, 2400, .08, .03); this.tone(105, .55, .12, 0, 'sine', 38); }
+    else if (event === 'breath') { this.rustle(1.1, 1200, .16); this.rustle(.75, 320, .13, .1); this.tone(95, .9, .08, 0, 'sawtooth', 55); }
+  }
+
+  loadCastleSample(url) {
+    if (!this.castleSamples.has(url)) {
+      const promise = fetch(url).then(response => {
+        if (!response.ok) throw new Error('Unable to load sound effect');
+        return response.arrayBuffer();
+      }).then(data => this.context.decodeAudioData(data)).catch(error => {
+        this.castleSamples.delete(url);
+        throw error;
+      });
+      this.castleSamples.set(url, promise);
+    }
+    return this.castleSamples.get(url);
+  }
+
+  stopCastleEffects() {
+    this.castleEffectRevision++;
+    for (const source of this.sources) if (source.villageEffect === 'cursedCastleGate') {
+      try { source.stop(); } catch { /* Already stopped. */ }
+    }
+  }
+
+  stopWitchAmbience() {
+    this.witchActive=false;this.witchGeneration++;
+    if (this.witchTimer!==null) { clearTimeout(this.witchTimer);this.witchTimer=null; }
+    if (this.witchSource) { const source=this.witchSource;this.witchSource=null;try { source.stop(); } catch { /* Already ended. */ } }
+  }
+
+  startWitchAmbience() {
+    if (this.witchActive || !this.ready() || !this.channels.interactions) return;
+    this.witchActive=true;const generation=++this.witchGeneration;
+    const schedule=delay=>{this.witchTimer=setTimeout(play,delay);};
+    const play=async()=>{
+      this.witchTimer=null;
+      if (!this.witchActive || generation!==this.witchGeneration || !this.ready() || !this.channels.interactions) { this.stopWitchAmbience();return; }
+      const index=nextWitchLaugh(this.witchPrevious),context=this.context;
+      try {
+        const buffer=await this.loadCastleSample(WITCH_LAUGHS[index]);
+        if (!this.witchActive || generation!==this.witchGeneration || this.context!==context || !this.ready() || !this.channels.interactions) return;
+        const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffer;gain.gain.value=.22;source.connect(gain);gain.connect(this.master);
+        source.villageChannel='interactions';source.villageEffect='witchAmbience';this.sources.add(source);this.witchSource=source;this.witchPrevious=index;
+        source.onended=()=>{this.sources.delete(source);source.disconnect();gain.disconnect();if(this.witchSource===source)this.witchSource=null;if(this.witchActive&&generation===this.witchGeneration)schedule(5000+Math.random()*4000);};
+        source.start();
+      } catch { if(this.witchActive&&generation===this.witchGeneration)schedule(10000); }
+    };
+    schedule(3000);
+  }
+
+  async cursedCastle(event) {
+    if (event === 'witch-start') { this.startWitchAmbience(); return; }
+    if (event === 'witch-stop') { this.stopWitchAmbience(); return; }
+    if (event === 'stop') { this.stopCastleEffects(); return; }
+    if (event !== 'gate' || !this.ready() || !this.channels.interactions) return;
+    const revision=++this.castleEffectRevision, context=this.context;
+    try {
+      const clips=await Promise.all([castleGateClip,castleScream1,castleScream2,castleScream3].map(url=>this.loadCastleSample(url)));
+      if (revision!==this.castleEffectRevision || this.context!==context || !this.ready() || !this.channels.interactions) return;
+      // Two metallic creaks accompany the lift; the soldiers cry out in succession.
+      const events=[[0,0,.32],[0,.72,.26],[1,.25,.18],[2,.65,.17],[3,1.05,.17]];
+      this.channel='interactions'; this.effectType='cursedCastleGate';
+      events.forEach(([index,delay,volume])=>{const source=context.createBufferSource(),gain=context.createGain();source.buffer=clips[index];gain.gain.value=volume;source.connect(gain);gain.connect(this.master);this.track(source,[gain],context.currentTime+delay,source.buffer.duration);});
+      this.effectType=null;
+    } catch { /* Missing or blocked effects do not interrupt the scene. */ }
   }
 
   lake(event) {
@@ -199,5 +285,6 @@ export default class VillageAudio {
     this.mute();
     if (this.context && this.context.state !== 'closed') this.context.close().catch(() => {});
     this.context = null;
+    this.castleSamples.clear();
   }
 }

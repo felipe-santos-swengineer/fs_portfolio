@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { facePlayer } from './facePlayer';
+import { allowRunAndRotate } from './runAndRotate';
 import { addFaceDetails, createAdventurer } from './VillageScene';
 import { dungeonPortalLabel } from './dungeonI18n';
 import './Lake.css';
@@ -414,7 +416,7 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
     const cylinder = (parent,r,h,color,x,y,z,segments=8) => add(parent,new THREE.CylinderGeometry(r,r,h,segments),color,x,y,z);
     const { player, limbs } = createAdventurer(scene,{box,sphere,mesh,cylinder});
     player.position.set(0,.23,31); player.rotation.y=Math.PI;
-    const orbit = new OrbitControls(camera,renderer.domElement); orbit.enableDamping=true; orbit.enablePan=false; orbit.minDistance=5; orbit.maxDistance=24; orbit.maxPolarAngle=Math.PI/2-.08;
+    const orbit = allowRunAndRotate(new OrbitControls(camera,renderer.domElement)); orbit.enableDamping=true; orbit.enablePan=false; orbit.minDistance=5; orbit.maxDistance=24; orbit.maxPolarAngle=Math.PI/2-.08;
     camera.position.set(10,12,41); orbit.target.set(0,1,31); orbit.update();
     aboardRef.current=false; setAboard(false);
 
@@ -495,6 +497,7 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
         if (limbs) { const swing=moving && !aboardRef.current ? Math.sin(now*.012)*.45 : 0; limbs[0].rotation.x=swing; limbs[2].rotation.x=-swing; limbs[1].rotation.x=-swing; limbs[3].rotation.x=swing; }
         boat.position.y=state.current.reduceMotion ? 0 : Math.sin(now*.002)*.06;
       } else clear();
+      if(!state.current.paused)facePlayer(guide,player);
       const sceneryTime=state.current.reduceMotion ? 0 : waterTime;
       lilies.forEach(({pad,phase})=>{pad.position.y=.09+Math.sin(sceneryTime*1.2+phase)*.035; pad.rotation.y=Math.sin(sceneryTime*.3+phase)*.12;});
       reeds.forEach(({reed,phase})=>{reed.rotation.z=Math.sin(sceneryTime*.8+phase)*.06;});

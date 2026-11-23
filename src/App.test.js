@@ -17,6 +17,8 @@ jest.mock('./components/TempleVillage', () => ({ __esModule: true, default: ({ o
 jest.mock('./components/DragonCave', () => ({ __esModule: true, default: ({ onExit, onEnterChamber, startAtChamber }) => <><button onClick={onExit}>Sair da caverna de teste</button><button onClick={onEnterChamber}>Entrar na câmara de teste</button><span data-testid="cave-arrival">{startAtChamber?'chamber':'entrance'}</span></> }));
 jest.mock('./components/DragonChamber', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair da câmara de teste</button> }));
 jest.mock('./components/Dungeon', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do calabouco de teste</button> }));
+jest.mock('./components/CursedCastle', () => ({ __esModule: true, default: ({ onExit,onEnterCastle,startNearGate }) => <><button onClick={onExit}>{'Sair do castelo amaldi\u00e7oado de teste'}</button><button onClick={onEnterCastle}>Entrar no interior de teste</button><span data-testid="castle-return">{String(startNearGate)}</span></> }));
+jest.mock('./components/CursedCastleInterior', () => ({ __esModule: true, default: ({onExit,onReturnVillage}) => <><button onClick={onExit}>Voltar aos arredores de teste</button><button onClick={onReturnVillage}>Portal da vila de teste</button></> }));
 
 beforeEach(() => {
   localStorage.clear();
@@ -452,4 +454,49 @@ test('the portal opens the dragon chamber directly', async () => {
   fireEvent.click(screen.getByRole('button', {name:/C\u00e2mara do Anci\u00e3o/}));
   expect(await screen.findByRole('button', {name:'Sair da c\u00e2mara de teste'})).toBeTruthy();
   expect(sessionStorage.getItem('portfolio-map')).toBe('chamber');
+});
+
+
+test('a campanha do castelo permite entrar, preservar o mapa e voltar ao portal', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
+  const campaign=screen.getByText('Campanha do Castelo Amaldi\u00e7oado');
+  expect(campaign.parentElement.open).toBe(false);
+  fireEvent.click(campaign);
+  fireEvent.click(screen.getByRole('button', { name: /Arredores do Castelo/ }));
+  expect(await screen.findByRole('button', { name: 'Sair do castelo amaldi\u00e7oado de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
+  fireEvent.click(screen.getByRole('button', { name: 'Sair do castelo amaldi\u00e7oado de teste' }));
+  expect(screen.getByTestId('village-canvas').getAttribute('data-portal-return')).toBe('true');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('village');
+});
+
+
+test('o interior do castelo abre pelo portao e retorna com o portao aberto', async () => {
+  await start();fireEvent.click(screen.getByRole('button',{name:'Simular entrada no portal'}));
+  fireEvent.click(screen.getByText('Campanha do Castelo Amaldi\u00e7oado'));
+  fireEvent.click(screen.getByRole('button',{name:/Arredores do Castelo/}));
+  fireEvent.click(await screen.findByRole('button',{name:'Entrar no interior de teste'}));
+  expect(await screen.findByRole('button',{name:'Voltar aos arredores de teste'})).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-interior');
+  fireEvent.click(screen.getByRole('button',{name:'Voltar aos arredores de teste'}));
+  expect((await screen.findByTestId('castle-return')).textContent).toBe('true');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
+});
+
+test('o portal acessa o interior diretamente e retorna para a vila', async () => {
+  await start();fireEvent.click(screen.getByRole('button',{name:'Simular entrada no portal'}));
+  fireEvent.click(screen.getByText('Campanha do Castelo Amaldi\u00e7oado'));
+  fireEvent.click(screen.getByRole('button',{name:/Interior do Castelo/}));
+  fireEvent.click(await screen.findByRole('button',{name:'Portal da vila de teste'}));
+  expect(screen.getByTestId('village-canvas').getAttribute('data-portal-return')).toBe('true');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('village');
+});
+
+
+test('recarregar no interior restaura o sal?o e o retorno aos arredores', async () => {
+  sessionStorage.setItem('portfolio-map','cursed-castle-interior');await start();
+  fireEvent.click(await screen.findByRole('button',{name:'Voltar aos arredores de teste'}));
+  expect((await screen.findByTestId('castle-return')).textContent).toBe('true');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
 });

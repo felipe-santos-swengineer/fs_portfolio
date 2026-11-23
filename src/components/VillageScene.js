@@ -2,6 +2,7 @@ import { createVillageWeather } from './VillageWeather';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { allowRunAndRotate } from './runAndRotate';
 import { ENGLISH_VILLAGE_SIGNS, SITES, PORTAL, PORTAL_ARRIVAL, isCastleThreshold, canWalk, nearbySite, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
 import { VILLAGERS, createWalkingGraph, randomRoute, advanceVillager } from './villagers';
 import { createDragon, createDayNight } from './VillageAtmosphere';
@@ -473,7 +474,7 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     const verticalAxis = new THREE.Vector3(0, 1, 0);
     const portrait = container.clientWidth < 600;
     const camera = new THREE.PerspectiveCamera(44, 1, .1, 260); const initialOffset = new THREE.Vector3(0, 12, 16).multiplyScalar(portrait ? 1.25 : 1); camera.position.copy(world.player.position).add(initialOffset);
-    const controls = new OrbitControls(camera, renderer.domElement); controls.target.set(0, 3.2, 11); controls.enableDamping = true; controls.dampingFactor = .07; controls.enablePan = false;
+    const controls = allowRunAndRotate(new OrbitControls(camera, renderer.domElement)); controls.target.set(0, 3.2, 11); controls.enableDamping = true; controls.dampingFactor = .07; controls.enablePan = false;
     controls.minDistance = 7; controls.maxDistance = 78; controls.minPolarAngle = .25; controls.maxPolarAngle = Math.PI / 2 - .09; controls.update();
     const resize = () => { const { width, height } = container.getBoundingClientRect(); renderer.setSize(width, height); camera.aspect = width / Math.max(height, 1); camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();

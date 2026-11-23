@@ -2,17 +2,24 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import App from './App';
 import VillageAudio from './audio/VillageAudio';
 
-jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, onOpen, zoom, missionRound, weatherMode }) => <div data-testid="village-canvas" data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button></div> }));
+jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, onOpen, onNear, onNearNpc, zoom, missionRound, weatherMode, returnToPortal }) => <div data-testid="village-canvas" data-portal-return={String(returnToPortal)} data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button><button onClick={() => onNearNpc(0)}>Aproximar da Bia</button><button onClick={() => onNear(0)}>Aproximar da taverna</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
 jest.mock('./assets/audio/village-bards-tale.mp3', () => 'village-track.mp3');
 jest.mock('./assets/audio/castle-kings-feast.mp3', () => 'castle-track.mp3');
 jest.mock('./assets/audio/dungeon.wav', () => 'dungeon-track.wav');
+jest.mock('./assets/audio/lake-ambient.wav', () => 'lake-track.wav');
+jest.mock('./assets/audio/rapids-theme.wav', () => 'rapids-track.wav');
 jest.mock('./components/ThroneHall', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do salao de teste</button> }));
+jest.mock('./components/Lake', () => ({ __esModule: true, default: ({ onExit, onEnterRapids }) => <><button onClick={onExit}>Sair do lago de teste</button><button onClick={onEnterRapids}>Entrar nas corredeiras de teste</button></> }));
+jest.mock('./components/Rapids', () => ({ __esModule: true, default: ({ onExit, onAdvance }) => <><button onClick={onExit}>Sair das corredeiras de teste</button><button onClick={onAdvance}>Avançar das corredeiras de teste</button></> }));
+jest.mock('./components/Ruins', () => ({ __esModule: true, default: ({ onExit, onEnterTunnel }) => <><button onClick={onExit}>Sair das ruínas de teste</button><button onClick={onEnterTunnel}>Entrar no túnel de teste</button></> }));
+jest.mock('./components/AncientTunnel', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do túnel de teste</button> }));
 jest.mock('./components/Dungeon', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do calabouco de teste</button> }));
 
 beforeEach(() => {
   localStorage.clear();
-  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), interact: jest.fn(), closeDoor: jest.fn(), step: jest.fn(), firework: jest.fn(), stopFireworks: jest.fn(), dispose: jest.fn() }));
+  sessionStorage.clear();
+  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), interact: jest.fn(), ruins: jest.fn(), closeDoor: jest.fn(), step: jest.fn(), firework: jest.fn(), stopFireworks: jest.fn(), dispose: jest.fn() }));
   jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
@@ -179,6 +186,7 @@ test.each([
 ])('modo leitura funciona em %s e permite retornar ao cenario', async (entrance, exit) => {
   await start();
   fireEvent.click(screen.getByRole('button', { name: entrance }));
+  if (entrance === 'Simular entrada no portal') fireEvent.click(screen.getByRole('button', { name: /Calabou\u00e7o/ }));
   expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' }));
   expect(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' })).toBeTruthy();
@@ -238,6 +246,7 @@ test.each([
 ])('trocar o idioma durante %s preserva o cenario e o modo leitura', async (entry, exit) => {
   await start();
   fireEvent.click(screen.getByRole('button', { name: entry }));
+  if (entry === 'Simular entrada no portal') fireEvent.click(screen.getByRole('button', { name: /Calabou\u00e7o/ }));
   expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'English (United States)' }));
   expect(screen.getByRole('button', { name: exit })).toBeTruthy();
@@ -255,4 +264,166 @@ test('o controle alterna os climas e retorna ao ciclo automatico', async () => {
     fireEvent.click(screen.getByRole('button', { name: `Alterar clima: ${current}` }));
     expect(scene.getAttribute('data-weather')).toBe(next);
   }
+});
+
+test('portal permite escolher ou cancelar antes de entrar no calabouco', async () => {
+  await start();
+  const portal = screen.getByRole('button', { name: 'Simular entrada no portal' });
+  fireEvent.click(portal);
+  expect(screen.getByRole('dialog', { name: 'Escolha um destino' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Sair do calabouco de teste' })).toBeNull();
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByRole('dialog', { name: 'Escolha um destino' })).toBeNull();
+  fireEvent.click(portal);
+  fireEvent.click(screen.getByRole('button', { name: /Calabou\u00e7o/ }));
+  expect(await screen.findByRole('button', { name: 'Sair do calabouco de teste' })).toBeTruthy();
+});
+
+
+test.each([
+  ['dungeon', 'Sair do calabouco de teste'],
+  ['throne', 'Sair do salao de teste'],
+  ['lake', 'Sair do lago de teste'],
+])('restaura o mapa %s ao recarregar e registra o retorno para a vila', async (map, exit) => {
+  sessionStorage.setItem('portfolio-map', map);
+  await start();
+  fireEvent.click(await screen.findByRole('button', { name: exit }));
+  expect(sessionStorage.getItem('portfolio-map')).toBe('village');
+  expect(screen.getByTestId('village-canvas')).toBeTruthy();
+});
+
+test('voltar do lago solicita chegada no portal da vila', async () => {
+  sessionStorage.setItem('portfolio-map', 'lake');
+  await start();
+  fireEvent.click(await screen.findByRole('button', { name: 'Sair do lago de teste' }));
+  expect(screen.getByTestId('village-canvas').getAttribute('data-portal-return')).toBe('true');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('village');
+});
+
+test('a entrada e a conversa usam botoes padronizados sem se sobrepor', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Aproximar da taverna' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Aproximar da Bia' }));
+  const entrance=screen.getByRole('button', { name: /Entrar: Taverna.* E/i });
+  const talk=screen.getByRole('button', { name: 'Conversar com Bia F' });
+  expect(entrance.parentElement).toBe(talk.parentElement);
+  fireEvent.click(entrance);
+  expect(screen.getByRole('dialog', { name: /Minha hist/ })).toBeTruthy();
+});
+
+test('a vila mostra o botao padronizado ao aproximar de um morador', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Aproximar da Bia' }));
+  const prompt=screen.getByRole('button', { name: 'Conversar com Bia F' });
+  expect(prompt.className).toBe('villager-talk');
+  fireEvent.click(prompt);
+  expect(screen.queryByRole('button', { name: 'Conversar com Bia F' })).toBeNull();
+  expect(screen.getByLabelText('Conversa com Bia')).toBeTruthy();
+});
+
+test('a versao exibe o commit abreviado e o identificador completo no titulo', async () => {
+  const previous=process.env.REACT_APP_BUILD_VERSION;
+  const commit='0123456789abcdef0123456789abcdef01234567';
+  process.env.REACT_APP_BUILD_VERSION=commit;
+  try {
+    await start();
+    expect(screen.getByTitle(commit).textContent).toContain('Commit 0123456789ab');
+    expect(screen.getByTitle(commit).querySelector('svg.lucide-github')).toBeTruthy();
+  } finally {
+    if(previous===undefined) delete process.env.REACT_APP_BUILD_VERSION;
+    else process.env.REACT_APP_BUILD_VERSION=previous;
+  }
+});
+
+test('o portal exibe corretamente os caracteres acentuados', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
+  expect(screen.getByRole('button', { name: /Calabou\u00e7o/ })).toBeTruthy();
+  expect(screen.getByText('Des\u00e7a o desfiladeiro de barco')).toBeTruthy();
+  expect(screen.getByRole('button', { name: /Enseada das Ru\u00ednas Submersas/ })).toBeTruthy();
+});
+
+test('o tunel abre a partir das ruinas e retorna ao mesmo mapa', async () => {
+  sessionStorage.setItem('portfolio-map','ruins');
+  await start();
+  fireEvent.click(await screen.findByRole('button', { name: 'Entrar no t\u00fanel de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair do t\u00fanel de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('tunnel');
+  expect(screen.queryByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Sair do t\u00fanel de teste' }));
+  expect(screen.getByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
+});
+
+test('a sessao restaura o tunel com retorno para as ruinas', async () => {
+  sessionStorage.setItem('portfolio-map','tunnel');
+  await start();
+  fireEvent.click(await screen.findByRole('button', { name: 'Sair do t\u00fanel de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
+});
+
+test('o portal abre as ruínas e permite retornar à vila', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
+  fireEvent.click(screen.getByRole('button', { name: /Enseada das Ruínas Submersas/ }));
+  expect(await screen.findByRole('button', { name: 'Sair das ruínas de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
+  expect(document.querySelector('audio[loop]').getAttribute('src')).toBe('lake-track.wav');
+  fireEvent.click(screen.getByRole('button', { name: 'Sair das ruínas de teste' }));
+  expect(sessionStorage.getItem('portfolio-map')).toBe('village');
+  expect(screen.getByTestId('village-canvas')).toBeTruthy();
+});
+
+test('avançar das corredeiras abre as ruínas e restaura o mapa após recarregar', async () => {
+  sessionStorage.setItem('portfolio-map', 'rapids');
+  const view = await act(async () => render(<App />));
+  fireEvent.click(await screen.findByRole('button', { name: 'Avançar das corredeiras de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair das ruínas de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
+  view.unmount();
+  await start();
+  expect(await screen.findByRole('button', { name: 'Sair das ruínas de teste' })).toBeTruthy();
+});
+
+test('o portal da vila abre as corredeiras diretamente', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
+  fireEvent.click(screen.getByRole('button', { name: /Corredeiras do Desfiladeiro/ }));
+  expect(await screen.findByRole('button', { name: 'Sair das corredeiras de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('rapids');
+  fireEvent.click(screen.getByRole('button', { name: 'Sair das corredeiras de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair do lago de teste' })).toBeTruthy();
+});
+
+test('a gruta abre as corredeiras e permite voltar ao lago', async () => {
+  sessionStorage.setItem('portfolio-map', 'lake');
+  await start();
+  fireEvent.click(await screen.findByRole('button', { name: 'Entrar nas corredeiras de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair das corredeiras de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('rapids');
+  expect(document.querySelector('audio[loop]').getAttribute('src')).toBe('rapids-track.wav');
+  fireEvent.click(screen.getByRole('button', { name: 'Sair das corredeiras de teste' }));
+  expect(document.querySelector('audio[loop]').getAttribute('src')).toBe('lake-track.wav');
+  expect(await screen.findByRole('button', { name: 'Sair do lago de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('lake');
+});
+
+test('a musica acompanha a entrada e a saida do lago', async () => {
+  await start();
+  const background = document.querySelector('audio[loop]');
+  expect(background.getAttribute('src')).toBe('village-track.mp3');
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
+  fireEvent.click(screen.getByRole('button', { name: /Lago das Interfaces/ }));
+  expect(await screen.findByRole('button', { name: 'Sair do lago de teste' })).toBeTruthy();
+  expect(background.getAttribute('src')).toBe('lake-track.wav');
+  fireEvent.click(screen.getByRole('button', { name: 'Sair do lago de teste' }));
+  expect(background.getAttribute('src')).toBe('village-track.mp3');
+});
+
+test('registra o mapa escolhido no portal para restaurar ao recarregar', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
+  fireEvent.click(screen.getByRole('button', { name: /Lago das Interfaces/ }));
+  expect(await screen.findByRole('button', { name: 'Sair do lago de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('lake');
 });

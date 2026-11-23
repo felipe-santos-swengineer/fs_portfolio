@@ -88,11 +88,11 @@ As verificações de acessibilidade automatizadas não substituem a avaliação 
 
 ## Publicar no GitHub Pages
 
-Ao enviar um commit para `main`, o GitHub Actions executa os testes, gera um novo build com a contagem atual de commits e publica automaticamente no GitHub Pages. Pull requests executam as verificações sem publicar.
+Ao enviar um commit para `main`, o GitHub Actions executa os testes, gera um novo build com o identificador do commit e publica automaticamente no GitHub Pages. Pull requests executam as verificações sem publicar.
 
 Em **Settings → Pages**, a origem deve estar configurada como **GitHub Actions**. A URL base já está definida em `package.json` para `/fs_portfolio/`.
 
-A versão exibida no cabeçalho corresponde ao número de commits acessíveis no histórico Git no momento do build. Caso a versão antiga continue aparecendo após a publicação, atualize a página com Ctrl + F5.
+A versão exibida no cabeçalho corresponde aos primeiros 12 caracteres do identificador do commit usado no build; o identificador completo aparece ao passar o cursor sobre a versão. Alterações locais ainda não registradas em commit não alteram esse identificador. Caso a versão antiga continue aparecendo após a publicação, atualize a página com Ctrl + F5.
 
 ## Organização do código
 

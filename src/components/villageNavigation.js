@@ -6,6 +6,7 @@ export const SITES = [
 ];
 
 export const PORTAL = { x: -16, z: 0 };
+export const PORTAL_ARRIVAL = { x: PORTAL.x + 2.2, z: PORTAL.z };
 export const MARKET_DISPLAY = { x: 26, z: 5.2 };
 export const MARKET_FOOD = { x: 26, z: -5.2 };
 export const MARKET_POTIONS = { x: 26, z: 0 };

@@ -106,7 +106,7 @@ export default function ThroneHall({ language = 'pt-BR', keys, onExit, onStep, o
     const camera=new THREE.PerspectiveCamera(44,1,.1,120);camera.position.set(0,9,20);
     const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.5,4);controls.enableDamping=true;controls.dampingFactor=.07;controls.enablePan=false;controls.minDistance=6;controls.maxDistance=27;controls.maxPolarAngle=Math.PI/2-.12;controls.update();
     const resize=()=>{const {width,height}=container.getBoundingClientRect();renderer.setSize(width,height);camera.aspect=width/Math.max(height,1);camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(container);resize();
-    const down=e=>{const k=e.key.toLowerCase();if(k==='f'&&!e.repeat&&!live.current.paused && Math.hypot(player.position.x,player.position.z+13.15)<4.2){e.preventDefault();talkRef.current?.();return;}if(!live.current.paused && !e.ctrlKey && !e.metaKey && !e.altKey && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){e.preventDefault();keys.current.add(k);}};
+    const down=e=>{const k=e.key.toLowerCase();if(k==='f'&&!e.repeat&&!live.current.paused && Math.hypot(player.position.x,player.position.z+13.15)<4.2){e.preventDefault();talkRef.current?.();return;}if(!live.current.paused && !e.ctrlKey && !e.metaKey && !e.altKey && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
     const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();const escape=e=>{if(e.key==='Escape' && !live.current.paused && dialogueRef.current!==null){e.preventDefault();closeRef.current?.();}};window.addEventListener('keydown',escape);
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerStart=null;
     const pointerDown=e=>{pointerStart={x:e.clientX,y:e.clientY};};
@@ -119,7 +119,7 @@ export default function ThroneHall({ language = 'pt-BR', keys, onExit, onStep, o
       const dt=Math.min((time-previous)/1000||0,.04);previous=time;if(!live.current.paused)clock+=dt;
       const k=keys.current,mx=Number(k.has('d')||k.has('arrowright'))-Number(k.has('a')||k.has('arrowleft')),mz=Number(k.has('w')||k.has('arrowup'))-Number(k.has('s')||k.has('arrowdown'));let walking=false;
       if(!live.current.paused && (mx||mz)){
-        camera.getWorldDirection(forward);forward.y=0;forward.normalize();right.crossVectors(forward,camera.up).normalize();movement.copy(forward).multiplyScalar(mz).addScaledVector(right,mx).normalize().multiplyScalar(dt*4.2);
+        camera.getWorldDirection(forward);forward.y=0;forward.normalize();right.crossVectors(forward,camera.up).normalize();movement.copy(forward).multiplyScalar(mz).addScaledVector(right,mx).normalize().multiplyScalar(dt*4.2*(k.has('shift')?1.8:1));
         const p=player.position,oldX=p.x,oldZ=p.z;p.x=THREE.MathUtils.clamp(p.x+movement.x,-9.1,9.1);p.z=THREE.MathUtils.clamp(p.z+movement.z,-10.1,13.7);
         const distance=Math.hypot(p.x-oldX,p.z-oldZ);walking=distance>.001;const next=advanceFootsteps(steps,distance);steps=next.distance;if(next.steps)live.current.onStep?.();
         if(walking){const yaw=Math.atan2(movement.x,movement.z);player.rotation.y+=Math.atan2(Math.sin(yaw-player.rotation.y),Math.cos(yaw-player.rotation.y))*Math.min(1,dt*14);delta.set(p.x-controls.target.x,1.5-controls.target.y,p.z-controls.target.z).multiplyScalar(Math.min(1,dt*2));controls.target.add(delta);camera.position.add(delta);}

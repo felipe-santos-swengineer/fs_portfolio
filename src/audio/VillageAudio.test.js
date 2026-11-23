@@ -87,3 +87,15 @@ test('o som de chuva respeita os efeitos e para ao silenciar', async () => {
   audio.mute(); expect(next.stop).toHaveBeenCalledTimes(1); expect(audio.weatherSource).toBeNull();
   audio.dispose();
 });
+
+test('os efeitos das ruinas respeitam o canal de interacoes', async () => {
+  const audio=new VillageAudio();await audio.enable();
+  for(const effect of ['rune','gate','stone','wood','passage','talk']) {
+    const before=audio.context.created.length;audio.ruins(effect);
+    expect(audio.context.created.length).toBeGreaterThan(before);
+  }
+  audio.setChannels({interactions:false});
+  const before=audio.context.created.length;audio.ruins('rune');audio.ruins('stone');
+  expect(audio.context.created.length).toBe(before);
+  audio.dispose();
+});

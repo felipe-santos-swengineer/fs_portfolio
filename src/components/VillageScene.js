@@ -2,7 +2,7 @@ import { createVillageWeather } from './VillageWeather';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { ENGLISH_VILLAGE_SIGNS, SITES, PORTAL, isCastleThreshold, canWalk, nearbySite, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
+import { ENGLISH_VILLAGE_SIGNS, SITES, PORTAL, PORTAL_ARRIVAL, isCastleThreshold, canWalk, nearbySite, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
 import { VILLAGERS, createWalkingGraph, advanceVillager } from './villagers';
 import { createDragon, createDayNight } from './VillageAtmosphere';
 import { createMissionFireworks } from './MissionFireworks';
@@ -413,13 +413,13 @@ export function createVillage(scene) {
   return { buildings, portal, castleDoor, backdrop, player, body, limbs, crystal, flames, fireflies, cape, npcs, performers, castleGuards, castleArchers, castleTowers, marketStall, marketVendors, marketFood: produce, marketPotions: goods };
 }
 
-export default function VillageScene({ language = 'pt-BR', keys, compassRef, paused, sceneHidden = false, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, weatherEffects = true, weatherMode = 'auto', onWeather, cameraTurn = 0 }) {
+export default function VillageScene({ language = 'pt-BR', keys, compassRef, paused, sceneHidden = false, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal = false, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, weatherEffects = true, weatherMode = 'auto', onWeather, cameraTurn = 0 }) {
   const mount = useRef(null);
   const wake = useRef(null);
   const updateSigns = useRef(null);
   useEffect(() => { updateSigns.current?.(language); }, [language]);
-  const live = useRef({ paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn });
-  live.current = { paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn };
+  const live = useRef({ paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn });
+  live.current = { paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn };
   const [error, setError] = useState(false);
   const wasSceneHidden = useRef(sceneHidden);
   useEffect(() => {
@@ -474,13 +474,21 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     };
     renderer.domElement.addEventListener('pointerdown', pointerdown); renderer.domElement.addEventListener('pointerup', pointerup);
     const lost = e => { e.preventDefault(); setError(true); }; renderer.domElement.addEventListener('webglcontextlost', lost);
-    const down = e => { const k = e.key.toLowerCase(); if (!live.current.paused && !e.ctrlKey && !e.altKey && !e.metaKey && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k) && !e.target.closest('button,a,input,audio')) { e.preventDefault(); keys.current.add(k); } };
+    const down = e => { const k = e.key.toLowerCase(); if (!live.current.paused && !e.ctrlKey && !e.altKey && !e.metaKey && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k) && !e.target.closest('button,a,input,audio')) { if (k !== 'shift') e.preventDefault(); keys.current.add(k); } };
     const up = e => keys.current.delete(e.key.toLowerCase()); const clear = () => keys.current.clear();
     renderer.domElement.addEventListener('keydown', down); renderer.domElement.addEventListener('blur', clear); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
     const forward = new THREE.Vector3(), right = new THREE.Vector3(), movement = new THREE.Vector3(); const target = new THREE.Vector3(); const delta = new THREE.Vector3();
     let frame, previous = 0, clock = 0, environmentTime = 0, stepDistance = 0, portalContact = false, castleContact = false, oldNear = -2, oldNearNpc = -2, lastWeatherReport = -1, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
     const draw = time => {
       if (document.hidden || live.current.sceneHidden) { frame = 0; previous = 0; return; }
+      if (live.current.returnToPortal) {
+        world.player.position.set(PORTAL_ARRIVAL.x,.2,PORTAL_ARRIVAL.z);
+        world.player.rotation.y=Math.PI/2;
+        target.set(PORTAL_ARRIVAL.x,1.1,PORTAL_ARRIVAL.z);
+        delta.subVectors(target,controls.target); controls.target.copy(target); camera.position.add(delta);
+        keys.current.clear(); portalContact=false;
+        live.current.onPortalReturnHandled?.();
+      }
       const reducedMotion = live.current.reduceMotion, ambientPaused = live.current.ambientPaused;
       const dt = Math.min((time - previous) / 1000 || 0, .04); previous = time; clock += dt;
       if (oldMissionRound !== live.current.missionRound) { oldMissionRound = live.current.missionRound; celebrated = false; fireworks.stop(); }
@@ -501,7 +509,7 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
       let walking = false;
       if (!live.current.paused && (movingX || movingZ)) {
         camera.getWorldDirection(forward); forward.y = 0; forward.normalize(); right.crossVectors(forward, camera.up).normalize();
-        movement.copy(forward).multiplyScalar(movingZ).addScaledVector(right, movingX).normalize().multiplyScalar(dt * 4.2);
+        movement.copy(forward).multiplyScalar(movingZ).addScaledVector(right, movingX).normalize().multiplyScalar(dt * 4.2 * (k.has('shift') ? 1.8 : 1));
         const p = world.player.position; const oldX = p.x, oldZ = p.z;
         if (canWalk(p.x + movement.x, p.z)) p.x += movement.x;
         if (canWalk(p.x, p.z + movement.z)) p.z += movement.z;

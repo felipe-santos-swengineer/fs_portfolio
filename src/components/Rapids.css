@@ -1,0 +1,10 @@
+.rapids-hud { position:absolute; top:20px; left:5%; display:flex; gap:16px; padding:10px 14px; border-radius:6px; color:#fff; background:#173b40e8; font-weight:700; }
+.rapids-overlay { position:absolute; inset:0; display:grid; place-items:center; padding:20px; background:#102a32a6; }
+.rapids-card { max-width:460px; padding:24px; border:1px solid #b7ddd1; border-radius:10px; background:#173b40f5; color:#fff; text-align:center; }
+.rapids-card h2 { margin:0 0 12px; font-family:Georgia,serif; }
+.rapids-card p { line-height:1.5; }
+.rapids-card button { padding:10px 18px; border:1px solid #b7ddd1; border-radius:6px; background:#e5c887; color:#182d2d; font-weight:700; cursor:pointer; }
+.rapids .lake-exit { z-index:2; }
+
+.rapids-skip { position:absolute; z-index:2; right:5%; top:72px; padding:9px 12px; background:#173b40ed; border:1px solid #98b9ad; border-radius:5px; color:white; }
+.rapids-card button + button { margin-left:10px; margin-top:10px; }

@@ -1,4 +1,4 @@
-import { canWalk, nearbySite, SITES, PORTAL, MARKET_DISPLAY, MARKET_FOOD, MARKET_POTIONS, isCastleThreshold, isThroneExit, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
+import { canWalk, nearbySite, SITES, PORTAL, PORTAL_ARRIVAL, MARKET_DISPLAY, MARKET_FOOD, MARKET_POTIONS, isCastleThreshold, isThroneExit, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
 
 test('o viajante pode caminhar nas ruas e se aproximar de todas as entradas', () => {
   expect(canWalk(0, 5)).toBe(true);
@@ -73,4 +73,11 @@ test('as portas permitem entrar pelas laterais e sair sem explorar o salao', () 
   expect(isThroneExit(1.9, 13.2)).toBe(true);
   expect(isThroneExit(-1.9, 13.2)).toBe(true);
   expect(isThroneExit(2.2, 13.2)).toBe(false);
+});
+
+
+test('the return point is walkable and close to the portal without reopening it', () => {
+  expect(canWalk(PORTAL_ARRIVAL.x, PORTAL_ARRIVAL.z)).toBe(true);
+  expect(nearbySite(PORTAL_ARRIVAL.x, PORTAL_ARRIVAL.z)).toBe(4);
+  expect(Math.hypot(PORTAL_ARRIVAL.x-PORTAL.x, PORTAL_ARRIVAL.z-PORTAL.z)).toBeGreaterThan(1.1);
 });

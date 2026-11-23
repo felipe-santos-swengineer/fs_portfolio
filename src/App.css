@@ -213,3 +213,24 @@
 
 .app .camera-tools .weather-control { color:#d5e5e2; border-color:#6c8880; }
 .app .camera-tools .weather-control:disabled { opacity:.55; cursor:not-allowed; }
+
+.portal-destinations p { color: var(--muted); line-height: 1.6; }
+.portal-destinations button { display: grid; grid-template-columns: 1fr auto; text-align: left; gap: 6px 20px; width: 100%; padding: 20px; border: 1px solid #78948c; border-radius: 8px; background: #20352f; color: #f1ead5; }
+.portal-destinations button strong { font-size: 1.15rem; }
+.portal-destinations button span { grid-column: 1; color: #c5d5cc; }
+.portal-destinations button svg { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+
+.portal-destinations button { padding: 0; overflow: hidden; grid-template-columns: 1fr auto; gap: 0; }
+.portal-card-image { display: block; grid-column: 1 / -1; width: 100%; height: 150px; background: #10191e; }
+.portal-card-copy { display: flex; flex-direction: column; gap: 7px; padding: 18px 20px; }
+.portal-destinations button > svg:not(.portal-card-image) { grid-column: 2; grid-row: 2; margin: 0 20px; }
+
+.portal-destinations button + button { margin-top: 16px; }
+
+@media(max-width:800px){.app .scene-guide,.app .dungeon .dungeon-guide,.app .throne-hall .throne-guide{left:50%;transform:translateX(-50%);width:90%;max-width:90%;text-align:center}}
+
+.village-actions { position:absolute; z-index:4; left:50%; bottom:105px; transform:translateX(-50%); display:flex; justify-content:center; flex-wrap:wrap; gap:8px; width:max-content; max-width:90%; }
+.village-actions button { background:#20392ef2; border:1px solid #9dbca9; color:#e5f2e6; border-radius:5px; padding:10px 14px; }
+@media(max-width:800px) { .village-actions { bottom:125px; } }
+
+.edition > svg { vertical-align:middle; margin:0 3px; }

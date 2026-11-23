@@ -34,6 +34,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "generate:npc-voices": "node scripts/generate-villager-voices.cjs",
+    "generate:elevenlabs-preview": "node scripts/generate-elevenlabs-voices.cjs",
     "generate:felipe-voice": "node scripts/generate-felipe-voice.cjs"
   },
   "eslintConfig": {

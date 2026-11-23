@@ -133,6 +133,26 @@ export default class VillageAudio {
     else if (event === 'start') { this.tone(300,.25,.055,0,'triangle',620); }
   }
 
+  lake(event) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions';
+    if (event === 'shot') { this.rustle(.13, 1800, .075); this.tone(130, .12, .035, 0, 'triangle', 55); }
+    else if (event === 'volcano') { this.rustle(.8, 260, .045); this.tone(65, .65, .025, 0, 'sine', 42); }
+    else if (event === 'horse') { this.tone(150, .08, .03, 0, 'triangle', 75); this.tone(120, .08, .025, .13, 'triangle', 65); }
+    else if (event === 'birds') { this.tone(1800, .12, .015, 0, 'sine', 2400); this.tone(2200, .13, .012, .16, 'sine', 1700); }
+  }
+
+  ruins(event) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions';
+    if (event === 'rune') { [520, 780, 1040].forEach((f,i)=>this.tone(f,.55,.045,i*.09,'sine')); }
+    else if (event === 'gate') { this.rustle(.8,420,.075); this.tone(90,.75,.045,0,'triangle',55); }
+    else if (event === 'stone') { this.rustle(.12,850,.08); this.tone(135,.13,.045,0,'triangle',68); }
+    else if (event === 'wood') { this.rustle(.1,500,.06); this.tone(170,.16,.05,0,'triangle',85); }
+    else if (event === 'passage') { this.tone(260,.4,.045,0,'sine',420); this.rustle(.3,600,.04); }
+    else if (event === 'talk') { this.tone(440,.16,.025,0,'sine',520); }
+  }
+
   closeDoor() { if (!this.channels.interactions) return; this.channel = 'interactions'; this.rustle(.1, 600, .08); this.tone(100, .12, .045, 0, 'triangle', 55); }
 
   firework(stage) {

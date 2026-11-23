@@ -1,22 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createAdventurer } from './VillageScene';
 import { createLakeBoat } from './lakeBoat';
 import { cameraRelativeDirection } from './cameraRelativeDirection';
 import MapControlGuide from './MapControlGuide';
 import './Lake.css';
 import './AncientTunnel.css';
+import TempleVillage from './TempleVillage';
 
-export default function AncientTunnel({language,paused,reduceMotion,onExit,onSound}) {
+export default function AncientTunnel({language,paused,reduceMotion,onExit,onSound,inVillage,onVillageChange}) {
   const mount=useRef(null),keys=useRef(new Set()),settings=useRef(null),messageRef=useRef(false),nearRef=useRef(false);
   settings.current={paused,reduceMotion,onSound};
   const [near,setNear]=useState(false),[message,setMessage]=useState(false),[error,setError]=useState(false);
   const en=language==='en-US';
-  const examine=()=>{if(settings.current.paused || !nearRef.current)return;keys.current.clear();messageRef.current=true;setMessage(true);settings.current.onSound?.('passage');};
+  const examine=()=>{if(settings.current.paused || !nearRef.current)return;keys.current.clear();onVillageChange(true);settings.current.onSound?.('passage');};
   const closeMessage=()=>{messageRef.current=false;setMessage(false);mount.current?.querySelector('canvas')?.focus({preventScroll:true});};
   const actions=useRef({examine,closeMessage});actions.current={examine,closeMessage};
   useEffect(()=>{
+    if(inVillage)return;
     const el=mount.current;let renderer;
     try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{setError(true);return;}
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.domElement.tabIndex=0;
@@ -25,11 +26,11 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
     scene.add(new THREE.HemisphereLight('#566a62','#1b2420',.8));
     const camera=new THREE.PerspectiveCamera(50,1,.1,80);
     const add=(parent,geometry,color,x,y,z)=>{const object=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.9}));object.position.set(x,y,z);parent.add(object);return object;};
-    const water=add(scene,new THREE.PlaneGeometry(12,54),'#284d4d',0,0,-16);water.rotation.x=-Math.PI/2;water.material.roughness=.35;
-    add(scene,new THREE.BoxGeometry(16,1,54),'#273a35',0,-.8,-16);
-    add(scene,new THREE.BoxGeometry(16,1.2,54),'#303c35',0,9,-16);
+    const water=add(scene,new THREE.PlaneGeometry(12,66),'#284d4d',0,0,-10);water.rotation.x=-Math.PI/2;water.material.roughness=.35;
+    add(scene,new THREE.BoxGeometry(16,1,66),'#273a35',0,-.8,-10);
+    add(scene,new THREE.BoxGeometry(16,1.2,66),'#303c35',0,9,-10);
     [-1,1].forEach(side=>{
-      add(scene,new THREE.BoxGeometry(3,9,54),'#39483f',side*7.2,4,-16);
+      add(scene,new THREE.BoxGeometry(3,9,66),'#39483f',side*7.2,4,-10);
       for(let i=0;i<9;i++){
         const z=5-i*5.5;
         const buttress=add(scene,new THREE.BoxGeometry(.85,7.5,1),'#4b584b',side*5.45,3.75,z);buttress.rotation.z=side*.035;
@@ -53,7 +54,8 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
     const sphere=(parent,r,color,x,y,z)=>add(parent,new THREE.IcosahedronGeometry(r,1),color,x,y,z);
     const cylinder=(parent,r,h,color,x,y,z,segments=8)=>add(parent,new THREE.CylinderGeometry(r,r,h,segments),color,x,y,z);
     const {player}=createAdventurer(boat,{box,sphere,mesh,cylinder});player.position.set(0,1,.55);player.rotation.y=Math.PI;
-    camera.position.set(0,7,16);const orbit=new OrbitControls(camera,renderer.domElement);orbit.target.set(0,1,4);orbit.enablePan=false;orbit.enableDamping=true;orbit.minDistance=5;orbit.maxDistance=16;orbit.maxPolarAngle=Math.PI/2-.08;orbit.update();
+    const updateCamera=()=>{camera.position.set(boat.position.x,6,Math.min(boat.position.z+8,15));camera.lookAt(boat.position.x,1,boat.position.z-3);};
+    updateCamera();
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
     const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&messageRef.current&&!settings.current.paused){e.preventDefault();actions.current.closeMessage();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||messageRef.current)return;if(k==='e'){e.preventDefault();actions.current.examine();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){e.preventDefault();keys.current.add(k);}};
     const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
@@ -71,14 +73,15 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
         const isNear=boat.position.z < -22;if(isNear!==nearRef.current){nearRef.current=isNear;setNear(isNear);}
       }else clear();
       if(!settings.current.reduceMotion)seal.rotation.y=time*.4;
-      const target=new THREE.Vector3(boat.position.x,1,boat.position.z),shift=target.clone().sub(orbit.target);camera.position.add(shift);orbit.target.copy(target);orbit.enabled=!settings.current.paused&&!messageRef.current;orbit.enableDamping=!settings.current.reduceMotion;orbit.update();renderer.render(scene,camera);
+      updateCamera();renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();orbit.dispose();scene.traverse(object=>{object.geometry?.dispose();if(Array.isArray(object.material))object.material.forEach(m=>m.dispose());else object.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
-  },[]);
+    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();scene.traverse(object=>{object.geometry?.dispose();if(Array.isArray(object.material))object.material.forEach(m=>m.dispose());else object.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
+  },[inVillage]);
   const press=(key,down)=>{if(paused||messageRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  if(inVillage)return <TempleVillage language={language} paused={paused} reduceMotion={reduceMotion} onExit={()=>onVillageChange(false)}/>;
   return <section className="lake ancient-tunnel"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/><button className="lake-exit" onClick={onExit}>{en?'Return to ruins':'Voltar às ruínas'}</button><MapControlGuide language={language} scene="tunnel"/>
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'}</p>}
-    {near&&!message&&<button className="lake-portal-action" onClick={examine}>{en?'Examine the entrance':'Examinar a entrada'} <kbd>E</kbd></button>}
+    {near&&!message&&<button className="lake-portal-action" onClick={examine}>{en?'Enter the village':'Entrar na aldeia'} <kbd>E</kbd></button>}
     {message&&<section className="npc-dialogue ancient-tunnel-dialogue" role="dialog" aria-labelledby="tunnel-title"><h2 id="tunnel-title">{en?'Ancient temple':'Templo antigo'}</h2><p>{en?'The passage leads to an ancient temple. This area is still under construction.':'A passagem leva a um templo antigo. Esta área ainda está em construção.'}</p><button autoFocus onClick={closeMessage}>{en?'Continue exploring':'Continuar explorando'}</button></section>}
     </div><div className="lake-touch" aria-label={en?'Boat controls':'Controles do barco'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}</div></section>;
 }

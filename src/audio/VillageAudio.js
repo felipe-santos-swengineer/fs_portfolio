@@ -133,6 +133,28 @@ export default class VillageAudio {
     else if (event === 'start') { this.tone(300,.25,.055,0,'triangle',620); }
   }
 
+  cave(event) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions';
+    if (event === 'attack') { this.rustle(.16, 6500, .16); this.rustle(.08, 9500, .07, .025); this.tone(1900, .13, .025, .015, 'sine', 680); }
+    else if (event === 'defeat') { this.tone(230, .24, .09, 0, 'sawtooth', 70); this.rustle(.2, 900, .1); }
+    else if (event === 'monsterHit') { this.tone(660, .18, .06, 0, 'sine', 1000); }
+    else if (event === 'lava') { this.rustle(.42, 1800, .13); this.tone(185, .35, .045, 0, 'sawtooth', 95); }
+    else if (event === 'spikes') { this.rustle(.1, 3900, .13); this.tone(500, .14, .055, 0, 'triangle', 240); }
+    else if (event === 'arrowLaunch') { this.rustle(.12, 1900, .07); this.tone(260, .16, .035, 0, 'triangle', 110); }
+    else if (event === 'arrow') { this.rustle(.1, 1600, .12); this.tone(190, .15, .06, 0, 'triangle', 80); }
+    else if (event === 'monster') { this.rustle(.25, 500, .12); this.tone(130, .28, .07, 0, 'sawtooth', 55); }
+    else if (event === 'lever') { this.rustle(.15, 850, .08); this.tone(170, .18, .05, 0, 'triangle', 105); this.tone(520, .3, .035, .12, 'sine', 780); }
+    else if (event === 'heal') { [520, 660, 880].forEach((f, i) => this.tone(f, .3, .045, i * .07, 'sine')); }
+    else if (event === 'death') { this.tone(200, .7, .07, 0, 'triangle', 55); this.rustle(.45, 550, .08); }
+  }
+
+  dragon(event) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions';
+    if (event === 'anger') { this.rustle(.6, 420, .055); this.tone(88, .65, .045, 0, 'sawtooth', 54); }
+  }
+
   lake(event) {
     if (!this.ready() || !this.channels.interactions) return;
     this.channel = 'interactions';

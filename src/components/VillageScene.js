@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ENGLISH_VILLAGE_SIGNS, SITES, PORTAL, PORTAL_ARRIVAL, isCastleThreshold, canWalk, nearbySite, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
-import { VILLAGERS, createWalkingGraph, advanceVillager } from './villagers';
+import { VILLAGERS, createWalkingGraph, randomRoute, advanceVillager } from './villagers';
 import { createDragon, createDayNight } from './VillageAtmosphere';
 import { createMissionFireworks } from './MissionFireworks';
 import mountainHorizon from '../assets/images/mountain-horizon.png';
@@ -403,7 +403,7 @@ export function createVillage(scene) {
     });
     const sign = label(group, person.name.toUpperCase(), 'F · CONVERSAR', person.color, 0, 3.05, 0); sign.scale.set(2.5, .73, 1);
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(.7, .7, 3, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); hit.position.y = 1.5; group.add(hit);
-    return { group, body: torso, limbs: joints, route: [], wait: index * .6, speed: person.speed, phase: index * 1.7 };
+    return { group, body: torso, limbs: joints, route: [], wait: 0, speed: person.speed, phase: index * 1.7 };
   });
 
   const positions = [];
@@ -420,7 +420,8 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
   useEffect(() => { updateSigns.current?.(language); }, [language]);
   const live = useRef({ paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn });
   live.current = { paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn };
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
+  const [rendererAttempt, setRendererAttempt] = useState(0);
   const wasSceneHidden = useRef(sceneHidden);
   useEffect(() => {
     if (!sceneHidden) wake.current?.(wasSceneHidden.current);
@@ -430,7 +431,12 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
   useEffect(() => {
     const container = mount.current;
     let renderer;
-    try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); } catch { setError(true); return; }
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
+    catch {
+      try { renderer = new THREE.WebGLRenderer({ antialias: false }); }
+      catch { setError('unavailable'); return; }
+    }
+    setError(null);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, container.clientWidth < 800 ? 1.15 : 1.5));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
@@ -454,6 +460,15 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     let oldMissionRound = live.current.missionRound;
     let previousReducedMotion = live.current.reduceMotion;
     const walkingGraph = createWalkingGraph();
+    // Start with routes already selected: most villagers are walking as the scene appears.
+    world.npcs.forEach((npc, index) => {
+      npc.route = randomRoute(walkingGraph, npc.group.position);
+      npc.wait = index === 2 ? 1.5 : 0;
+      if (npc.route.length) {
+        const next = npc.route[0];
+        npc.body.rotation.y = Math.atan2(next.x - npc.group.position.x, next.z - npc.group.position.z);
+      }
+    });
     let oldCameraTurn = live.current.cameraTurn;
     const verticalAxis = new THREE.Vector3(0, 1, 0);
     const portrait = container.clientWidth < 600;
@@ -473,7 +488,10 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
       else if (object) live.current.onOpen(object.userData.site);
     };
     renderer.domElement.addEventListener('pointerdown', pointerdown); renderer.domElement.addEventListener('pointerup', pointerup);
-    const lost = e => { e.preventDefault(); setError(true); }; renderer.domElement.addEventListener('webglcontextlost', lost);
+    const lost = e => { e.preventDefault(); setError('lost'); };
+    const restored = () => { setError(null); resize(); wake.current?.(); };
+    renderer.domElement.addEventListener('webglcontextlost', lost);
+    renderer.domElement.addEventListener('webglcontextrestored', restored);
     const down = e => { const k = e.key.toLowerCase(); if (!live.current.paused && !e.ctrlKey && !e.altKey && !e.metaKey && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k) && !e.target.closest('button,a,input,audio')) { if (k !== 'shift') e.preventDefault(); keys.current.add(k); } };
     const up = e => keys.current.delete(e.key.toLowerCase()); const clear = () => keys.current.clear();
     renderer.domElement.addEventListener('keydown', down); renderer.domElement.addEventListener('blur', clear); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
@@ -569,13 +587,13 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     return () => {
       live.current.onWeather?.(0); updateSigns.current = null; wake.current = null; document.removeEventListener('visibilitychange', visibility); cancelAnimationFrame(frame); observer.disconnect(); controls.dispose(); clear();
       renderer.domElement.removeEventListener('keydown', down); renderer.domElement.removeEventListener('blur', clear); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear);
-      renderer.domElement.removeEventListener('pointerdown', pointerdown); renderer.domElement.removeEventListener('pointerup', pointerup); renderer.domElement.removeEventListener('webglcontextlost', lost);
+      renderer.domElement.removeEventListener('pointerdown', pointerdown); renderer.domElement.removeEventListener('pointerup', pointerup); renderer.domElement.removeEventListener('webglcontextlost', lost); renderer.domElement.removeEventListener('webglcontextrestored', restored);
       scene.traverse(o => { if (o.isInstancedMesh) o.dispose(); o.geometry?.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.map?.dispose(); m.alphaMap?.dispose(); m.dispose(); }); });
       renderer.dispose(); renderer.domElement.remove();
     };
   // Language changes update sign textures without rebuilding the scene.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keys, compassRef]);
+  }, [keys, compassRef, rendererAttempt]);
 
-  return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">{language === 'en-US' ? 'Interactive scene. Use Tab or click to focus it. Use WASD or arrow keys to walk, E to enter a nearby building and F to talk to a nearby villager. Press Tab to leave the scene. All content is also available in reading mode and through the destination buttons.' : 'Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para entrar em um edifício próximo e F para conversar com um morador próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.'}</p>{error && <div className="scene-error"><strong>{language === 'en-US' ? 'The 3D scene requires WebGL 2.' : 'O cenário 3D precisa de WebGL 2.'}</strong><p>{language === 'en-US' ? 'Read every story in reading mode or use the destinations below.' : 'Você pode acessar todas as histórias pelo modo leitura ou pelos destinos abaixo.'}</p></div>}</div>;
+  return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">{language === 'en-US' ? 'Interactive scene. Use Tab or click to focus it. Use WASD or arrow keys to walk, E to enter a nearby building and F to talk to a nearby villager. Press Tab to leave the scene. All content is also available in reading mode and through the destination buttons.' : 'Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para entrar em um edifício próximo e F para conversar com um morador próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.'}</p>{error && <div className="scene-error" role="status"><strong>{error === 'lost' ? (language === 'en-US' ? 'The 3D scene was interrupted.' : 'O cenário 3D foi interrompido.') : (language === 'en-US' ? 'The 3D scene could not be started.' : 'Não foi possível iniciar o cenário 3D.')}</strong><p>{language === 'en-US' ? 'Try again, or access every story in reading mode and through the destinations below.' : 'Tente novamente ou acesse todas as histórias pelo modo leitura e pelos destinos abaixo.'}</p><button type="button" onClick={() => setRendererAttempt(attempt => attempt + 1)}>{language === 'en-US' ? 'Try 3D again' : 'Tentar abrir o 3D novamente'}</button></div>}</div>;
 }

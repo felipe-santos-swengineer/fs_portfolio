@@ -13,11 +13,11 @@ Um portfólio interativo em forma de vilarejo: explore o cenário com um persona
 | Oficina | Projetos, galerias de imagens e links |
 | Correio | Contato e redes profissionais |
 | Castelo | Salão do trono e conversa com Felipe |
-| Portal a oeste | Calabouço com minijogos e combate |
+| Portal a oeste | Lago, corredeiras, ruínas e ilha do dragão |
 | Mercado a leste | Alimentos, misturas de poções e vitrine de tecnologias |
 
 - Personagem articulado, obstáculos e câmera com rotação e zoom. A jornada começa na doca ao sul da vila.
-- Castelo com salão do trono e falas gravadas de Felipe; portal com celas de jogos, soldados e ondas de criaturas.
+- Castelo com salão do trono e falas gravadas de Felipe; portal para explorar o lago, as ruínas e a ilha do dragão.
 - Quatro moradores passeando pela vila, com diálogos em texto e gravações de vozes distintas.
 - Dragão que sobrevoa o cenário e pousa nos telhados, com transição gradual entre dia e noite.
 - Missão de visitar os quatro destinos, com uma breve celebração de fogos ao concluir.
@@ -35,7 +35,7 @@ O botão **Recomeçar** reinicia o progresso da missão e a celebração, preser
 | Aproximar ou afastar | Roda do mouse, gesto de pinça ou botões de zoom |
 | Abrir um edifício | Clicar nele ou pressionar E perto da entrada |
 | Conversar | Clicar no personagem ou pressionar F quando estiver próximo |
-| Atacar no calabouço | J ou espaço; botão de ataque no celular |
+| Atacar na caverna | J ou espaço; botão de ataque no celular |
 | Fechar uma janela | Escape ou botão de fechar |
 | Centralizar a câmera | Botão Focar personagem |
 

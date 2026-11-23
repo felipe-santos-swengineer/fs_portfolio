@@ -12,13 +12,14 @@ import pirateLines from './ruinsPirate.json';
 import { SHRINES, SHIPWRECK, COLUMNS, SHORE_POINTS, shorePoint, ruinsObstacle, nearTempleEntrance } from './ruinsWorld';
 
 
-export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel,onSound,onSpeak,onStop,speaking,voiceEnabled,voiceNotice,active=true}) {
-  const mount=useRef(null),keys=useRef(new Set()), settings=useRef({paused,reduceMotion});
+export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel,onSound,onSpeak,onStop,speaking,voiceEnabled,voiceNotice,active=true,templeReached=false}) {
+  const mount=useRef(null),keys=useRef(new Set()), settings=useRef({paused,reduceMotion}), returnToPassage=useRef(null);
   settings.current={paused,reduceMotion,language,onSound,onEnterTunnel};
   const [talking,setTalking]=useState(false),[pirateNear,setPirateNear]=useState(false),[pirateLine,setPirateLine]=useState(0);
   const talkingRef=useRef(false),pirateNearRef=useRef(false),pirateVisits=useRef(0),piratePanel=useRef(null),pirateSignRef=useRef(null),stopVoice=useRef(onStop);stopVoice.current=onStop;
-  const [activated,setActivated]=useState([false,false,false]), [near,setNear]=useState(-1), [nearTunnel,setNearTunnel]=useState(false), [error,setError]=useState(false);
+  const [activated,setActivated]=useState(() => SHRINES.map(() => templeReached)), [near,setNear]=useState(-1), [nearTunnel,setNearTunnel]=useState(false), [error,setError]=useState(false);
   const activeRef=useRef(activated), nearRef=useRef(-1), tunnelNearRef=useRef(false); activeRef.current=activated;
+  useEffect(()=>{if(templeReached){const lit=SHRINES.map(()=>true);activeRef.current=lit;setActivated(lit);}},[templeReached]);
   const en=language==='en-US';
   const talkPirate=({fromClick=false}={})=>{if(paused||(!pirateNearRef.current&&!fromClick&&!talkingRef.current))return;keys.current.clear();const line=pirateVisits.current++%pirateLines['pt-BR'].length;setPirateLine(line);talkingRef.current=true;setTalking(true);settings.current.onSound?.('talk');onSpeak?.(line);};
   const closePirate=()=>{talkingRef.current=false;setTalking(false);onStop?.();mount.current?.querySelector('canvas')?.focus({preventScroll:true});};
@@ -184,6 +185,7 @@ export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel
     const {player}=createAdventurer(boat,{box,sphere,mesh,cylinder});player.position.set(0,1,.55);player.rotation.y=Math.PI;
     camera.position.set(10,14,42);
     const orbit=new OrbitControls(camera,renderer.domElement); orbit.target.set(0,1,25); orbit.enablePan=false; orbit.enableDamping=true; orbit.minDistance=5; orbit.maxDistance=24; orbit.maxPolarAngle=Math.PI/2-.08; orbit.update();
+    returnToPassage.current=()=>{const target=new THREE.Vector3(0,1,-23),shift=target.clone().sub(orbit.target);boat.position.set(0,0,-23);boat.rotation.y=0;camera.position.add(shift);orbit.target.copy(target);orbit.update();};
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
     const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkingRef.current&&!settings.current.paused){e.preventDefault();pirateActions.current.closePirate();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||talkingRef.current)return;if(k==='f'&&pirateNearRef.current){e.preventDefault();pirateActions.current.talkPirate();return;}if(k==='e'){e.preventDefault();activateRef.current();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){e.preventDefault();keys.current.add(k);}};
     const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
@@ -236,9 +238,10 @@ export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel
       const target=new THREE.Vector3(boat.position.x,1,boat.position.z), shift=target.clone().sub(orbit.target);
       camera.position.add(shift); orbit.target.copy(target); orbit.enabled=!settings.current.paused && !talkingRef.current; orbit.enableDamping=!settings.current.reduceMotion; orbit.update(); renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();stopVoice.current?.();pirateSignRef.current=null;orbit.dispose();horizonTexture.dispose();haloTexture.dispose();pirateSignTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
+    return()=>{returnToPassage.current=null;cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();stopVoice.current?.();pirateSignRef.current=null;orbit.dispose();horizonTexture.dispose();haloTexture.dispose();pirateSignTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[]);
   const press=(key,down)=>{if(paused || talkingRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  useEffect(()=>{if(active && templeReached)returnToPassage.current?.();},[active,templeReached]);
   const count=activated.filter(Boolean).length;
   return <section className="lake ruins"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/><button className="lake-exit" onClick={onExit}>{en?'Return to village':'Voltar para a vila'}</button>
     <MapControlGuide language={language} scene="ruins"/>

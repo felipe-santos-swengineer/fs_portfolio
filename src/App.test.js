@@ -13,7 +13,9 @@ jest.mock('./components/ThroneHall', () => ({ __esModule: true, default: ({ onEx
 jest.mock('./components/Lake', () => ({ __esModule: true, default: ({ onExit, onEnterRapids }) => <><button onClick={onExit}>Sair do lago de teste</button><button onClick={onEnterRapids}>Entrar nas corredeiras de teste</button></> }));
 jest.mock('./components/Rapids', () => ({ __esModule: true, default: ({ onExit, onAdvance }) => <><button onClick={onExit}>Sair das corredeiras de teste</button><button onClick={onAdvance}>Avançar das corredeiras de teste</button></> }));
 jest.mock('./components/Ruins', () => ({ __esModule: true, default: ({ onExit, onEnterTunnel }) => <><button onClick={onExit}>Sair das ruínas de teste</button><button onClick={onEnterTunnel}>Entrar no túnel de teste</button></> }));
-jest.mock('./components/AncientTunnel', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do túnel de teste</button> }));
+jest.mock('./components/TempleVillage', () => ({ __esModule: true, default: ({ onExit, onEnterCave }) => <><button onClick={onExit}>Sair da aldeia de teste</button><button onClick={onEnterCave}>Entrar na caverna de teste</button></> }));
+jest.mock('./components/DragonCave', () => ({ __esModule: true, default: ({ onExit, onEnterChamber, startAtChamber }) => <><button onClick={onExit}>Sair da caverna de teste</button><button onClick={onEnterChamber}>Entrar na câmara de teste</button><span data-testid="cave-arrival">{startAtChamber?'chamber':'entrance'}</span></> }));
+jest.mock('./components/DragonChamber', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair da câmara de teste</button> }));
 jest.mock('./components/Dungeon', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do calabouco de teste</button> }));
 
 beforeEach(() => {
@@ -182,11 +184,11 @@ test('a musica acompanha a entrada e a saida do castelo', async () => {
 
 test.each([
   ['Simular entrada no castelo', 'Sair do salao de teste'],
-  ['Simular entrada no portal', 'Sair do calabouco de teste'],
+  ['Simular entrada no portal', 'Sair do lago de teste'],
 ])('modo leitura funciona em %s e permite retornar ao cenario', async (entrance, exit) => {
   await start();
   fireEvent.click(screen.getByRole('button', { name: entrance }));
-  if (entrance === 'Simular entrada no portal') fireEvent.click(screen.getByRole('button', { name: /Calabou\u00e7o/ }));
+  if (entrance === 'Simular entrada no portal') fireEvent.click(screen.getByRole('button', { name: /Lago das Interfaces/ }));
   expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' }));
   expect(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' })).toBeTruthy();
@@ -242,11 +244,11 @@ test('a troca de idioma persiste e apresenta conteudo e vozes em ingles', async 
 
 test.each([
   ['Simular entrada no castelo', 'Sair do salao de teste'],
-  ['Simular entrada no portal', 'Sair do calabouco de teste'],
+  ['Simular entrada no portal', 'Sair do lago de teste'],
 ])('trocar o idioma durante %s preserva o cenario e o modo leitura', async (entry, exit) => {
   await start();
   fireEvent.click(screen.getByRole('button', { name: entry }));
-  if (entry === 'Simular entrada no portal') fireEvent.click(screen.getByRole('button', { name: /Calabou\u00e7o/ }));
+  if (entry === 'Simular entrada no portal') fireEvent.click(screen.getByRole('button', { name: /Lago das Interfaces/ }));
   expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'English (United States)' }));
   expect(screen.getByRole('button', { name: exit })).toBeTruthy();
@@ -266,17 +268,17 @@ test('o controle alterna os climas e retorna ao ciclo automatico', async () => {
   }
 });
 
-test('portal permite escolher ou cancelar antes de entrar no calabouco', async () => {
+test('portal permite escolher ou cancelar antes de entrar no lago', async () => {
   await start();
   const portal = screen.getByRole('button', { name: 'Simular entrada no portal' });
   fireEvent.click(portal);
   expect(screen.getByRole('dialog', { name: 'Escolha um destino' })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Sair do calabouco de teste' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Sair do lago de teste' })).toBeNull();
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(screen.queryByRole('dialog', { name: 'Escolha um destino' })).toBeNull();
   fireEvent.click(portal);
-  fireEvent.click(screen.getByRole('button', { name: /Calabou\u00e7o/ }));
-  expect(await screen.findByRole('button', { name: 'Sair do calabouco de teste' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: /Lago das Interfaces/ }));
+  expect(await screen.findByRole('button', { name: 'Sair do lago de teste' })).toBeTruthy();
 });
 
 
@@ -338,7 +340,8 @@ test('a versao exibe o commit abreviado e o identificador completo no titulo', a
 test('o portal exibe corretamente os caracteres acentuados', async () => {
   await start();
   fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
-  expect(screen.getByRole('button', { name: /Calabou\u00e7o/ })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /Calabou\u00e7o|Dungeon/ })).toBeNull();
+  expect(screen.getByRole('button', { name: /Lago das Interfaces/ })).toBeTruthy();
   expect(screen.getByText('Des\u00e7a o desfiladeiro de barco')).toBeTruthy();
   expect(screen.getByRole('button', { name: /Enseada das Ru\u00ednas Submersas/ })).toBeTruthy();
 });
@@ -347,10 +350,10 @@ test('o tunel abre a partir das ruinas e retorna ao mesmo mapa', async () => {
   sessionStorage.setItem('portfolio-map','ruins');
   await start();
   fireEvent.click(await screen.findByRole('button', { name: 'Entrar no t\u00fanel de teste' }));
-  expect(await screen.findByRole('button', { name: 'Sair do t\u00fanel de teste' })).toBeTruthy();
-  expect(sessionStorage.getItem('portfolio-map')).toBe('tunnel');
+  expect(await screen.findByRole('button', { name: 'Sair da aldeia de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('temple');
   expect(screen.queryByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Sair do t\u00fanel de teste' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Sair da aldeia de teste' }));
   expect(screen.getByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
   expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
 });
@@ -358,7 +361,7 @@ test('o tunel abre a partir das ruinas e retorna ao mesmo mapa', async () => {
 test('a sessao restaura o tunel com retorno para as ruinas', async () => {
   sessionStorage.setItem('portfolio-map','tunnel');
   await start();
-  fireEvent.click(await screen.findByRole('button', { name: 'Sair do t\u00fanel de teste' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Sair da aldeia de teste' }));
   expect(await screen.findByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
 });
 
@@ -426,4 +429,27 @@ test('registra o mapa escolhido no portal para restaurar ao recarregar', async (
   fireEvent.click(screen.getByRole('button', { name: /Lago das Interfaces/ }));
   expect(await screen.findByRole('button', { name: 'Sair do lago de teste' })).toBeTruthy();
   expect(sessionStorage.getItem('portfolio-map')).toBe('lake');
+});
+
+
+test('the portal reaches the cave and chamber and returns to the chamber entrance', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no portal' }));
+  fireEvent.click(screen.getByRole('button', { name: /Caverna do Anci\u00e3o/ }));
+  expect(await screen.findByRole('button', {name:'Entrar na c\u00e2mara de teste'})).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cave');
+  fireEvent.click(screen.getByRole('button', {name:'Entrar na c\u00e2mara de teste'}));
+  expect(await screen.findByRole('button', {name:'Sair da c\u00e2mara de teste'})).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('chamber');
+  fireEvent.click(screen.getByRole('button', {name:'Sair da c\u00e2mara de teste'}));
+  expect((await screen.findByTestId('cave-arrival')).textContent).toBe('chamber');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cave');
+});
+
+test('the portal opens the dragon chamber directly', async () => {
+  await start();
+  fireEvent.click(screen.getByRole('button', {name:'Simular entrada no portal'}));
+  fireEvent.click(screen.getByRole('button', {name:/C\u00e2mara do Anci\u00e3o/}));
+  expect(await screen.findByRole('button', {name:'Sair da c\u00e2mara de teste'})).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('chamber');
 });

@@ -9,6 +9,7 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
+  pages: write
 jobs:
   check:
     runs-on: ubuntu-latest

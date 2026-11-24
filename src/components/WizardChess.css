@@ -1,0 +1,122 @@
+.wizard-chess-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  background: #100b17b8;
+}
+.wizard-chess {
+  width: min(100%, 410px);
+  max-height: 100%;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #a58661;
+  border-radius: 8px;
+  background: #221a29;
+  color: #fff4d9;
+  font-size: calc(.875rem * var(--text-scale, 1));
+}
+.wizard-chess-heading,
+.wizard-chess-actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.wizard-chess-heading > button { min-width: 44px; }
+.wizard-chess h2, .wizard-chess p { margin: 0 0 6px; }
+.wizard-chess button { color: inherit; background: #443551; border: 1px solid #a58661; padding: 4px 8px; }
+.wizard-chess-board { display: grid; grid-template-columns: repeat(8, 1fr); width: min(100%, 340px); margin: 0 auto 6px; }
+.app .wizard-chess-board button {
+  aspect-ratio: 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: #dac6a4;
+  color: #231a25;
+  font: clamp(18px, 6vw, 34px)/1 'Segoe UI Symbol', 'DejaVu Sans', serif;
+}
+.wizard-chess-board button[data-dark=true] { background: #795d82; }
+.wizard-chess-board button[data-piece=w] span { color: #fff3d0; text-shadow: 0 0 2px #140d16, 0 1px 2px #140d16, 1px 0 #140d16, -1px 0 #140d16; }
+.wizard-chess-board button[aria-pressed=true] { box-shadow: inset 0 0 0 3px #f7c86a; }
+.wizard-chess-board button[data-target=true]::after { content: ''; position: absolute; inset: 9%; border: 2px solid #ffe49b; border-radius: 50%; }
+.app .wizard-chess-board button:focus-visible { z-index: 1; outline: 3px solid #3c2160; outline-offset: -3px; box-shadow: none; }
+.wizard-chess-board small { position: absolute; left: 2px; bottom: 1px; color: #fff; text-shadow: 0 0 2px black, 0 1px black; font: 10px/1 sans-serif; }
+
+@media (max-width: 800px) {
+  .wizard-chess-board { width: min(100%, 340px, calc(max(430px, 55svh) - 148px)); }
+}
+
+.wizard-chess-in-scene {
+  align-items: end;
+  pointer-events: none;
+  background: none;
+}
+.wizard-chess-in-scene .wizard-chess {
+  width: min(100%, 620px);
+  pointer-events: auto;
+  background: #221a29f2;
+  padding: 6px 10px;
+}
+.wizard-chess-in-scene .wizard-chess-heading h2 { font-size: 1rem; margin: 0; }
+.wizard-chess-in-scene .wizard-chess-heading button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #221a29;
+}
+.wizard-chess-in-scene .wizard-chess-actions { justify-content: flex-start; }
+.app .chess-walking-hidden { display: none; }
+
+.castle-courtyard :is(.cursed-heading, .lake-exit)[hidden] { display: none; }
+
+.wizard-chess-level-picker {
+  width: min(100%, 460px);
+  padding: clamp(12px, 4vw, 24px);
+}
+.wizard-chess-level-picker > p {
+  margin-bottom: 16px;
+  color: #e2cfb9;
+  line-height: 1.45;
+}
+.wizard-chess-levels {
+  display: grid;
+  gap: 8px;
+}
+.wizard-chess-levels button {
+  display: grid;
+  gap: 4px;
+  padding: 10px 14px;
+  text-align: start;
+  border-radius: 6px;
+  background: #322639;
+  touch-action: manipulation;
+}
+.wizard-chess-levels button:hover,
+.wizard-chess-levels button:focus-visible { background: #513d59; }
+.wizard-chess-levels strong { font-size: 1.12em; }
+.wizard-chess-levels span { color: #e2cfb9; }
+
+.wizard-chess-zoom {
+  display: flex;
+  gap: 6px;
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  pointer-events: auto;
+}
+.wizard-chess-zoom button {
+  min-width: 44px;
+  background: #221a29;
+  font-size: 1.15rem;
+  touch-action: manipulation;
+}
+
+.wizard-chess .wizard-chess-skip {
+  background: transparent;
+  border-radius: 5px;
+}
+.wizard-chess .wizard-chess-skip:hover { background: #443551; }
+.wizard-chess-level-picker .wizard-chess-skip { margin-top: 12px; }

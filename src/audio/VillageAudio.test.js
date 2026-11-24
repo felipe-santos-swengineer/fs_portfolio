@@ -99,3 +99,45 @@ test('os efeitos das ruinas respeitam o canal de interacoes', async () => {
   expect(audio.context.created.length).toBe(before);
   audio.dispose();
 });
+
+test('chess pieces have distinct focus sounds on the interactions channel', async () => {
+  const audio = new VillageAudio();
+  await audio.enable();
+  const tone = jest.spyOn(audio, 'tone');
+  const signatures = new Set();
+  for (const type of ['k', 'q', 'b', 'n', 'r', 'p']) {
+    tone.mockClear();
+    audio.chessPiece({ type, color: 'w' });
+    signatures.add(JSON.stringify(tone.mock.calls));
+  }
+  expect(signatures.size).toBe(6);
+  audio.chessPiece({ type: 'k', color: 'b' });
+  expect(tone.mock.calls.at(-1)[4]).toBe('sawtooth');
+  audio.setChannels({ interactions: false });
+  tone.mockClear();
+  audio.chessPiece({ type: 'k', color: 'w' });
+  expect(tone).not.toHaveBeenCalled();
+  audio.dispose();
+});
+
+test('all six chess attacks have distinct sounds and honor the interactions channel', async () => {
+  const audio = new VillageAudio();
+  await audio.enable();
+  const tone = jest.spyOn(audio, 'tone');
+  const rustle = jest.spyOn(audio, 'rustle');
+  const signatures = new Set();
+  for (const type of ['p', 'n', 'r', 'b', 'q', 'k']) {
+    tone.mockClear();
+    rustle.mockClear();
+    audio.chessAttack(type);
+    signatures.add(JSON.stringify([tone.mock.calls, rustle.mock.calls]));
+  }
+  expect(signatures.size).toBe(6);
+  audio.setChannels({ interactions: false });
+  tone.mockClear();
+  rustle.mockClear();
+  audio.chessAttack('r');
+  expect(tone).not.toHaveBeenCalled();
+  expect(rustle).not.toHaveBeenCalled();
+  audio.dispose();
+});

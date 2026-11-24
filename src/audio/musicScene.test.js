@@ -17,3 +17,9 @@ test('selects village, cave, and boss music with nested scene priority', () => {
   expect(musicScene({ inCave: true, dragonVictory: true })).toBe('cave');
   expect(musicScene({ inChamber: true, inCave: true, dragonBattle: true, reading: true })).toBe('village');
 });
+
+test('wizard chess has its own music while open and yields to reading mode', () => {
+  expect(musicScene({ inCursedCastle: true, wizardChessOpen: true })).toBe('wizardChess');
+  expect(musicScene({ inCursedCastle: true, wizardChessOpen: false })).toBe('cursedCastle');
+  expect(musicScene({ inCursedCastle: true, wizardChessOpen: true, reading: true })).toBe('village');
+});

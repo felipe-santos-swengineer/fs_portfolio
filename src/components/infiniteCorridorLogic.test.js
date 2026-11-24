@@ -45,8 +45,15 @@ test.each([10, 20, 30, 40])('keeps the approach to checkpoint stretch %s clear o
   expect(inCheckpointSafeZone({ x: 0, z: z - 5 })).toBe(false);
 });
 
-test('a dormant monster cannot resume chasing even when it sees the player', () => {
-  expect(shouldMonsterChase({ insideCorridor: true, seesPlayer: true, corridorEnded: false, dormant: true })).toBe(false);
+test('a nearby monster can chase again each time the cloak aura expires', () => {
+  const monster = { x: 0, z: -15 };
+  const player = { x: 1, z: -11 };
+  const alerted = elapsed => shouldMonsterChase({
+    insideCorridor: true,
+    seesPlayer: canSeePlayer(monster, player, cloakPhase(elapsed).invisible),
+    corridorEnded: false,
+  });
+  expect([9.99, 10, 20, 30].map(alerted)).toEqual([false, true, false, true]);
 });
 
 test.each([0, Math.PI / 4, -Math.PI / 2, Math.PI / 2, Math.PI])(

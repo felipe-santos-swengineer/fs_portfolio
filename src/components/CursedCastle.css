@@ -6,6 +6,8 @@
 .witch-battle-status .witch-lives{color:#ff7885;letter-spacing:.14em;font-size:21px;line-height:1}
 .witch-battle-status .witch-refuge{color:#afffbd}
 .witch-battle-status .witch-danger{color:#c3eaff}
+.witch-battle-status .courtyard-action{justify-self:start;pointer-events:auto;padding:7px 11px;color:#f9ead1;background:#352b22;border:1px solid #b89a64;border-radius:5px;touch-action:manipulation}
+.courtyard-progress{color:#ffe4aa}
 @media(max-width:600px){
   .castle-courtyard .cursed-heading{max-width:43%}
   .castle-courtyard .lake-exit{top:12px;max-width:45%}

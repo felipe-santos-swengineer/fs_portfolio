@@ -167,10 +167,9 @@ export function checkpointRespawnZ(checkpointZ) {
   return Number.isFinite(checkpointZ) ? checkpointZ : CORRIDOR_START_Z;
 }
 
-// Monsters stay dormant in the entrance and disappear for good once the room
-// has completed a full rotation.
-export function shouldMonsterChase({ insideCorridor, seesPlayer, corridorEnded, dormant }) {
-  return insideCorridor && seesPlayer && !corridorEnded && !dormant;
+// Monsters only pursue inside the corridor while the room is active.
+export function shouldMonsterChase({ insideCorridor, seesPlayer, corridorEnded }) {
+  return insideCorridor && seesPlayer && !corridorEnded;
 }
 
 export function withinReach(first, second, radius = 2.4) {

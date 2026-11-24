@@ -302,6 +302,61 @@ export default class VillageAudio {
     else if (event === 'birds') { this.tone(1800, .12, .015, 0, 'sine', 2400); this.tone(2200, .13, .012, .16, 'sine', 1700); }
   }
 
+  chessAttack(type) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions';
+    const attacks = {
+      p: () => {
+        this.rustle(.21, 5800, .14);
+        this.tone(1070, .22, .055, .025, 'triangle', 720);
+      },
+      n: () => {
+        this.rustle(.09, 950, .14);
+        this.tone(163, .16, .11, 0, 'triangle', 52);
+        this.tone(128, .1, .06, .065, 'sine', 57);
+      },
+      r: () => {
+        this.rustle(.32, 370, .17);
+        this.tone(102, .32, .13, 0, 'triangle', 29);
+        this.rustle(.16, 1280, .09, .12);
+      },
+      b: () => {
+        this.rustle(.39, 1450, .07);
+        [392, 523, 659, 784].forEach((note, index) => this.tone(note, .28, .04, index * .055, 'sine', note * 1.25));
+      },
+      q: () => {
+        this.rustle(.07, 2600, .13);
+        this.tone(680, .08, .08, .025, 'sine', 380);
+        this.tone(980, .19, .047, .08, 'sine', 1310);
+      },
+      k: () => {
+        this.rustle(.16, 1750, .17);
+        this.tone(228, .16, .09, 0, 'triangle', 76);
+        this.rustle(.12, 900, .1, .095);
+      },
+    };
+    attacks[type]?.();
+  }
+
+  chessPiece({ type, color }) {
+    if (!this.ready() || !this.channels.interactions) return;
+    this.channel = 'interactions';
+    const undead = color === 'b';
+    const pitch = undead ? .55 : 1;
+    const ring = (note, duration, delay = 0, shape = 'triangle', end = note) =>
+      this.tone(note * pitch, duration, .04, delay, undead ? 'sawtooth' : shape, end * pitch);
+    const accents = {
+      k: () => { ring(220, .22); ring(330, .28, .11); },
+      q: () => { ring(392, .21, 0, 'sine'); ring(587, .25, .09, 'sine'); },
+      b: () => { ring(523, .31, 0, 'sine'); ring(785, .25, .035, 'sine'); },
+      n: () => { ring(340, .17, 0, 'triangle', 530); ring(450, .16, .13, 'triangle', 270); },
+      r: () => { this.rustle(.16, 450, .065); ring(136, .26, 0, 'sine', 78); },
+      p: () => { this.rustle(.09, 2050, .055); ring(265, .14, 0, 'triangle', 180); },
+    };
+    accents[type]?.();
+    if (undead) this.rustle(.22, 580, .055);
+  }
+
   ruins(event) {
     if (!this.ready() || !this.channels.interactions) return;
     this.channel = 'interactions';

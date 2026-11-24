@@ -68,6 +68,7 @@ export function createCourtyardWitch(scene, { mesh, sphere, cylinder }) {
   const cloak = mesh(root, new THREE.ConeGeometry(.68, 1.52, 8), trim, 0, .6, -.72);
   cloak.rotation.x = .9;
   const sleeveAxis = new THREE.Vector3(0, 1, 0);
+  let castingArm, castingHand, castingShoulder, broomGrip, sleeveLength;
   for (const side of [-1, 1]) {
     const shoulder = new THREE.Vector3(side * .27, .99, .07);
     const grip = new THREE.Vector3(side * .05, broom.position.y + .082, side < 0 ? .65 : .94);
@@ -75,7 +76,15 @@ export function createCourtyardWitch(scene, { mesh, sphere, cylinder }) {
     const midpoint = shoulder.clone().lerp(grip, .47);
     const arm = cylinder(root, .12, sleeve.length() * .92, robe, midpoint.x, midpoint.y, midpoint.z);
     arm.quaternion.setFromUnitVectors(sleeveAxis, sleeve.normalize());
-    sphere(root, .13, skin, grip.x, grip.y, grip.z).scale.set(.91, 1, 1.16);
+    const hand = sphere(root, .13, skin, grip.x, grip.y, grip.z);
+    hand.scale.set(.91, 1, 1.16);
+    if (side === 1) {
+      castingArm = arm;
+      castingHand = hand;
+      castingShoulder = shoulder;
+      broomGrip = grip;
+      sleeveLength = grip.distanceTo(shoulder);
+    }
     const boot = sphere(root, .21, '#221c27', side * .38, -.14, -.21);
     boot.scale.set(.66, 1.4, 1.28);
   }
@@ -103,5 +112,40 @@ export function createCourtyardWitch(scene, { mesh, sphere, cylinder }) {
   const crown = mesh(head, new THREE.ConeGeometry(.39, .78, 10), robe, -.12, .68, 0);
   crown.rotation.z = .32;
   cylinder(head, .34, .11, trim, -.014, .43, 0).rotation.z = .18;
-  return { root, head, mouth, cloak };
+
+  const flask = new THREE.Group();
+  const flaskBody = sphere(flask, .23, '#335945', 0, 0, 0);
+  flaskBody.scale.y = 1.2;
+  sphere(flask, .148, '#7dff28', 0, -.045, .137).scale.set(1, .75, .5);
+  cylinder(flask, .082, .19, '#5aa953', 0, .245, 0);
+  cylinder(flask, .105, .045, '#9ae957', 0, .35, 0);
+  const spout = new THREE.Object3D();
+  spout.position.y = .38;
+  flask.add(spout);
+  flask.visible = false;
+  root.add(flask);
+
+  const raise = new THREE.Vector3(.66, 1.63, .51);
+  const throwDown = new THREE.Vector3(.54, .37, 1.08);
+  const pouring = new THREE.Vector3(.77, .78, .56);
+  const armDirection = new THREE.Vector3();
+  function poseAttack(cast, pour) {
+    const hand = castingHand.position;
+    hand.copy(broomGrip);
+    if (pour > 0) hand.lerp(pouring, pour);
+    if (cast > 0 && cast < 1) {
+      if (cast < .45) hand.lerp(raise, cast / .45);
+      else if (cast < .72) hand.lerpVectors(raise, throwDown, (cast - .45) / .27);
+      else hand.lerpVectors(throwDown, broomGrip, (cast - .72) / .28);
+    }
+    castingArm.position.copy(castingShoulder).lerp(hand, .47);
+    armDirection.subVectors(hand, castingShoulder);
+    castingArm.scale.y = armDirection.length() / sleeveLength;
+    castingArm.quaternion.setFromUnitVectors(sleeveAxis, armDirection.normalize());
+    flask.visible = pour > 0;
+    flask.position.copy(hand).addScaledVector(sleeveAxis, .12);
+    flask.rotation.z = -pour * 2.55;
+  }
+
+  return { root, head, mouth, cloak, poseAttack, castingHand, spout };
 }

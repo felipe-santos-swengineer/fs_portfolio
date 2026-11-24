@@ -267,7 +267,7 @@ export default function InfiniteCorridor({ language, paused, reduceMotion, onExi
         eye.position.set(dx, 1.78, .23); group.add(eye);
       });
       group.userData.monster = true;
-      monsters.push({ group, body, eyeMaterial, phase: Math.random() * 6, hitCooldown: 0, dormant: false, segmentIndex: index });
+      monsters.push({ group, body, eyeMaterial, phase: Math.random() * 6, hitCooldown: 0, segmentIndex: index });
     };
     const buildSegment = index => {
       if (segments.has(index)) return;
@@ -574,9 +574,6 @@ export default function InfiniteCorridor({ language, paused, reduceMotion, onExi
 
         const currentPhase = cloakPhase(phaseElapsed);
         const rounded = Math.ceil(currentPhase.remaining);
-        if (cloakTakenRef.current && phaseInvisibleRef.current && !currentPhase.invisible) {
-          monsters.forEach(monster => { monster.dormant = true; });
-        }
         if (currentPhase.invisible !== phaseInvisibleRef.current || rounded !== lastRemainingRef.current) {
           phaseInvisibleRef.current = currentPhase.invisible;
           lastRemainingRef.current = rounded;
@@ -598,7 +595,6 @@ export default function InfiniteCorridor({ language, paused, reduceMotion, onExi
             insideCorridor,
             seesPlayer: !playerAtCheckpoint && canSeePlayer(position, player.position, currentPhase.invisible),
             corridorEnded: corridorEndedRef.current || spinningRef.current,
-            dormant: monster.dormant,
           });
           monster.eyeMaterial.opacity = alerted ? .95 : .1;
           monster.eyeMaterial.color.set(alerted ? '#ff6b5e' : '#8c3f3a');
@@ -739,7 +735,7 @@ export default function InfiniteCorridor({ language, paused, reduceMotion, onExi
       </div>
       {error && <p className="lake-scene-error">{en ? '3D is unavailable in this browser.' : 'O 3D não está disponível neste navegador.'}</p>}
       <MapControlGuide language={language} scene="corridor" />
-      {noticeOpen && <div className="corridor-notice"><article className="corridor-notice-card" role="dialog" aria-modal="false" aria-labelledby="corridor-notice-title"><h2 id="corridor-notice-title">{en ? 'No mortal may pass' : 'Um mortal não pode avançar'}</h2><p>{en ? 'You can explore this entrance freely, but not go into the corridor: it rebuilds itself for anyone who does not belong here. Take the ghost\'s cloak hanging on the wall: it hides you for 10 seconds, then leaves you visible for 10. When the aura fades, the creatures already present become dormant. New creatures can see you while the aura is off. Every tenth stretch has a door on the floor: it is your checkpoint. The first three turns take you across both walls and the ceiling. The fourth puts you back on the floor and opens the way to the exit.' : 'Você pode explorar esta entrada à vontade, mas não avançar para o corredor: ele se reconstrói para quem não pertence aqui. Pegue o manto do fantasma pendurado na parede: ele esconde você por 10 segundos e depois deixa você visível por 10. Quando a aura se apaga, as criaturas que já apareceram ficam inativas. Novas criaturas podem enxergar você enquanto a aura estiver apagada. A cada dez trechos há uma porta no chão: ela é seu checkpoint. Os primeiros três giros levam você pelas duas paredes e pelo teto. O quarto devolve você ao chão e abre o caminho para a saída.'}</p><div className="npc-dialogue-actions"><button onClick={closeNotice}>{en ? 'I understand' : 'Entendi'}</button></div></article></div>}
+      {noticeOpen && <div className="corridor-notice"><article className="corridor-notice-card" role="dialog" aria-modal="false" aria-labelledby="corridor-notice-title"><h2 id="corridor-notice-title">{en ? 'No mortal may pass' : 'Um mortal não pode avançar'}</h2><p>{en ? 'You can explore this entrance freely, but not go into the corridor: it rebuilds itself for anyone who does not belong here. Take the ghost\'s cloak hanging on the wall: it hides you for 10 seconds, then leaves you visible for 10. When the aura fades, nearby creatures can see and chase you. Every tenth stretch has a door on the floor: it is your checkpoint. The first three turns take you across both walls and the ceiling. The fourth puts you back on the floor and opens the way to the exit.' : 'Você pode explorar esta entrada à vontade, mas não avançar para o corredor: ele se reconstrói para quem não pertence aqui. Pegue o manto do fantasma pendurado na parede: ele esconde você por 10 segundos e depois deixa você visível por 10. Quando a aura se apaga, as criaturas próximas podem enxergar e perseguir você. A cada dez trechos há uma porta no chão: ela é seu checkpoint. Os primeiros três giros levam você pelas duas paredes e pelo teto. O quarto devolve você ao chão e abre o caminho para a saída.'}</p><div className="npc-dialogue-actions"><button onClick={closeNotice}>{en ? 'I understand' : 'Entendi'}</button></div></article></div>}
     </div>
     <div className="lake-touch" aria-label={en ? 'Walking controls' : 'Controles de caminhada'}>
       {[['arrowleft', en ? 'Left' : 'Esquerda', '←'], ['arrowup', en ? 'Forward' : 'Frente', '↑'], ['arrowdown', en ? 'Back' : 'Trás', '↓'], ['arrowright', en ? 'Right' : 'Direita', '→']].map(([key, label, symbol]) => <button key={key} type="button" aria-label={label} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); press(key, true); }} onPointerUp={() => press(key, false)} onPointerCancel={() => press(key, false)} onLostPointerCapture={() => press(key, false)}>{symbol}</button>)}

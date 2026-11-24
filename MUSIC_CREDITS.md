@@ -12,3 +12,11 @@
 
 - Efeito do portão: "Iron Door", por themightyglider — [CC0](https://opengameart.org/content/iron-door).
 - Gritos dos soldados: "Male Grunt/Yelling sounds", por HaelDB — [CC0](https://opengameart.org/content/male-gruntyelling-sounds); selecionados e convertidos de WAV para Ogg.
+
+## Efeitos do Xadrez de Bruxo
+
+- Corte, coice, catapulta, arrebatamento, beijo e cadeirada. Efeitos sintetizados originalmente para o projeto em `src/audio/VillageAudio.js`, sem gravações de terceiros. Esses seis efeitos sonoros são disponibilizados sob [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Trilha do Xadrez de Bruxo
+
+- [Whispers in the Fog](https://opengameart.org/content/whispers-in-the-fog), de Ruhinre, sob [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/). Arquivo original em Ogg, reproduzido em loop durante o desafio.

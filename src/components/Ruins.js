@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { allowRunAndRotate } from './runAndRotate';
 import { facePlayer } from './facePlayer';
 import { cameraRelativeDirection } from './cameraRelativeDirection';
 import { addFaceDetails, createAdventurer } from './VillageScene';
@@ -185,11 +186,11 @@ export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel
     const cylinder=(parent,r,h,color,x,y,z,segments=8)=>add(parent,new THREE.CylinderGeometry(r,r,h,segments),color,x,y,z);
     const {player}=createAdventurer(boat,{box,sphere,mesh,cylinder});player.position.set(0,1,.55);player.rotation.y=Math.PI;
     camera.position.set(10,14,42);
-    const orbit=new OrbitControls(camera,renderer.domElement); orbit.target.set(0,1,25); orbit.enablePan=false; orbit.enableDamping=true; orbit.minDistance=5; orbit.maxDistance=24; orbit.maxPolarAngle=Math.PI/2-.08; orbit.update();
+    const orbit=allowRunAndRotate(new OrbitControls(camera,renderer.domElement)); orbit.target.set(0,1,25); orbit.enablePan=false; orbit.enableDamping=true; orbit.minDistance=5; orbit.maxDistance=24; orbit.maxPolarAngle=Math.PI/2-.08; orbit.update();
     returnToPassage.current=()=>{const target=new THREE.Vector3(0,1,-23),shift=target.clone().sub(orbit.target);boat.position.set(0,0,-23);boat.rotation.y=0;camera.position.add(shift);orbit.target.copy(target);orbit.update();};
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
-    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkingRef.current&&!settings.current.paused){e.preventDefault();pirateActions.current.closePirate();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||talkingRef.current)return;if(k==='f'&&pirateNearRef.current){e.preventDefault();pirateActions.current.talkPirate();return;}if(k==='e'){e.preventDefault();activateRef.current();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){e.preventDefault();keys.current.add(k);}};
-    const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
+    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkingRef.current&&!settings.current.paused){e.preventDefault();pirateActions.current.closePirate();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||talkingRef.current)return;if(k==='f'&&pirateNearRef.current){e.preventDefault();pirateActions.current.talkPirate();return;}if(k==='e'){e.preventDefault();activateRef.current();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
+    const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);renderer.domElement.addEventListener('blur',clear);
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerStart=null;
     const pointerDown=e=>{if(e.isPrimary&&e.button===0)pointerStart={id:e.pointerId,x:e.clientX,y:e.clientY};};
     const pointerUp=e=>{const start=pointerStart;pointerStart=null;if(!start||start.id!==e.pointerId||Math.hypot(e.clientX-start.x,e.clientY-start.y)>6||settings.current.paused||talkingRef.current)return;
@@ -206,7 +207,7 @@ export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel
         const z=(keys.current.has('s')||keys.current.has('arrowdown')?1:0)-(keys.current.has('w')||keys.current.has('arrowup')?1:0);
         if(x||z){
           const direction=cameraRelativeDirection(camera,x,z);
-          const nx=boat.position.x+direction.x*6*dt,nz=boat.position.z+direction.z*6*dt;
+          const speed=keys.current.has('shift')?9.75:6,nx=boat.position.x+direction.x*speed*dt,nz=boat.position.z+direction.z*speed*dt;
           const obstacle=ruinsObstacle(nx,nz);
           if(!obstacle){boat.position.x=nx;boat.position.z=nz;boat.rotation.y=Math.atan2(-direction.x,-direction.z);}
           else if(time>=nextImpact){settings.current.onSound?.(obstacle);nextImpact=time+.9;}
@@ -240,7 +241,7 @@ export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel
       const target=new THREE.Vector3(boat.position.x,1,boat.position.z), shift=target.clone().sub(orbit.target);
       camera.position.add(shift); orbit.target.copy(target); orbit.enabled=!settings.current.paused && !talkingRef.current; orbit.enableDamping=!settings.current.reduceMotion; orbit.update(); renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
-    return()=>{returnToPassage.current=null;cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();stopVoice.current?.();pirateSignRef.current=null;orbit.dispose();horizonTexture.dispose();haloTexture.dispose();pirateSignTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
+    return()=>{returnToPassage.current=null;cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();stopVoice.current?.();pirateSignRef.current=null;orbit.dispose();horizonTexture.dispose();haloTexture.dispose();pirateSignTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[]);
   const press=(key,down)=>{if(paused || talkingRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
   useEffect(()=>{if(active && templeReached)returnToPassage.current?.();},[active,templeReached]);

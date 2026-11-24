@@ -2,7 +2,7 @@ import React from 'react';
 
 // These illustrations follow the palette and landmarks of the playable maps.
 export default function PortalArtwork({ scene }) {
-  const skies={lake:['#b6d8d2','#e1e5c9'],rapids:['#a4ceca','#d6e3cf'],ruins:['#b0d1c9','#e1e0c8'],temple:['#172a2d','#52695d'],cave:['#101919','#34483c'],chamber:['#171812','#4b4738']};
+  const skies={lake:['#b6d8d2','#e1e5c9'],rapids:['#a4ceca','#d6e3cf'],ruins:['#b0d1c9','#e1e0c8'],temple:['#172a2d','#52695d'],cave:['#101919','#34483c'],chamber:['#171812','#4b4738'],corridor:['#0d0c12','#33303c']};
   const [top,bottom]=skies[scene];
   return <svg className="portal-card-image" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
     <defs><linearGradient id={`sky-${scene}`} x2="0" y2="1"><stop stopColor={top}/><stop offset="1" stopColor={bottom}/></linearGradient><linearGradient id={`water-${scene}`} x2="0" y2="1"><stop stopColor="#80c8c5"/><stop offset="1" stopColor="#397f83"/></linearGradient><radialGradient id={`glow-${scene}`}><stop stopColor="#f8c777" stopOpacity=".65"/><stop offset="1" stopColor="#f8c777" stopOpacity="0"/></radialGradient></defs>
@@ -33,10 +33,18 @@ export default function PortalArtwork({ scene }) {
       <path d="M0 0h600v48l-48 14-24-20-28 32-35-27-41 19-32-26-40 18-35-32-38 37-30-25-33 26-29-23-43 28-36-24-31 21-37-20-40 18Z" fill="#536254"/><path d="M0 64 88 39l69 47-13 164H0m600-185-90-25-66 45 11 165h145" fill="#34473c"/><path d="M98 250 203 80l96-33 97 33 106 170Z" fill="#202e28"/><path d="M224 172v-52a76 76 0 0 1 152 0v52Z" fill="#627264"/><path d="M245 172v-43a55 55 0 0 1 110 0v43Z" fill="#101919"/><path d="M226 122q72-36 148 0l-10 13-15-8-11 12-13-8-12 11-13-11-12 11-12-11-12 10-13-9-13 8Z" fill="#899788"/>
       <path d="M0 250 142 171l104 8 54 20 56-20 105-8 139 79Z" fill="#4e5241"/><path d="m217 250 56-62h54l56 62Z" fill="#806b50"/><path d="M21 217q77-19 143 0l-22 17H35m400-18q77-19 142 0l-14 18H454" fill="#af5328"/><path d="M111 179l9-20 8 20Zm359 0 9-20 8 20Z" fill="#e29c53"/><circle cx="120" cy="170" r="31" fill={`url(#glow-${scene})`}/><circle cx="479" cy="170" r="31" fill={`url(#glow-${scene})`}/>
     </>}
-    {scene==='chamber'&&<>
-      <path d="M0 0h600v50l-35 15-32-21-35 21-32-20-40 21-30-23-38 20-29-26-38 27-35-23-39 25-31-21-35 21-32-20-42 17Z" fill="#454d3e"/><path d="M0 62 72 43l50 62-12 145H0m600-190-73-17-48 61 12 146h109" fill="#384338"/><ellipse cx="300" cy="229" rx="250" ry="69" fill="#655748"/>
-      <path d="M94 225q38-37 78 0m251 0q38-37 78 0" fill="#b08b44"/><path d="M105 218h50m-40-6h35m278 6h53m-42-6h30" stroke="#dfb758" strokeWidth="4"/>
-      <path d="M165 166 104 102l76 17 68 23m188 24 59-64-77 17-66 23" fill="#4b3537" stroke="#2e4034" strokeWidth="7"/><ellipse cx="300" cy="170" rx="96" ry="46" fill="#354c3e"/><path d="M249 166q-14-48 18-71l34-13 33 13q32 23 18 71Z" fill="#3c5342"/><path d="M260 107 238 65l30 23m71 19 23-42-30 23" fill="#c1b697" stroke="#536351" strokeWidth="5"/><path d="M260 134q40-25 80 0v29q-40 15-80 0Z" fill="#50644e"/><path d="m274 132 16 4m20 0 16-4" stroke="#f0ad54" strokeWidth="5" strokeLinecap="round"/><path d="M272 160h56l-8 13h-40Z" fill="#25372e"/><path d="M245 201q55 24 110 0" fill="none" stroke="#879178" strokeWidth="8"/>
-    </>}
+    {scene==='chamber'&&<>
+      <path d="M0 0h600v50l-35 15-32-21-35 21-32-20-40 21-30-23-38 20-29-26-38 27-35-23-39 25-31-21-35 21-32-20-42 17Z" fill="#454d3e"/><path d="M0 62 72 43l50 62-12 145H0m600-190-73-17-48 61 12 146h109" fill="#384338"/><ellipse cx="300" cy="229" rx="250" ry="69" fill="#655748"/>
+      <path d="M94 225q38-37 78 0m251 0q38-37 78 0" fill="#b08b44"/><path d="M105 218h50m-40-6h35m278 6h53m-42-6h30" stroke="#dfb758" strokeWidth="4"/>
+      <path d="M165 166 104 102l76 17 68 23m188 24 59-64-77 17-66 23" fill="#4b3537" stroke="#2e4034" strokeWidth="7"/><ellipse cx="300" cy="170" rx="96" ry="46" fill="#354c3e"/><path d="M249 166q-14-48 18-71l34-13 33 13q32 23 18 71Z" fill="#3c5342"/><path d="M260 107 238 65l30 23m71 19 23-42-30 23" fill="#c1b697" stroke="#536351" strokeWidth="5"/><path d="M260 134q40-25 80 0v29q-40 15-80 0Z" fill="#50644e"/><path d="m274 132 16 4m20 0 16-4" stroke="#f0ad54" strokeWidth="5" strokeLinecap="round"/><path d="M272 160h56l-8 13h-40Z" fill="#25372e"/><path d="M245 201q55 24 110 0" fill="none" stroke="#879178" strokeWidth="8"/>
+    </>}
+    {scene==='corridor'&&<>
+      <path d="M0 0h600v250H0Z" fill="#111019"/><path d="M0 0 205 62v126L0 250Zm600 0-205 62v126l205 62Z" fill="#3b3942"/><path d="M205 62 300 92v96l-95 30Zm190 0-95 30v96l95 30Z" fill="#28272f"/>
+      <path d="M300 92v96m-95-126v126m190-126v126M0 0l205 62m395-62-205 62M0 250l205-62m395 62-205-62" fill="none" stroke="#6a6574" strokeWidth="5"/>
+      <path d="M0 62q95 22 205 42m390-42q-95 22-205 42M0 188q95-22 205-42m390 42q-95-22-205-42" fill="none" stroke="#8b849a" strokeWidth="4" opacity=".65"/>
+      <path d="M118 0h14v250h-14m336-250h14v250h-14" fill="#4b4853"/><circle cx="125" cy="112" r="13" fill="#d5965f"/><circle cx="475" cy="112" r="13" fill="#d5965f"/>
+      <path d="M276 123q24-18 48 0v72q-24 14-48 0Z" fill="#0a0910"/><path d="M282 118q18-24 36 0l-7-5-11 5-11-5Z" fill="#171320"/><path d="m290 145 8 3m12 0 8-3" stroke="#a9d8ff" strokeWidth="4" strokeLinecap="round"/>
+      <path d="M236 196h128l-20 54H256Z" fill="#9ad9ff" opacity=".22"/><path d="M255 250 271 196h58l16 54Z" fill="#101725"/>
+    </>}
   </svg>;
 }

@@ -7,6 +7,8 @@
 - Vitória: “Treasure Hunter”, por TAD — [CC0](https://opengameart.org/content/treasure-hunter).
 
 - Arredores do castelo amaldiçoado: "Abandoned Castle Music (Loop)", por StarNinjas — [CC0](https://opengameart.org/content/abandoned-castle-music-loop).
+- Corredor do Infinito. “Dark Shrine Loop”, por qubodup, remix de “Shrine”, de yd. [Fonte e licença CC0](https://opengameart.org/content/dark-shrine-loop).
+- Confronto com a bruxa. “Determined Pursuit”, por Emma_MA. Convertida de WAV para Ogg Vorbis. [Fonte e licença CC0](https://opengameart.org/content/determined-pursuit-epic-orchestra-loop).
 
 - Efeito do portão: "Iron Door", por themightyglider — [CC0](https://opengameart.org/content/iron-door).
 - Gritos dos soldados: "Male Grunt/Yelling sounds", por HaelDB — [CC0](https://opengameart.org/content/male-gruntyelling-sounds); selecionados e convertidos de WAV para Ogg.

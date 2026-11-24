@@ -57,14 +57,14 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
     const updateCamera=()=>{camera.position.set(boat.position.x,6,Math.min(boat.position.z+8,15));camera.lookAt(boat.position.x,1,boat.position.z-3);};
     updateCamera();
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
-    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&messageRef.current&&!settings.current.paused){e.preventDefault();actions.current.closeMessage();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||messageRef.current)return;if(k==='e'){e.preventDefault();actions.current.examine();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){e.preventDefault();keys.current.add(k);}};
-    const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
+    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&messageRef.current&&!settings.current.paused){e.preventDefault();actions.current.closeMessage();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||messageRef.current)return;if(k==='e'){e.preventDefault();actions.current.examine();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
+    const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);renderer.domElement.addEventListener('blur',clear);
     let frame,last=performance.now(),time=0,nextImpact=0;
     const animate=now=>{
       frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;
       if(!settings.current.paused&&!messageRef.current){
         time+=dt;const x=(keys.current.has('d')||keys.current.has('arrowright')?1:0)-(keys.current.has('a')||keys.current.has('arrowleft')?1:0),z=(keys.current.has('s')||keys.current.has('arrowdown')?1:0)-(keys.current.has('w')||keys.current.has('arrowup')?1:0);
-        if(x||z){const direction=cameraRelativeDirection(camera,x,z),rawX=boat.position.x+direction.x*4*dt,rawZ=boat.position.z+direction.z*4*dt;
+        if(x||z){const direction=cameraRelativeDirection(camera,x,z),speed=keys.current.has('shift')?6.5:4,rawX=boat.position.x+direction.x*speed*dt,rawZ=boat.position.z+direction.z*speed*dt;
           const nx=THREE.MathUtils.clamp(rawX,-3.2,3.2),nz=THREE.MathUtils.clamp(rawZ,-26,6);
           if((nx!==rawX||nz!==rawZ)&&time>=nextImpact){settings.current.onSound?.('stone');nextImpact=time+.9;}
           boat.position.set(nx,boat.position.y,nz);boat.rotation.y=Math.atan2(-direction.x,-direction.z);
@@ -75,7 +75,7 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
       if(!settings.current.reduceMotion)seal.rotation.y=time*.4;
       updateCamera();renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();scene.traverse(object=>{object.geometry?.dispose();if(Array.isArray(object.material))object.material.forEach(m=>m.dispose());else object.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
+    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();scene.traverse(object=>{object.geometry?.dispose();if(Array.isArray(object.material))object.material.forEach(m=>m.dispose());else object.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[inVillage]);
   const press=(key,down)=>{if(paused||messageRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
   if(inVillage)return <TempleVillage language={language} paused={paused} reduceMotion={reduceMotion} onExit={()=>onVillageChange(false)}/>;

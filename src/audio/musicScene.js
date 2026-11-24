@@ -1,5 +1,7 @@
-export function musicScene({ reading, inCursedCastle, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel, templeReached, inLake, inRuins }) {
+export function musicScene({ reading, inCorridor, inCursedCastle, inCastleCourtyard, witchEncounter, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel, templeReached, inLake, inRuins }) {
   if (reading) return 'village';
+  if (inCorridor) return 'corridor';
+  if (inCastleCourtyard && witchEncounter) return 'witchBattle';
   if (inCursedCastle) return 'cursedCastle';
   if (inDungeon) return 'dungeon';
   if (inThrone) return 'castle';

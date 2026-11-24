@@ -9,6 +9,8 @@ jest.mock('./assets/audio/castle-kings-feast.mp3', () => 'castle-track.mp3');
 jest.mock('./assets/audio/dungeon.wav', () => 'dungeon-track.wav');
 jest.mock('./assets/audio/lake-ambient.wav', () => 'lake-track.wav');
 jest.mock('./assets/audio/rapids-theme.wav', () => 'rapids-track.wav');
+jest.mock('./assets/audio/cursed-castle.ogg', () => 'cursed-castle-track.ogg');
+jest.mock('./assets/audio/witch-battle.ogg', () => 'witch-battle-track.ogg');
 jest.mock('./components/ThroneHall', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do salao de teste</button> }));
 jest.mock('./components/Lake', () => ({ __esModule: true, default: ({ onExit, onEnterRapids }) => <><button onClick={onExit}>Sair do lago de teste</button><button onClick={onEnterRapids}>Entrar nas corredeiras de teste</button></> }));
 jest.mock('./components/Rapids', () => ({ __esModule: true, default: ({ onExit, onAdvance }) => <><button onClick={onExit}>Sair das corredeiras de teste</button><button onClick={onAdvance}>Avançar das corredeiras de teste</button></> }));
@@ -18,7 +20,8 @@ jest.mock('./components/DragonCave', () => ({ __esModule: true, default: ({ onEx
 jest.mock('./components/DragonChamber', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair da câmara de teste</button> }));
 jest.mock('./components/Dungeon', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do calabouco de teste</button> }));
 jest.mock('./components/CursedCastle', () => ({ __esModule: true, default: ({ onExit,onEnterCastle,startNearGate }) => <><button onClick={onExit}>{'Sair do castelo amaldi\u00e7oado de teste'}</button><button onClick={onEnterCastle}>Entrar no interior de teste</button><span data-testid="castle-return">{String(startNearGate)}</span></> }));
-jest.mock('./components/CursedCastleInterior', () => ({ __esModule: true, default: ({onExit,onReturnVillage}) => <><button onClick={onExit}>Voltar aos arredores de teste</button><button onClick={onReturnVillage}>Portal da vila de teste</button></> }));
+jest.mock('./components/CursedCastleCourtyard', () => ({ __esModule: true, default: ({onExit,onEncounterChange}) => <><button onClick={onExit}>Voltar aos arredores de teste</button><button onClick={() => onEncounterChange(true)}>Encerrar a cutscene da bruxa de teste</button></> }));
+jest.mock('./components/InfiniteCorridor', () => ({ __esModule: true, default: ({onExit,onAdvance}) => <><button onClick={onExit}>Voltar aos arredores do corredor de teste</button><button onClick={onAdvance}>Avançar para o interior de teste</button></> }));
 
 beforeEach(() => {
   localStorage.clear();
@@ -477,20 +480,41 @@ test('o interior do castelo abre pelo portao e retorna com o portao aberto', asy
   fireEvent.click(screen.getByText('Campanha do Castelo Amaldi\u00e7oado'));
   fireEvent.click(screen.getByRole('button',{name:/Arredores do Castelo/}));
   fireEvent.click(await screen.findByRole('button',{name:'Entrar no interior de teste'}));
+  expect(await screen.findByRole('button',{name:'Avançar para o interior de teste'})).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-corridor');
+  fireEvent.click(screen.getByRole('button',{name:'Avançar para o interior de teste'}));
   expect(await screen.findByRole('button',{name:'Voltar aos arredores de teste'})).toBeTruthy();
-  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-interior');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-courtyard');
   fireEvent.click(screen.getByRole('button',{name:'Voltar aos arredores de teste'}));
   expect((await screen.findByTestId('castle-return')).textContent).toBe('true');
   expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
 });
 
-test('o portal acessa o interior diretamente e retorna para a vila', async () => {
+test('a campanha abre o corredor do infinito como primeira sala interior', async () => {
+  await start(); fireEvent.click(screen.getByRole('button',{name:'Simular entrada no portal'}));
+  fireEvent.click(screen.getByText('Campanha do Castelo Amaldi\u00e7oado'));
+  fireEvent.click(screen.getByRole('button',{name:/Corredor do Infinito/}));
+  expect(await screen.findByRole('button',{name:'Avançar para o interior de teste'})).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-corridor');
+  fireEvent.click(screen.getByRole('button',{name:'Voltar aos arredores do corredor de teste'}));
+  expect((await screen.findByTestId('castle-return')).textContent).toBe('true');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
+});
+
+test('o portal acessa o pátio diretamente e permite voltar aos arredores', async () => {
   await start();fireEvent.click(screen.getByRole('button',{name:'Simular entrada no portal'}));
   fireEvent.click(screen.getByText('Campanha do Castelo Amaldi\u00e7oado'));
-  fireEvent.click(screen.getByRole('button',{name:/Interior do Castelo/}));
-  fireEvent.click(await screen.findByRole('button',{name:'Portal da vila de teste'}));
-  expect(screen.getByTestId('village-canvas').getAttribute('data-portal-return')).toBe('true');
-  expect(sessionStorage.getItem('portfolio-map')).toBe('village');
+  fireEvent.click(screen.getByRole('button',{name:/Pátio do Castelo/}));
+  const exit = await screen.findByRole('button',{name:'Voltar aos arredores de teste'});
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-courtyard');
+  const background = document.querySelector('audio[loop]');
+  expect(background.getAttribute('src')).toBe('cursed-castle-track.ogg');
+  fireEvent.click(screen.getByRole('button', {name:'Encerrar a cutscene da bruxa de teste'}));
+  expect(background.getAttribute('src')).toBe('witch-battle-track.ogg');
+  fireEvent.click(exit);
+  expect((await screen.findByTestId('castle-return')).textContent).toBe('true');
+  expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
+  expect(background.getAttribute('src')).toBe('cursed-castle-track.ogg');
 });
 
 

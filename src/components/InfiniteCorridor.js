@@ -102,6 +102,7 @@ export default function InfiniteCorridor({ language, paused, reduceMotion, onExi
     const sphere = (p, r, c, x, y, z) => mesh(p, new THREE.IcosahedronGeometry(r, 1), c, x, y, z);
     const cylinder = (p, r, h, c, x, y, z, n = 8) => mesh(p, new THREE.CylinderGeometry(r, r, h, n), c, x, y, z);
     const glowMaterial = (color, intensity = 1) => new THREE.MeshStandardMaterial({ color, roughness: .5, emissive: new THREE.Color(color), emissiveIntensity: intensity });
+    // eslint-disable-next-line no-unused-vars
     const basicMaterial = color => new THREE.MeshBasicMaterial({ color });
     const makeLabel = (parent, y, width, height) => {
       const canvas = document.createElement('canvas'); canvas.width = 768; canvas.height = 192;

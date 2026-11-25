@@ -104,7 +104,7 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
     immuneContext.fillStyle='#effaff';
     immuneContext.font='bold 44px sans-serif';
     immuneContext.textAlign='center'; immuneContext.textBaseline='middle';
-    immuneContext.fillText(en?'IMMUNE':'IMUNE',128,49);
+    immuneContext.fillText(live.current.en?'IMMUNE':'IMUNE',128,49);
     const immuneTexture=new THREE.CanvasTexture(immuneCanvas);
     const immuneTextMaterial=new THREE.SpriteMaterial({map:immuneTexture,transparent:true,depthWrite:false,depthTest:false});
     const immuneText=new THREE.Sprite(immuneTextMaterial);

@@ -9,6 +9,7 @@ import witch4 from '../assets/audio/witches/4.mp3';
 import witchIntroLaugh from '../assets/audio/witch-dialogue/intro-laugh.mp3';
 import witchLightningReaction from '../assets/audio/witch-dialogue/lightning-reaction.mp3';
 import { nextWitchLaugh } from './witchAmbience';
+import { KING_LAUGHS } from './kingVoices';
 
 const WITCH_LAUGHS=[witch1,witch2,witch3,witch4];
 
@@ -25,11 +26,12 @@ export default class VillageAudio {
     this.witchGeneration=0; this.witchActive=false; this.witchTimer=null; this.witchSource=null; this.witchPrevious=-1;
     this.witchCompletion = null;
     this.witchLaughState = null;
+    this.kingLaughState = { active: false, generation: 0, timer: null, source: null, previous: -1 };
   }
 
   setChannels(channels) {
     this.channels = { ...this.channels, ...channels };
-    if (!this.channels.interactions) { this.stopWeather(); this.stopCastleEffects(); this.stopWitchAmbience(); }
+    if (!this.channels.interactions) { this.stopWeather(); this.stopCastleEffects(); this.stopWitchAmbience(); this.stopKingLaughs(); }
     for (const source of this.sources) if (!this.channels[source.villageChannel]) { try { source.stop(); } catch { /* Already ended. */ } }
   }
 
@@ -54,6 +56,7 @@ export default class VillageAudio {
 
   mute() {
     this.stopWitchAmbience();
+    this.stopKingLaughs();
     this.stopCastleEffects();
     this.stopWeather();
     this.enabled = false;
@@ -252,7 +255,68 @@ export default class VillageAudio {
     schedule(battleLaugh ? 450 : 3000);
   }
 
+  stopKingLaughs() {
+    const state = this.kingLaughState;
+    state.active = false;
+    state.generation++;
+    if (state.timer !== null) { clearTimeout(state.timer); state.timer = null; }
+    if (state.source) {
+      const source = state.source;
+      state.source = null;
+      try { source.stop(); } catch { /* Already ended. */ }
+    }
+  }
+
+  startKingLaughs() {
+    const state = this.kingLaughState;
+    if (state.active || !this.ready() || !this.channels.interactions) return;
+    state.active = true;
+    const generation = ++state.generation;
+    const schedule = delay => { state.timer = setTimeout(play, delay); };
+    const play = async () => {
+      state.timer = null;
+      if (!state.active || generation !== state.generation || !this.ready() || !this.channels.interactions) {
+        this.stopKingLaughs();
+        return;
+      }
+      const index = nextWitchLaugh(state.previous), context = this.context;
+      try {
+        const buffer = await this.loadCastleSample(KING_LAUGHS[index]);
+        if (!state.active || generation !== state.generation) return;
+        if (this.context !== context || !this.ready() || !this.channels.interactions) {
+          this.stopKingLaughs();
+          return;
+        }
+        const source = context.createBufferSource(), gain = context.createGain();
+        source.buffer = buffer;
+        gain.gain.value = .28;
+        source.connect(gain);
+        gain.connect(this.master);
+        source.villageChannel = 'interactions';
+        source.villageEffect = 'kingLaugh';
+        this.sources.add(source);
+        state.source = source;
+        state.previous = index;
+        source.onended = () => {
+          this.sources.delete(source);
+          source.disconnect();
+          gain.disconnect();
+          if (state.source === source) state.source = null;
+          if (!state.active || generation !== state.generation) return;
+          schedule(3500 + Math.random() * 5500);
+        };
+        source.start();
+      } catch {
+        if (!state.active || generation !== state.generation) return;
+        schedule(8000);
+      }
+    };
+    schedule(1600 + Math.random() * 2400);
+  }
+
   async cursedCastle(event, onDone) {
+    if (event === 'king-laugh-start') { this.startKingLaughs(); return; }
+    if (event === 'king-laugh-stop') { this.stopKingLaughs(); return; }
     if (event === 'witch-start') { this.startWitchAmbience(); return; }
     if (event === 'witch-battle-laugh') { this.startWitchAmbience({ battleLaugh: onDone }); return; }
     if (event === 'witch-intro-laugh') return this.startWitchAmbience({ clip: witchIntroLaugh });
@@ -355,6 +419,12 @@ export default class VillageAudio {
     else if (event === 'stone') { this.rustle(.12,850,.08); this.tone(135,.13,.045,0,'triangle',68); }
     else if (event === 'wood') { this.rustle(.1,500,.06); this.tone(170,.16,.05,0,'triangle',85); }
     else if (event === 'passage') { this.tone(260,.4,.045,0,'sine',420); this.rustle(.3,600,.04); }
+    else if (event === 'echo') { this.rustle(.09,760,.035); this.tone(180,.14,.03,.1,'triangle',120); this.tone(150,.2,.015,.24,'sine',100); }
+    else if (event === 'drip') { this.tone(1280,.09,.035,0,'sine',620); this.tone(910,.13,.014,.16,'sine',480); }
+    else if (event === 'wind') { this.rustle(1.5,420,.035); this.rustle(.9,720,.018,.35,-.4); this.rustle(.8,620,.014,.7,.4); }
+    else if (event === 'deep') { this.tone(62,1.4,.045,0,'sine',44); this.rustle(1.1,180,.025,.2); }
+    else if (event === 'fire') { this.rustle(.1,2600,.03); this.rustle(.07,1800,.022,.09,.3); this.tone(420,.07,.012,.04,'triangle',280); }
+    else if (event === 'village') { [392,523,659].forEach((f,i)=>this.tone(f,.65,.022,i*.13,'sine')); this.rustle(.8,1100,.02,.25); }
     else if (event === 'talk') { this.tone(440,.16,.025,0,'sine',520); }
   }
 

@@ -1,3 +1,5 @@
+import { addRockVault, addTunnelRockwork } from './rockVault';
+import { createRiverRockGeometry, createRiverRockMaterial, RIVER_GREENS, RIVER_ROCK_COLORS, RIVER_STRATA } from './riverRock';
 import { isRunning, setTouchMovement } from './touchMovement';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
@@ -118,9 +120,70 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
     });
     const gate=add(temple,new THREE.BoxGeometry(7.5,6.8,.45),'#6e7f72',0,3.4,.8);
     for(let i=-2;i<=2;i++)add(gate,new THREE.BoxGeometry(.07,5.5,.08),'#98b0a0',i*1.1,0,.25);
-    // A dark opening behind the gate is the entrance to the next area.
-    const tunnelMouth=add(temple,new THREE.PlaneGeometry(7.3,6.6),'#101b1a',0,3.35,-1.9);
-    tunnelMouth.material.side=THREE.DoubleSide;
+    // Stone jambs bridge the gate edge to the side pillars so no slit stays open.
+    [-1,1].forEach(side=>{
+      const jamb=add(temple,new THREE.BoxGeometry(.66,7,4.2),'#7f8b7d',side*3.92,3.45,0);
+      jamb.rotation.y=side*.015;
+    });
+    const mouthSealShape=new THREE.Shape();
+    mouthSealShape.moveTo(-3.85,0);mouthSealShape.lineTo(-3.85,6.45);
+    mouthSealShape.quadraticCurveTo(0,9.3,3.85,6.45);mouthSealShape.lineTo(3.85,0);mouthSealShape.closePath();
+    const mouthSeal=add(temple,new THREE.ShapeGeometry(mouthSealShape),'#16211f',0,0,.52);
+    mouthSeal.material.side=THREE.DoubleSide;
+    const vaultHalfWidth=4.6,vaultHeight=8.2,vaultNearZ=-1.5,vaultFarZ=-17;
+    addRockVault(temple,vaultHalfWidth,vaultHeight,vaultNearZ,vaultFarZ);
+    addTunnelRockwork(temple,{halfWidth:vaultHalfWidth,height:vaultHeight,nearZ:vaultNearZ,farZ:vaultFarZ});
+    const channel=add(temple,new THREE.PlaneGeometry(7.6,16),'#15292b',0,.13,-9.4);
+    channel.rotation.x=-Math.PI/2;
+    const endShape=new THREE.Shape();
+    for(let i=0;i<=24;i++){
+      const angle=Math.PI*i/24;
+      const x=Math.cos(angle)*vaultHalfWidth*1.09;
+      const y=-1.3+Math.pow(Math.sin(angle),.68)*(vaultHeight*1.09+1.3);
+      if(i===0)endShape.moveTo(x,y);else endShape.lineTo(x,y);
+    }
+    endShape.closePath();
+    const endWall=add(temple,new THREE.ShapeGeometry(endShape),'#0b1414',0,0,vaultFarZ-.35);
+    endWall.material.side=THREE.DoubleSide;
+    const caveStone=new THREE.InstancedMesh(createRiverRockGeometry(),createRiverRockMaterial(),51);
+    const pose=new THREE.Object3D(),stoneTint=new THREE.Color();
+    let stoneIndex=0;
+    const placeStone=(x,y,z,sx,sy,sz,yaw,lean,color)=>{
+      pose.position.set(x,y,z);pose.scale.set(sx,sy,sz);pose.rotation.set(lean*.35,yaw,lean);pose.updateMatrix();
+      caveStone.setMatrixAt(stoneIndex,pose.matrix);caveStone.setColorAt(stoneIndex,stoneTint.set(color));stoneIndex++;
+    };
+    for(const side of [-1,1]){
+      for(let i=0;i<12;i++){
+        const z=-1.7-i*1.4,size=.63+.19*Math.sin(i*1.73+side);
+        placeStone(side*(4.08+.19*Math.sin(i*2.1+side*1.7)),.12+size*.26,z,
+          size*1.12,size*.58,size*1.9,side*i*.05,side*.08,
+          i%5===0?RIVER_GREENS[(i+(side>0?1:0))%RIVER_GREENS.length]:RIVER_ROCK_COLORS[(i+(side>0?2:0))%RIVER_ROCK_COLORS.length]);
+      }
+    }
+    for(let i=0;i<3;i++){
+      const z=-3.8-i*4.8,side=i%2?1:-1;
+      for(let j=0;j<9;j++){
+        const angle=j*2.399+i,tier=j%3;
+        const size=tier===0?3+.55*Math.sin(j+i):1.35+.55*Math.cos(j*1.7+i);
+        const spread=tier===0?.85:2.15;
+        placeStone(side*(7.4+Math.cos(angle)*spread+(j%2)*.45),
+          .35+size*(tier===0?.68:.48)+Math.sin(angle)*.28,
+          z+Math.sin(angle)*(tier===0?1.35:3.1),
+          size*.92,size*(tier===0?1.24:1.05),size*1.08,
+          angle*.32,side*(.08+j*.018),
+          j%6===0?RIVER_GREENS[(j+i)%RIVER_GREENS.length]:RIVER_STRATA[(j+i*3)%RIVER_STRATA.length]);
+      }
+    }
+    caveStone.instanceMatrix.needsUpdate=true;
+    if(caveStone.instanceColor)caveStone.instanceColor.needsUpdate=true;
+    temple.add(caveStone);
+    for(let i=0;i<3;i++){
+      const z=-3.8-i*4.8,side=i%2?1:-1;
+      const lamp=add(temple,new THREE.OctahedronGeometry(.16,0),'#ffd298',side*4,3,z);
+      lamp.material.emissive.set('#ed9b55');
+      const lamplight=new THREE.PointLight('#ffb673',6,10);
+      lamplight.position.set(side*3.6,2.9,z);temple.add(lamplight);
+    }
     // A damaged hull and broken mast form a small shipwreck for the stranded pirate.
     const wreck=new THREE.Group();wreck.position.set(SHIPWRECK.x,0,SHIPWRECK.z);wreck.rotation.y=.35;scene.add(wreck);
     const hullColors=['#594332','#78583d','#9b7954'];
@@ -156,7 +219,7 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
     const pirateSignCanvas=document.createElement('canvas');pirateSignCanvas.width=768;pirateSignCanvas.height=224;
     const pirateSignContext=pirateSignCanvas.getContext('2d'),pirateSignTexture=new THREE.CanvasTexture(pirateSignCanvas);pirateSignTexture.colorSpace=THREE.SRGBColorSpace;
     const pirateSign=new THREE.Sprite(new THREE.SpriteMaterial({map:pirateSignTexture,depthTest:true}));
-    pirateSignRef.current=lang=>{pirateSignContext.fillStyle='#101b24';pirateSignContext.fillRect(0,0,768,224);pirateSignContext.strokeStyle='#a5896b';pirateSignContext.lineWidth=5;pirateSignContext.strokeRect(10,10,748,204);pirateSignContext.textAlign='center';pirateSignContext.fillStyle='#d9c4a0';pirateSignContext.font='bold 49px sans-serif';pirateSignContext.fillText('DUARTE',384,92);pirateSignContext.fillStyle='#e6e0d2';pirateSignContext.font='32px sans-serif';pirateSignContext.fillText(lang==='en-US'?'F \u00b7 TALK':'F \u00b7 CONVERSAR',384,159);pirateSignTexture.needsUpdate=true;};
+    pirateSignRef.current=lang=>{pirateSignContext.fillStyle='#101b24';pirateSignContext.fillRect(0,0,768,224);pirateSignContext.strokeStyle='#a5896b';pirateSignContext.lineWidth=5;pirateSignContext.strokeRect(10,10,748,204);pirateSignContext.textAlign='center';pirateSignContext.fillStyle='#d9c4a0';pirateSignContext.font='bold 49px sans-serif';pirateSignContext.fillText('DUARTE',384,92);pirateSignContext.fillStyle='#e6e0d2';pirateSignContext.font='32px sans-serif';pirateSignContext.fillText(lang==='en-US'?'E \u00b7 INTERACT':'E \u00b7 INTERAGIR',384,159);pirateSignTexture.needsUpdate=true;};
     pirateSignRef.current(settings.current.language);pirateSign.position.set(0,3.05,0);pirateSign.scale.set(2.5,.73,1);pirate.add(pirateSign);
     const boat=createLakeBoat(add);scene.add(boat);boat.position.set(0,0,25);
     const mesh=(parent,geometry,color,x,y,z)=>add(parent,geometry,color,x,y,z);
@@ -171,7 +234,7 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
     const orbit=allowRunAndRotate(new OrbitControls(camera,renderer.domElement)); orbit.target.set(0,1,25); orbit.enablePan=false; orbit.enableDamping=true; orbit.minDistance=5; orbit.maxDistance=24; orbit.maxPolarAngle=Math.PI/2-.08; orbit.update();
     returnToPassage.current=()=>{const target=new THREE.Vector3(0,1,-23),shift=target.clone().sub(orbit.target);boat.position.set(0,0,-23);boat.rotation.y=0;camera.position.add(shift);orbit.target.copy(target);orbit.update();};
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
-    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkingRef.current&&!settings.current.paused){e.preventDefault();pirateActions.current.closePirate();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||talkingRef.current)return;if(k==='f'&&pirateNearRef.current){e.preventDefault();pirateActions.current.talkPirate();return;}if(k==='e'){e.preventDefault();activateRef.current();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
+    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkingRef.current&&!settings.current.paused){e.preventDefault();pirateActions.current.closePirate();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||talkingRef.current)return;if(k==='e'&&pirateNearRef.current){e.preventDefault();pirateActions.current.talkPirate();return;}if(k==='e'){e.preventDefault();activateRef.current();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
     const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);renderer.domElement.addEventListener('blur',clear);
     const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let pointerStart=null;
     const pointerDown=e=>{if(e.isPrimary&&e.button===0)pointerStart={id:e.pointerId,x:e.clientX,y:e.clientY};};
@@ -236,7 +299,7 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
   const count=activated.filter(Boolean).length;
   return <section className="lake ruins"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en?'Return to village':'Voltar para a vila'}</button>}
     <MapControlGuide language={language} scene="ruins"/>
-    {pirateNear && !talking && <button className="ruins-pirate-talk" onClick={talkPirate}>{en?'Talk to Duarte':'Conversar com Duarte'} <kbd>F</kbd></button>}
+    {pirateNear && !talking && <button className="ruins-pirate-talk" onClick={talkPirate}>{en?'Talk to Duarte':'Conversar com Duarte'} <kbd>E</kbd></button>}
     {talking && <PirateDialogue ref={piratePanel} language={language} line={pirateLine} speaking={speaking} voiceEnabled={voiceEnabled} voiceNotice={voiceNotice} onSpeak={onSpeak} onStop={onStop} onNext={talkPirate} onClose={closePirate}/>}
     <div className="ruins-status" aria-live="polite"><strong>{en?'Sunken Ruins Cove':'Enseada das Ruínas Submersas'}</strong><span>{error?(en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'):count===3?(en?'The gate is open. Approach to enter the tunnel.':'A porta se abriu. Aproxime-se para entrar no túnel.'):(en?`Activate the island runes: ${count}/3`:`Ative as runas das ilhas: ${count}/3`)}</span></div>
     {(nearTunnel || near>=0)&&<button className="lake-portal-action" onClick={()=>{activate();if(!tunnelNearRef.current)mount.current?.querySelector('canvas')?.focus();}}>{nearTunnel?(en?'Enter tunnel':'Entrar no túnel'):(en?'Activate rune':'Ativar runa')} <kbd>E</kbd></button>}</div>

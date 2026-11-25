@@ -1,3 +1,4 @@
+import { bindNpcTap } from './bindNpcTap';
 import { isRunning, setTouchMovement } from './touchMovement';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
@@ -16,7 +17,7 @@ import { createTempleVillageScenery, createTempleCutaway } from './templeVillage
 import { sceneFrameDelta } from './sceneFrameDelta';
 
 const HOUSES = [[-18,-2],[-24,5],[-18,14],[-25,20],[-14,24],[18,-2],[24,5],[18,14],[25,20],[14,24],[-25,-21],[25,-21]];
-const NAMES = ['Aruã', 'Jaci', 'Potira', 'Cauã', 'Tupã', 'Iara', 'Ubiratan', 'Araci', 'Apoena', 'Moema', 'Ceci', 'Tainá', 'Yara', 'Abaré'];
+const NAMES = ['Aruã', 'Jaci', 'Potira', 'Cauã', 'Tupã', 'Iara', 'Ubiratan', 'Araci', 'Apoena', 'Moema', 'Ceci', 'Cauê', 'Yara', 'Abaré'];
 const PEOPLE = [
   {x:-4,z:9, route:[[-4,9],[-10,9],[-10,19],[-4,19]], pt:'Bem-vindo à nossa aldeia. O templo guarda histórias muito antigas.', en:'Welcome to our village. The temple holds ancient stories.'},
   {x:5,z:19, route:[[5,19],[10,19],[10,9],[5,9]], pt:'As estradas ligam nossas casas à praça e ao templo.', en:'The roads connect our homes to the square and the temple.'},
@@ -42,8 +43,15 @@ export default function TempleVillage({ campaignNavigation,language, paused, red
   useEffect(()=>{signsRef.current.forEach(sign=>sign(language));},[language]);
   useEffect(()=>{if(talk!==null)dialoguePanel.current?.focus();},[talk]);
   const close=()=>{onStop?.();talkRef.current=null;setTalk(null);mount.current?.querySelector('canvas')?.focus();};
-  const interact=()=>{if(state.current.paused || talkRef.current!==null)return; if(state.current.nearExit){keys.current.clear();state.current.onExit();return;} if(state.current.nearCave){keys.current.clear();state.current.onEnterCave?.();return;} const i=state.current.near; if(i>=0){keys.current.clear();talkRef.current=i;setTalk(i);onSpeak?.(i);}};
-  const actions=useRef({});actions.current={interact,close};
+  const talkToResident = index => {
+    if (state.current.paused || talkRef.current !== null) return;
+    keys.current.clear();
+    talkRef.current = index;
+    setTalk(index);
+    onSpeak?.(index);
+  };
+  const interact=()=>{if(state.current.paused || talkRef.current!==null)return; if(state.current.nearExit){keys.current.clear();state.current.onExit();return;} if(state.current.nearCave){keys.current.clear();state.current.onEnterCave?.();return;} const i=state.current.near; if(i>=0)talkToResident(i);};
+  const actions=useRef({});actions.current={interact,close,talkToResident};
   useEffect(()=>{
     const el=mount.current;let renderer;
     try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{setError(true);return;}
@@ -101,14 +109,17 @@ export default function TempleVillage({ campaignNavigation,language, paused, red
       if(p.child)body.scale.setScalar(.66);
       const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d'),texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;
       const sign=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));sign.position.y=p.child?1.9:2.8;sign.scale.set(2.1,.66,1);group.add(sign);
-      const drawSign=lang=>{ctx.clearRect(0,0,512,160);ctx.fillStyle='#1a2522';ctx.fillRect(4,4,504,152);ctx.strokeStyle='#c3a778';ctx.lineWidth=5;ctx.strokeRect(7,7,498,146);ctx.textAlign='center';ctx.fillStyle='#f6e9ca';ctx.font='bold 52px sans-serif';ctx.fillText(NAMES[i],256,67);ctx.fillStyle='#d3c8a8';ctx.font='30px sans-serif';ctx.fillText(lang==='en-US'?'E / F  TALK':'E / F  CONVERSAR',256,122);texture.needsUpdate=true;};
+      const drawSign=lang=>{ctx.clearRect(0,0,512,160);ctx.fillStyle='#1a2522';ctx.fillRect(4,4,504,152);ctx.strokeStyle='#c3a778';ctx.lineWidth=5;ctx.strokeRect(7,7,498,146);ctx.textAlign='center';ctx.fillStyle='#f6e9ca';ctx.font='bold 52px sans-serif';ctx.fillText(NAMES[i],256,67);ctx.fillStyle='#d3c8a8';ctx.font='30px sans-serif';ctx.fillText(lang==='en-US'?'E  INTERACT':'E  INTERAGIR',256,122);texture.needsUpdate=true;};
       drawSign(state.current.language);signsRef.current.push(drawSign);group.userData.residentIndex=i;
       if(!p.elder){const target=p.route[1];group.rotation.y=Math.atan2(target[0]-p.x,target[1]-p.z);}
       return {group,body,legs,arms,route:p.route,elder:p.elder,next:1,wait:!p.elder&&i%5===2?1.4:0,phase:i*1.7,texture};
     });
     camera.position.set(0,initialNearCave.current?9:6.6,initialNearCave.current?-3.5:40);const orbit=allowRunAndRotate(new OrbitControls(camera,renderer.domElement));orbit.target.set(0,1,initialNearCave.current?-14.5:25);orbit.enablePan=false;orbit.enableDamping=true;orbit.minDistance=5;orbit.maxDistance=22;orbit.maxPolarAngle=Math.PI/2-.08;orbit.update();
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
-    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkRef.current!==null){e.preventDefault();actions.current.close();return;}if(document.activeElement!==renderer.domElement||state.current.paused||talkRef.current!==null)return;if(k==='e'||k==='f'){e.preventDefault();actions.current.interact();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
+    const removeNpcTap = bindNpcTap(renderer.domElement, camera, residents.map(npc => npc.group),
+      () => !state.current.paused && talkRef.current === null,
+      index => actions.current.talkToResident(index));
+    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkRef.current!==null){e.preventDefault();actions.current.close();return;}if(document.activeElement!==renderer.domElement||state.current.paused||talkRef.current!==null)return;if(k==='e'){e.preventDefault();actions.current.interact();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
     const up=e=>keys.current.delete(e.key.toLowerCase()),clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);renderer.domElement.addEventListener('blur',clear);
     const blocked=(x,z)=>Math.hypot(x,z-2)<3.55||(Math.abs(x)<8.5&&z< -16)||Math.abs(x)>29||z>29||z< -18||HOUSES.some(([hx,hz])=>Math.abs(x-hx)<3.5&&Math.abs(z-hz)<3)||[[-22,-12],[22,-12]].some(([sx,sz])=>Math.hypot(x-sx,z-sz)<4);
     const target=new THREE.Vector3(), shift=new THREE.Vector3(), interactionFocus=new THREE.Vector3();
@@ -149,6 +160,7 @@ export default function TempleVillage({ campaignNavigation,language, paused, red
       renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
     return ()=>{
+      removeNpcTap();
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener('keydown',down);
@@ -177,7 +189,7 @@ export default function TempleVillage({ campaignNavigation,language, paused, red
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'}</p>}
     {nearExit&&talk===null&&<button className="lake-portal-action" onClick={interact}>{en?'Enter passage to ruins':'Entrar na passagem para as ruínas'} <kbd>E</kbd></button>}
     {nearCave&&talk===null&&<button className="lake-portal-action" onClick={interact}>{en?'Enter the cave':'Entrar na caverna'} <kbd>E</kbd></button>}
-    {!nearExit&&!nearCave&&near>=0&&talk===null&&<div className="village-actions"><button onClick={interact}>{en?'Talk to':'Conversar com'} {NAMES[near]} <kbd>F</kbd></button></div>}
+    {!nearExit&&!nearCave&&near>=0&&talk===null&&<div className="village-actions"><button onClick={interact}>{en?'Talk to':'Conversar com'} {NAMES[near]} <kbd>E</kbd></button></div>}
     {talk!==null&&<section className="npc-dialogue" role="dialog" aria-labelledby="resident-title" tabIndex={-1} ref={dialoguePanel}>
       <div className="npc-dialogue-heading">
         <span className="npc-avatar" style={{background:talk===-2?'#657064':['#a36f51','#d0aa77','#798c68','#76684d','#8a7555','#9d735b','#688077'][talk%7]}} aria-hidden="true">{talk===-2?'*':NAMES[talk][0]}</span>

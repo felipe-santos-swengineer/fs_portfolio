@@ -66,9 +66,7 @@ Estas regras se aplicam a novos mapas e a alterações nos mapas existentes. Sig
 - NÃO capture screenshots.
 - NÃO inicie o servidor de desenvolvimento.
 - NÃO execute testes automatizados.
-- Não execute build e lint.
 - NÃO instale ferramentas de validação.
 - NÃO realize ciclos repetitivos de verificação.
 - NÃO execute processos de monitoramento contínuo.
-- Realize somente a análise estática necessária e implemente diretamente as alterações no código.
 - A validação visual e funcional será realizada manualmente por mim.

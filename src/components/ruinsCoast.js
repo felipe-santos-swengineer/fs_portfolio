@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createRapidsWater } from './rapidsScenery';
 import { COLUMNS, SHIPWRECK, SHORE_POINTS, SHRINES, shorePoint } from './ruinsWorld';
 
 const TAU = Math.PI * 2;
@@ -91,7 +92,9 @@ export function createCoveCoast(scene) {
     const radius = Math.hypot(x, z);
     strata.forEach(([offset], layer) => {
       const scale = 1 + (offset + (layer > 2 ? .48 * Math.sin(index * .83 + layer) : 0)) / radius;
-      positions.push(x * scale, beachHeight(index, layer), z * scale);
+      const bankX = x * scale, bankZ = z * scale;
+      const mouth = bankZ > 24 ? 1 - THREE.MathUtils.smoothstep(Math.abs(bankX), 5.5, 10) : 0;
+      positions.push(bankX, beachHeight(index, layer) - 2 * mouth, bankZ);
       tint.set(sand[layer]).multiplyScalar(1 + .07 * Math.sin(index * 1.51 + layer) + .055 * Math.cos(index * .69));
       colors.push(tint.r, tint.g, tint.b);
       if (layer > 0) {
@@ -155,6 +158,32 @@ export function createCoveCoast(scene) {
     return instances;
   };
   const stones = ['#64748b', '#575e62', '#828984', '#6f775d', '#918775'];
+  // Trace the rapids upstream from the arrival basin. The upper bend disappears
+  // behind the canyon walls; at the lower end the foam fades into the cove.
+  const riverSections = [
+    // centre x, elevation, z, half-width
+    [0, .11, 28, 7.4], [0, .15, 35, 6.7], [0, .4, 41, 6.2],
+    [-.5, 1.1, 46, 5.8], [-1, 2.8, 49, 5.4], [-1, 3.2, 55, 5.2],
+    [1, 4.2, 62, 5.1], [5, 5.8, 68, 4.8], [12, 7.2, 73, 4.6],
+    [21, 8.5, 78, 4.4], [28, 9.2, 87, 4.1],
+  ];
+  const channel = new THREE.PlaneGeometry(1, 1, 1, riverSections.length - 1);
+  const channelPoints = channel.attributes.position, channelUV = channel.attributes.uv;
+  const walls = batch(rock, material('#ffffff'), (riverSections.length - 2) * 2);
+  riverSections.forEach(([x, y, z, halfWidth], row) => {
+    for (const [column, side] of [[0, -1], [1, 1]]) {
+      const index = row * 2 + column;
+      channelPoints.setXYZ(index, x + side * halfWidth, y, z);
+      channelUV.setXY(index, column, (z - 28) / 59);
+      if (row < 2) continue;
+      const height = Math.min(8, 1.5 + (row - 2) * 1.25);
+      set(walls, (row - 2) * 2 + column, x + side * (halfWidth + 2.4),
+        y + height * .16, z, 4.1, height, 6.4, side * row * .32, stones[(row + column) % stones.length]);
+    }
+  });
+  channel.computeBoundingSphere();
+  const current = put(coast, channel, createRapidsWater(tide, false, true), 0, 0, 0);
+  current.renderOrder = 1;
   const wood = ['#78583d', '#8c6a4d', '#9e8060', '#594735'];
   const plants = ['#496b45', '#60764b', '#777e51', '#959262'];
   const grassPositions = [];
@@ -183,7 +212,10 @@ export function createCoveCoast(scene) {
       const index = sector * 7 + Math.floor(range(0, 7));
       const point = shoreline[i % 3 === 0 ? index : Math.round(centre + range(-2.3, 2.3)) % SHORE_POINTS];
       const scale = 1 + offset / Math.hypot(point.x, point.z);
-      return [point.x * scale + range(-.8, .8), point.z * scale + range(-.8, .8)];
+      let x = point.x * scale + range(-.8, .8);
+      const z = point.z * scale + range(-.8, .8);
+      if (z > 30 && Math.abs(x) < 9) x += x < 0 ? -10 : 10;
+      return [x, z];
     };
     for (let i = 0; i < 20; i++) {
       const offshore = i < 7;

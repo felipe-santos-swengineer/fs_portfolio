@@ -61,9 +61,8 @@ Marina, Duarte, Abaré, Elara e Alden acompanham o jogador com o olhar. Os perso
 | Rotacionar a câmera | Arrastar com o mouse ou um dedo; botões de rotação |
 | Aproximar ou afastar | Roda do mouse, gesto de pinça ou botões de zoom |
 | Abrir um edifício | Clicar nele ou pressionar E perto da entrada |
-| Conversar | Clicar no personagem ou pressionar F quando estiver próximo |
-| Atacar na caverna ou no calabouço | J ou espaço; botão de ataque no celular |
-| Atacar o dragão | E, J ou espaço; botão de ataque no celular |
+| Conversar | Clicar no personagem ou pressionar E quando estiver próximo |
+| Atacar na caverna, no calabouço e nas lutas contra o dragão e o rei | Espaço no teclado ou botão Atacar junto às setas |
 | Usar portal ou entrada próxima | E; em portais de retorno também é possível tocar no portal ou atravessá-lo |
 | Fechar uma janela | Escape ou botão de fechar |
 | Centralizar a câmera | Botão Focar personagem |

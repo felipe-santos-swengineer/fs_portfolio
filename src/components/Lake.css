@@ -53,7 +53,7 @@
   right: var(--campaign-side);
 }
 .lake-viewport > :is(.rapids-hud, .ruins-status, .cave-status, .cursed-heading,
-  .corridor-status, .dragon-chamber-status, .courtyard-status) {
+  .corridor-status, .dragon-chamber-status, .courtyard-status, .tunnel-region) {
   top: var(--campaign-top);
   left: var(--campaign-side);
   max-width: min(44%, 30rem);
@@ -76,7 +76,7 @@
   max-width: 100%;
 }
 .lake .lake-viewport :is(.rapids-hud, .ruins-status, .cave-status, .cursed-heading,
-  .chamber-heading, .battle-hud, .witch-battle-status, .corridor-hud) {
+  .chamber-heading, .battle-hud, .witch-battle-status, .corridor-hud, .tunnel-region) {
   box-sizing: border-box;
   min-height: 44px;
   padding: var(--campaign-card-padding);

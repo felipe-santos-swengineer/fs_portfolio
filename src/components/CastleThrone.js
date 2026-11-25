@@ -8,9 +8,14 @@ import { poseAdventurerStride, poseAdventurerSword } from './adventurerAnimation
 import { sceneFrameDelta } from './sceneFrameDelta';
 import { isRunning, setTouchMovement } from './touchMovement';
 import TouchAttack from './TouchAttack';
+import TouchInteract from './TouchInteract';
 import MapControlGuide from './MapControlGuide';
 import { buildRoyalArena, createCastleLord } from './royalArena';
+import { createCastleCelebration, createPrincess } from './dragonAftermath';
+import { facePlayer } from './facePlayer';
+import { isDungeonPortalTap } from './dungeonPortalTap';
 import kingDialogue from './kingDialogue.json';
+import castlePrincessDialogue from './castlePrincessDialogue.json';
 import './Lake.css';
 import './CursedCastle.css';
 
@@ -22,15 +27,21 @@ const arrows = [['arrowleft','←','Left','Esquerda'],['arrowup','↑','Forward'
   ['arrowdown','↓','Back','Trás'],['arrowright','→','Right','Direita']];
 const walkKeys = ['w','a','s','d','shift',...arrows.map(([key])=>key)];
 
-export default function CastleThrone({ en, paused, reduceMotion, keys, campaignNavigation, voiceEnabled, voiceNotice, onSpeak, onStop, onSound, onBattleStart, onRestart, onReturn }) {
-  const host=useRef(null), attack=useRef(null), live=useRef(null), skipIntro=useRef(null);
+export default function CastleThrone({ en, paused, reduceMotion, keys, campaignNavigation, voiceEnabled, voiceNotice, onSpeak, onStop, onSound, onBattleStart, onVictoryChange, onRestart, onReturn, onPrincessSpeak, speaking, onReturnVillage }) {
+  const host=useRef(null), attack=useRef(null), live=useRef(null), skipIntro=useRef(null), skipBattle=useRef(null), kingLaughsEnabled=useRef(false);
+  const princessNearRef=useRef(false), princessTalkingRef=useRef(false), princessActionRef=useRef(null), princessLangRef=useRef(null);
   const introVoiceDone=useRef(false), introVoiceSucceeded=useRef(false), introGapElapsed=useRef(0);
-  live.current={paused,reduceMotion,onSound,onBattleStart,voiceEnabled,en,onStop};
+  live.current={paused,reduceMotion,onSound,onBattleStart,onVictoryChange,voiceEnabled,en,onStop,onPrincessSpeak};
   const [status,setStatus]=useState(initial);
   const [error,setError]=useState(false);
   const [intro,setIntro]=useState(false);
   const [introLine,setIntroLine]=useState(-1);
+  const [battleStarted,setBattleStarted]=useState(false);
+  const [princessLine,setPrincessLine]=useState(0);
+  const [princessNear,setPrincessNear]=useState(false);
+  const [princessTalking,setPrincessTalking]=useState(false);
   const active=status.health>0 && status.lives>0 && !error;
+  const won=status.health===0 && status.lives>0 && !error;
   useEffect(()=>{
     if(!intro || introLine<0 || paused || !voiceEnabled) {
       onStop?.();
@@ -51,6 +62,16 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
   },[en,intro,introLine,onSpeak,onStop,paused,voiceEnabled]);
   useEffect(()=>()=>onStop?.(),[onStop]);
   useEffect(()=>{
+    if(paused) onSound?.('king-laugh-stop');
+    else if(kingLaughsEnabled.current) onSound?.('king-laugh-start');
+  },[paused,onSound]);
+  useEffect(()=>{ princessLangRef.current?.(en?'en-US':'pt-BR'); },[en]);
+  useEffect(()=>{
+    if(!princessTalking) return;
+    if(!paused && voiceEnabled) live.current.onPrincessSpeak?.(princessLine);
+    return ()=>live.current.onStop?.();
+  },[princessTalking,princessLine,paused,voiceEnabled]);
+  useEffect(()=>{
     const mount=host.current;
     let renderer;
     try { renderer=new THREE.WebGLRenderer({antialias:true}); }
@@ -61,7 +82,8 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
     const scene=new THREE.Scene();
     scene.background=new THREE.Color('#34313a');
     scene.fog=new THREE.FogExp2('#393642',.014);
-    scene.add(new THREE.HemisphereLight('#c6d6e3','#403a38',1.65));
+    const hemi=new THREE.HemisphereLight('#c6d6e3','#403a38',1.65);
+    scene.add(hemi);
     const light=new THREE.DirectionalLight('#d8c8bb',1.2);
     light.position.set(-9,19,14); scene.add(light);
     const rim=new THREE.PointLight('#a98aff',95,22);
@@ -69,6 +91,11 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
     const shapes=buildRoyalArena(scene);
     const {king,weapon,legs,castingArm}=createCastleLord(scene,shapes);
     const {player,body,limbs,sword}=createAdventurer(scene,shapes);
+    const princessNpc=createPrincess(scene,shapes), princess=princessNpc.group;
+    princess.position.set(0,0,0);
+    princessNpc.setLanguage(live.current.en?'en-US':'pt-BR');
+    princessLangRef.current=princessNpc.setLanguage;
+    const celebration=createCastleCelebration(scene,shapes,live.current.en?'en-US':'pt-BR');
     king.position.set(0,1.15,-15.1);
     king.rotation.y=0;
     legs.forEach(leg=>{leg.rotation.x=-1.35;});
@@ -240,22 +267,22 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
     for(let i=0;i<18;i++) sparks.push(shapes.sphere(scene,.045,'#a790ca',Math.sin(i*7)*5,1+i%5,-15+Math.cos(i)*2,true));
     // Keep the courtyard orbit independent of the extra framing distance.
     const camera=new THREE.PerspectiveCamera(48,1,.1,160);
-    const orbitCamera=camera.clone();
-    orbitCamera.position.set(0,4.35,player.position.z+7.5);
-    const orbit=allowRunAndRotate(new OrbitControls(orbitCamera,canvas));
-    orbit.target.set(0,2.75,player.position.z);
+    camera.position.set(player.position.x,player.position.y+11,player.position.z+14);
+    const orbit=allowRunAndRotate(new OrbitControls(camera,canvas));
+    orbit.target.copy(player.position);
+    orbit.target.y+=1.2;
     orbit.enablePan=false; orbit.enableDamping=true;
-    orbit.minDistance=5; orbit.maxDistance=15; orbit.maxPolarAngle=Math.PI/2-.07;
+    orbit.minDistance=7; orbit.maxDistance=32; orbit.maxPolarAngle=Math.PI/2-.07;
     orbit.update();
-    const focus=new THREE.Vector3(), shift=new THREE.Vector3(), offset=new THREE.Vector3();
-    const local=new THREE.Vector3(), inverse=new THREE.Quaternion();
+    const focus=new THREE.Vector3(), shift=new THREE.Vector3();
     const cinematicPosition=new THREE.Vector3(), cinematicFocus=new THREE.Vector3(), returnPosition=new THREE.Vector3();
     const sceneExitOffset=new THREE.Vector3();
-    let introActive=false, introStarted=false, introComplete=false, introDistance=0, introSpoken=-1, introLineElapsed=0;
-    let framingDistance=0;
+    let introActive=false, introStarted=false, introComplete=false, introSpoken=-1, introLineElapsed=0;
+    // A cutscene só começa quando o jogador realmente se aproxima do rei.
+    const introStartGap=Math.hypot(player.position.x-king.position.x,player.position.z-king.position.z);
     function updateCamera(dt) {
-      focus.copy(player.position).lerp(king.position,.23);
-      focus.y=2.35;
+      focus.copy(player.position);
+      focus.y+=1.2;
       if(introActive) {
         orbit.enabled=false;
         orbit.enableDamping=false;
@@ -266,39 +293,21 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
         const exitBlend=teleportStarted?THREE.MathUtils.smoothstep(teleportTime,.2,.78):0;
         cinematicPosition.set(king.position.x,king.position.y+4.4,king.position.z+10.2);
         cinematicFocus.set(king.position.x,king.position.y+2.7,king.position.z);
-        cinematicPosition.lerpVectors(orbitCamera.position,cinematicPosition,Math.min(1,dt*1.35));
+        cinematicPosition.lerpVectors(camera.position,cinematicPosition,Math.min(1,dt*1.35));
         cinematicFocus.lerpVectors(orbit.target,cinematicFocus,Math.min(1,dt*1.35));
         returnPosition.copy(focus).add(sceneExitOffset);
         cinematicPosition.lerp(returnPosition,exitBlend);
         cinematicFocus.lerp(focus,exitBlend);
-        orbitCamera.position.copy(cinematicPosition);
+        camera.position.copy(cinematicPosition);
         orbit.target.copy(cinematicFocus);
         orbit.update();
-        camera.position.copy(orbitCamera.position);
-        camera.quaternion.copy(orbitCamera.quaternion);
         shapes.updateView(camera.position);
         return;
       }
-      orbitCamera.position.add(shift.subVectors(focus,orbit.target));
+      camera.position.add(shift.subVectors(focus,orbit.target));
       orbit.target.copy(focus);
       orbit.enableDamping=!live.current.reduceMotion;
       orbit.update();
-      offset.subVectors(orbitCamera.position,focus);
-      let required=offset.length();
-      inverse.copy(orbitCamera.quaternion).invert();
-      const tanY=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-      for(const actor of [player,king]) {
-        local.copy(actor.position).sub(focus).applyQuaternion(inverse);
-        const width=actor===king?1.9:.85, height=actor===king?4.85:2.55;
-        // Reserve space below the feet for the sword warnings and control guide.
-        required=Math.max(required,local.z+(Math.abs(local.x)+width)/(tanY*camera.aspect*.85),
-          local.z+(1.15-local.y)/(tanY*.86));
-        shift.set(0,height,0).applyQuaternion(inverse);
-        required=Math.max(required,local.z+shift.z+(local.y+shift.y+.35)/(tanY*.83));
-      }
-      framingDistance=Math.max(required,THREE.MathUtils.damp(framingDistance,required,5,dt));
-      camera.position.copy(focus).addScaledVector(offset.normalize(),framingDistance);
-      camera.quaternion.copy(orbitCamera.quaternion);
       shapes.updateView(camera.position);
     }
     const resize=()=>{
@@ -370,9 +379,16 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
       if(!introActive) return;
       introActive=false;
       introComplete=true;
+      orbit.target.copy(player.position);
+      orbit.target.y+=1.2;
+      camera.position.copy(orbit.target).add(sceneExitOffset);
+      orbit.update();
       introSpoken=-1;
       live.current.onStop?.();
       live.current.onBattleStart?.();
+      kingLaughsEnabled.current=true;
+      setBattleStarted(true);
+      if(!live.current.paused) live.current.onSound?.('king-laugh-start');
       setIntro(false);
       setIntroLine(-1);
       clear();
@@ -395,7 +411,7 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
       introVoiceDone.current=false;
       introVoiceSucceeded.current=false;
       introGapElapsed.current=0;
-      sceneExitOffset.subVectors(orbitCamera.position,orbit.target);
+      sceneExitOffset.subVectors(camera.position,orbit.target);
       setIntro(true);
       setIntroLine(0);
       clear();
@@ -428,6 +444,49 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
       if(teleportStarted&&teleportTime>=.78) finishKingIntro();
     }
     skipIntro.current=finishKingIntro;
+    const defeatKing=()=>{
+      health=0;
+      setStatus({health,lives});
+      kingLaughsEnabled.current=false;
+      live.current.onSound?.('king-laugh-stop');
+      king.visible=false;
+      princess.visible=true;
+      celebration.root.visible=true;
+      player.position.set(0,0,3.2);
+      player.rotation.y=Math.PI;
+      facePlayer(princess,player);
+      shapes.setProsperous(true);
+      scene.background.set('#87a8c4');
+      scene.fog.color.set('#b8cde0');
+      scene.fog.density=.006;
+      hemi.color.set('#fff6dc');
+      hemi.groundColor.set('#c4a97d');
+      hemi.intensity=2.4;
+      light.color.set('#fff1c7');
+      light.intensity=2.2;
+      rim.color.set('#ffd980');
+      rim.intensity=140;
+      sparks.forEach(s=>{
+        s.material.color.set('#ffe48f');
+        s.material.emissive.set('#ffd257');
+        s.material.emissiveIntensity=1.2;
+      });
+      clearZone(); clear(); magicOrb.visible=false; magicImpact.visible=false;
+      kingShield.visible=false; immuneText.visible=false;
+      rageAura.visible=false; rageLight.intensity=0;
+      rangedAttack=false; spinAttack=false;
+      castingArm.rotation.z=0;
+      legs.forEach(leg=>{leg.rotation.x=0;});
+      king.position.y=0;
+      magicTrail.forEach(bead=>{bead.visible=false;});
+      live.current.onVictoryChange?.();
+      live.current.onSound('win');
+      canvas.focus({preventScroll:true});
+    };
+    skipBattle.current=()=>{
+      if(live.current.paused || introActive || !introComplete || !health || !lives) return;
+      defeatKing();
+    };
     attack.current=()=>{
       if(live.current.paused || introActive || !introComplete || !health || !lives || cooldown>0) return;
       swing=.45; cooldown=.54; live.current.onSound('attack');
@@ -438,22 +497,50 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
         return;
       }
       kingInvulnerability=.8;
-      health--; kingFlash.trigger(); setStatus({health,lives});
-      if(!health) {
-        clearZone(); clear(); magicOrb.visible=false; magicImpact.visible=false;
-        kingShield.visible=false; immuneText.visible=false;
-        magicTrail.forEach(bead=>{bead.visible=false;});
-        live.current.onSound('win');
-      }
+      health--; kingFlash.trigger();
+      if(!health) defeatKing();
+      else setStatus({health,lives});
     };
+    const talkPrincess=open=>{
+      if(open && (health>0 || !lives || !princessNearRef.current || live.current.paused)) return;
+      princessTalkingRef.current=open;
+      setPrincessTalking(open);
+      clear();
+      if(!open) canvas.focus({preventScroll:true});
+    };
+    princessActionRef.current=talkPrincess;
     const down=e=>{
-      if(live.current.paused || e.ctrlKey || e.altKey || e.metaKey) return;
       const key=e.key.toLowerCase();
-      if([' ','e','j'].includes(key)) { e.preventDefault(); if(!e.repeat) attack.current(); }
+      if(key==='escape' && princessTalkingRef.current && !live.current.paused) {
+        e.preventDefault();
+        princessActionRef.current?.(false);
+        return;
+      }
+      if(live.current.paused || princessTalkingRef.current || e.ctrlKey || e.altKey || e.metaKey) return;
+      if(key==='e' && !e.repeat && !health && lives>0 && princessNearRef.current) {
+        e.preventDefault();
+        princessActionRef.current?.(true);
+        return;
+      }
+      if(key===' ') { e.preventDefault(); if(!e.repeat) attack.current(); }
       else if(walkKeys.includes(key)) { e.preventDefault(); keys.current.add(key); }
     };
     const up=e=>keys.current.delete(e.key.toLowerCase());
+    let pointerStart=null;
+    const raycaster=new THREE.Raycaster(), pointer=new THREE.Vector2();
+    const pointerDown=e=>{ if(e.isPrimary && e.button===0) pointerStart={id:e.pointerId,x:e.clientX,y:e.clientY}; };
+    const pointerUp=e=>{
+      const start=pointerStart; pointerStart=null;
+      if(!princess.visible || health>0 || !lives || !isDungeonPortalTap(start,e,live.current.paused,princessTalkingRef.current)) return;
+      const bounds=canvas.getBoundingClientRect();
+      if(!bounds.width || !bounds.height) return;
+      pointer.set((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1);
+      raycaster.setFromCamera(pointer,camera);
+      if(raycaster.intersectObject(princess,true).length) princessActionRef.current?.(true);
+    };
+    const pointerCancel=()=>{ pointerStart=null; };
     canvas.addEventListener('keydown',down); canvas.addEventListener('blur',clear);
+    canvas.addEventListener('pointerdown',pointerDown); canvas.addEventListener('pointerup',pointerUp); canvas.addEventListener('pointercancel',pointerCancel);
     window.addEventListener('keyup',up); window.addEventListener('blur',clear);
     function walk(dt) {
       const pressed=keys.current;
@@ -461,15 +548,14 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
       const z=Number(pressed.has('w')||pressed.has('arrowup'))-Number(pressed.has('s')||pressed.has('arrowdown'));
       camera.getWorldDirection(forward); forward.y=0; forward.normalize(); right.crossVectors(forward,camera.up);
       move.copy(forward).multiplyScalar(z).addScaledVector(right,x).normalize();
-      const p=player.position, startX=p.x, startZ=p.z, speed=isRunning(pressed)?6.5:4;
+      const p=player.position, speed=isRunning(pressed)?6.5:4;
       p.x=THREE.MathUtils.clamp(p.x+move.x*dt*speed,-11.7,11.7);
       p.z=THREE.MathUtils.clamp(p.z+move.z*dt*speed,-11.6,16);
       if(x||z) player.rotation.y=Math.atan2(move.x,move.z);
       poseAdventurerStride(limbs,age,x||z,live.current.reduceMotion);
-      if(!introStarted) {
-        introDistance+=Math.hypot(p.x-startX,p.z-startZ);
-        if(introDistance>=2.4) startKingIntro();
-      }
+      // Andar para trás ou para os lados não dispara a introdução: é preciso
+      // reduzir a distância até o rei em pelo menos 2,4 unidades.
+      if(!introStarted && distance()<=introStartGap-2.4) startKingIntro();
     }
     function fight(dt) {
       const p=player.position, b=king.position, gap=distance(), furious=health<=6;
@@ -608,7 +694,7 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
     }
     function draw(now) {
       const dt=previous?sceneFrameDelta(now,previous):0; previous=now;
-      orbit.enabled=!live.current.paused;
+      orbit.enabled=!live.current.paused && !princessTalkingRef.current;
       if(live.current.paused) clear();
       else {
         age+=dt;
@@ -696,7 +782,19 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
           immuneText.visible=false;
           rangedAttack=false;
           spinAttack=false;
-          castingArm.rotation.z=live.current.reduceMotion?0:THREE.MathUtils.damp(castingArm.rotation.z,0,14,dt);
+          if(!lives && health>0) {
+            const sway=live.current.reduceMotion?0:Math.sin(age*2.2);
+            const chuckle=live.current.reduceMotion?0:Math.sin(age*7)*(.5+.5*Math.sin(age*1.1));
+            king.rotation.y=Math.atan2(player.position.x-king.position.x,player.position.z-king.position.z);
+            king.rotation.x=-.04+.025*chuckle;
+            king.rotation.z=.018*sway;
+            const armPose=-.38+.07*chuckle;
+            castingArm.rotation.z=live.current.reduceMotion?armPose:THREE.MathUtils.damp(castingArm.rotation.z,armPose,8,dt);
+            weapon.rotation.x=live.current.reduceMotion?0:THREE.MathUtils.damp(weapon.rotation.x,0,8,dt);
+            weapon.position.y=2+.035*sway;
+          } else {
+            castingArm.rotation.z=live.current.reduceMotion?0:THREE.MathUtils.damp(castingArm.rotation.z,0,14,dt);
+          }
           legs.forEach(leg=>{
             leg.rotation.x=live.current.reduceMotion?0:THREE.MathUtils.damp(leg.rotation.x,0,14,dt);
           });
@@ -705,8 +803,15 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
         playerFlash.update(dt,live.current.reduceMotion);
         kingFlash.update(dt,live.current.reduceMotion);
         if(!health) {
-          king.rotation.z=live.current.reduceMotion?1.45:THREE.MathUtils.damp(king.rotation.z,1.45,4,dt);
-          rim.intensity=THREE.MathUtils.damp(rim.intensity,14,2,dt);
+          if(lives) {
+            if(!princessTalkingRef.current) walk(dt);
+            else poseAdventurerStride(limbs,age,false,live.current.reduceMotion);
+            const near=Math.hypot(player.position.x-princess.position.x,player.position.z-princess.position.z)<4;
+            if(near!==princessNearRef.current) { princessNearRef.current=near; setPrincessNear(near); }
+            facePlayer(princess,player);
+            princess.position.y=live.current.reduceMotion?0:Math.sin(age*1.5)*.025;
+            if(celebration.root.visible) celebration.update(age,live.current.en?'en-US':'pt-BR',live.current.reduceMotion);
+          }
         }
         if(!live.current.reduceMotion) sparks.forEach((s,i)=>{s.position.y=1+i%5+Math.sin(age+i)*.35;});
       }
@@ -715,13 +820,14 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
     const visibility=()=>{ cancelAnimationFrame(frame); clear(); previous=0; if(!document.hidden) frame=requestAnimationFrame(draw); };
     document.addEventListener('visibilitychange',visibility); visibility();
     return ()=>{
-      cancelAnimationFrame(frame); clear(); attack.current=null; skipIntro.current=null; observer.disconnect(); orbit.dispose();
+      kingLaughsEnabled.current=false; live.current.onSound?.('king-laugh-stop');
+      cancelAnimationFrame(frame); clear(); attack.current=null; skipIntro.current=null; skipBattle.current=null; princessActionRef.current=null; princessLangRef.current=null; observer.disconnect(); orbit.dispose();
       document.removeEventListener('visibilitychange',visibility); canvas.removeEventListener('keydown',down);
-      canvas.removeEventListener('blur',clear); window.removeEventListener('keyup',up); window.removeEventListener('blur',clear);
+      canvas.removeEventListener('blur',clear); canvas.removeEventListener('pointerdown',pointerDown); canvas.removeEventListener('pointerup',pointerUp); canvas.removeEventListener('pointercancel',pointerCancel); window.removeEventListener('keyup',up); window.removeEventListener('blur',clear);
       clearZone(); playerFlash.reset(); kingFlash.reset(); damageRed.dispose(); immuneTexture.dispose();
       const geometries=new Set(), materials=new Set();
       scene.traverse(o=>{ if(o.isInstancedMesh)o.dispose(); if(o.geometry)geometries.add(o.geometry); if(o.material)materials.add(o.material); });
-      geometries.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); renderer.dispose(); canvas.remove();
+      geometries.forEach(g=>g.dispose()); materials.forEach(m=>{m.map?.dispose();m.dispose();}); renderer.dispose(); canvas.remove();
     };
   },[keys]);
   const title=en?'Castle Lord':'Senhor do Castelo';
@@ -731,8 +837,11 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
       {intro && <button className="battle-skip" disabled={paused} onClick={()=>skipIntro.current?.()}>
         {en?'Skip cutscene':'Pular cena'}
       </button>}
+      {active && battleStarted && !intro && <button className="battle-skip" disabled={paused} onClick={()=>skipBattle.current?.()}>
+        {en?'Skip battle':'Pular luta'}
+      </button>}
     </div>
-    <div className="courtyard-status"><div className="cursed-heading"><strong>{en?'Evil Throne Room':'Sala do Trono Maligno'}</strong></div>
+    <div className="courtyard-status"><div className="cursed-heading"><strong>{won?(en?'Purified Throne Room':'Sala do Trono Purificada'):(en?'Evil Throne Room':'Sala do Trono Maligno')}</strong></div>
       {active && <div className="witch-battle-status"><span className="witch-lives" aria-label={en?`Player health ${status.lives}/${initial.lives}`:`Vida do jogador ${status.lives}/${initial.lives}`}>{'♥'.repeat(status.lives)}{'♡'.repeat(initial.lives-status.lives)}</span>
         <small className="witch-health">{title} · {status.health}/{initial.health}</small></div>}</div>
     {intro && introLine>=0 && <div className="chamber-subtitle castle-intro-subtitle" role="status" aria-live="polite">
@@ -741,13 +850,21 @@ export default function CastleThrone({ en, paused, reduceMotion, keys, campaignN
       {!voiceEnabled && <small>{en?'Enable voices in audio settings to hear the king.':'Ative as vozes nas configurações de áudio para ouvir o rei.'}</small>}
       {voiceEnabled && voiceNotice && <small>{voiceNotice}</small>}
     </div>}
-    {!active && <div className="witch-battle-status courtyard-progress" role="status">
-      <strong>{error?(en?'Could not open the 3D room.':'Não foi possível abrir a sala 3D.'):status.health===0?(en?'The crown falls silent.':'A coroa silencia.'):(en?'You fell before the throne.':'Você caiu diante do trono.')}</strong>
-      <button className="courtyard-action" disabled={paused} onClick={status.health===0?onReturn:onRestart}>{status.health===0?(en?'Return to the entrance':'Voltar à entrada'):(en?'Try again':'Tentar novamente')}</button></div>}
-    {active && !intro && <MapControlGuide language={en ? 'en-US' : 'pt-BR'} scene="castleThrone" />}
-    </div><div className="lake-touch sword-controls" hidden={intro}>{arrows.map(([key,symbol,english,portuguese])=><button key={key} aria-label={en?english:portuguese} disabled={!active || paused || intro}
+    {!active && !won && <div className="witch-battle-status courtyard-progress" role="status">
+      <strong>{error?(en?'Could not open the 3D room.':'Não foi possível abrir a sala 3D.'):(en?'You fell before the throne.':'Você caiu diante do trono.')}</strong>
+      <button className="courtyard-action" disabled={paused} onClick={onRestart}>{en?'Try again':'Tentar novamente'}</button></div>}
+    {won && princessNear && !princessTalking && <div className="village-actions"><button className="villager-talk" onClick={()=>princessActionRef.current?.(true)}>{en?'Talk to':'Conversar com'} {en?'Princess Elara':'Princesa Elara'} <kbd>E</kbd></button></div>}
+    {won && princessTalking && <section className="npc-dialogue" aria-label={en?'Conversation with Princess Elara':'Conversa com a Princesa Elara'}>
+      <div className="npc-dialogue-heading"><span className="npc-avatar" style={{background:'#b77391'}}>E</span><div><h2>Elara</h2><small>{en?'Princess':'Princesa'}</small></div><button onClick={()=>princessActionRef.current?.(false)} aria-label={en?'End conversation':'Encerrar conversa'}>×</button></div>
+      <p aria-live="polite">{castlePrincessDialogue[en?'en-US':'pt-BR'][princessLine]}</p>
+      <div className="npc-dialogue-actions"><button disabled={!voiceEnabled} onClick={()=>speaking?onStop?.():onPrincessSpeak?.(princessLine)}>{speaking?(en?'Stop voice':'Parar voz'):(en?'Listen':'Ouvir mensagem')}</button>{princessLine===0?<button onClick={()=>setPrincessLine(1)}>{en?'Next message':'Outra mensagem'} {'\u2197'}</button>:<><button onClick={onReturnVillage}>{en?'Return to the starting village':'Voltar \u00e0 vila inicial'}</button><button onClick={onRestart}>{en?'Fight the king again':'Enfrentar o rei novamente'}</button></>}</div>
+      {(!voiceEnabled||voiceNotice)&&<small className="npc-voice-note">{voiceNotice||(en?'Enable NPC voices in audio settings.':'Ative as vozes dos NPCs nas configura\u00e7\u00f5es de \u00e1udio.')}</small>}
+    </section>}
+    {(active || won) && !intro && !princessTalking && <MapControlGuide language={en ? 'en-US' : 'pt-BR'} scene="castleThrone" purified={won} />}
+    </div><div className="lake-touch sword-controls" hidden={intro}>{arrows.map(([key,symbol,english,portuguese])=><button key={key} aria-label={en?english:portuguese} disabled={(!active && !won) || paused || intro || princessTalking}
       onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);setTouchMovement(keys.current,key,true);}}
       onPointerUp={()=>setTouchMovement(keys.current,key,false)} onLostPointerCapture={()=>setTouchMovement(keys.current,key,false)}
       onPointerCancel={()=>setTouchMovement(keys.current,key,false)}>{symbol}</button>)}
-      <TouchAttack en={en} disabled={!active || paused || intro} onAttack={()=>attack.current?.()}/></div></section>;
+      {won && <TouchInteract language={en?'en-US':'pt-BR'} onInteract={()=>princessActionRef.current?.(true)} disabled={paused || !princessNear || princessTalking} />}
+      {active && <TouchAttack en={en} disabled={!active || paused || intro} onAttack={()=>attack.current?.()}/>}</div></section>;
 }

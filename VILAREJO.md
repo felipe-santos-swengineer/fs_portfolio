@@ -41,7 +41,7 @@ Os testes incluem auditoria estrutural com axe-core, navegação de foco, ajuste
 
 Quatro NPCs articulados passeiam com destinos aleatórios e pequenas pausas: Bia, guardiã da biblioteca; Tom, artesão; Lia, mensageira; e Rui, anfitrião da taverna. As rotas são calculadas em uma malha que respeita as casas, a fonte e os limites transitáveis.
 
-Clique em um morador ou pressione **F** quando estiver próximo. Um botão contextual para conversar também aparece junto ao tutorial quando há um morador por perto. O morador selecionado para de caminhar e se volta ao visitante durante a conversa. Cada um possui duas mensagens de agradecimento, alternadas a cada interação. **Outra mensagem** troca o diálogo; Escape ou o botão de fechar encerra a conversa.
+Clique em um morador ou pressione **E** quando estiver próximo. Um botão contextual para conversar também aparece junto ao tutorial quando há um morador por perto. O morador selecionado para de caminhar e se volta ao visitante durante a conversa. Cada um possui duas mensagens de agradecimento, alternadas a cada interação. **Outra mensagem** troca o diálogo; Escape ou o botão de fechar encerra a conversa.
 
 Com os sons da vila ativados, a mensagem é reproduzida por um MP3 local gerado previamente com voz neural. O texto exibido é o mesmo usado na geração. Cada personagem tem uma voz própria, sem mudanças artificiais de pitch ou velocidade na reprodução:
 

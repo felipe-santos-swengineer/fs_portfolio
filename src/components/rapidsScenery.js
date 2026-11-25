@@ -20,6 +20,7 @@ const waterFragment = `
   #include <fog_pars_fragment>
   uniform float time;
   uniform float waterfall;
+  uniform float outlet;
   uniform vec3 deep;
   uniform vec3 shallow;
   uniform vec3 foam;
@@ -51,12 +52,23 @@ const waterFragment = `
       color = mix(shallow * .57, foam, clamp(.43 + streak * .19 + cascade * .27 + (1.0 - uv.y) * .18, 0.0, 1.0));
       opacity = smoothstep(0.0, .13, min(uv.x, 1.0 - uv.x)) * .94;
     }
+    if (outlet > .5) opacity *= smoothstep(0.0, .16, surface.y) * smoothstep(0.0, .10, min(surface.x, 1.0 - surface.x));
     gl_FragColor = vec4(color, opacity);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
     #include <fog_fragment>
   }
 `;
+
+export function createRapidsWater(time, waterfall = false, outlet = false) {
+  return new THREE.ShaderMaterial({
+    uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), time, waterfall: { value: Number(waterfall) }, outlet: { value: Number(outlet) },
+      deep: { value: new THREE.Color('#164e63') }, shallow: { value: new THREE.Color('#38bdf8') },
+      foam: { value: new THREE.Color('#e2e8f0') } },
+    vertexShader: waterVertex, fragmentShader: waterFragment, fog: true,
+    transparent: true, depthWrite: !waterfall, side: waterfall ? THREE.DoubleSide : THREE.FrontSide,
+  });
+}
 
 export function createRapidsScenery(scene, riverY, distance, obstacles) {
   const root = new THREE.Group();
@@ -75,15 +87,8 @@ export function createRapidsScenery(scene, riverY, distance, obstacles) {
     parent.add(object);
     return object;
   };
-  const waterMaterial = waterfall => new THREE.ShaderMaterial({
-    uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), time, waterfall: { value: waterfall },
-      deep: { value: new THREE.Color('#164e63') }, shallow: { value: new THREE.Color('#38bdf8') },
-      foam: { value: new THREE.Color('#e2e8f0') } },
-    vertexShader: waterVertex, fragmentShader: waterFragment, fog: true,
-    transparent: true, depthWrite: !waterfall, side: waterfall ? THREE.DoubleSide : THREE.FrontSide,
-  });
-  const river = waterMaterial(0);
-  const fallingWater = waterMaterial(1);
+  const river = createRapidsWater(time);
+  const fallingWater = createRapidsWater(time, true);
   const center = 5 - distance / 2;
   const water = mesh(root, new THREE.PlaneGeometry(25, distance + 100), river, 0, riverY(center), center);
   water.rotation.x = -Math.PI / 2 - Math.atan(riverY(6) - riverY(5));

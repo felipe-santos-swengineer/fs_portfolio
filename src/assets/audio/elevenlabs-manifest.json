@@ -1,0 +1,962 @@
+[
+  {
+    "character": "cursed-king",
+    "locale": "pt-BR",
+    "file": "castle-king/pt-1.mp3",
+    "text": "Você chegou mais longe do que eu esperava.",
+    "voice_id": "QrI5hzjSoTw2k9P20I0r",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "y9ufU0EC0L6JhriNZ8jx",
+    "credits": 42
+  },
+  {
+    "character": "cursed-king",
+    "locale": "pt-BR",
+    "file": "castle-king/pt-2.mp3",
+    "text": "Admiro sua determinação. Poucos chegaram até este salão.",
+    "voice_id": "QrI5hzjSoTw2k9P20I0r",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "AaPFhZutH1s6O53xcFk5",
+    "credits": 56
+  },
+  {
+    "character": "cursed-king",
+    "locale": "pt-BR",
+    "file": "castle-king/pt-3.mp3",
+    "text": "Mas desafiar o Trono Maligno tem um preço. Agora, você será punido!",
+    "voice_id": "QrI5hzjSoTw2k9P20I0r",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "IMHYRprwpJCGEODZoxQ3",
+    "credits": 67
+  },
+  {
+    "character": "dragon",
+    "locale": "pt-BR",
+    "file": "dragon/pt-elevenlabs-1.mp3",
+    "text": "Sinto o cheiro de um invasor... Veio roubar o MEU ouro?!",
+    "voice_id": "5BP8gDVZ9dvJLlPqClsx",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "ZmGRWWRAvZSaeGZrHD6n",
+    "credits": 56
+  },
+  {
+    "character": "dragon",
+    "locale": "pt-BR",
+    "file": "dragon/pt-elevenlabs-2.mp3",
+    "text": "Tão pequeno... e ainda assim atravessou minha caverna.",
+    "voice_id": "5BP8gDVZ9dvJLlPqClsx",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "jGsg0WFXKCWgtz9W1N0Y",
+    "credits": 54
+  },
+  {
+    "character": "dragon",
+    "locale": "pt-BR",
+    "file": "dragon/pt-elevenlabs-3.mp3",
+    "text": "Aproxime-se, ladrão. Suas cinzas se juntarão aos que vieram antes.",
+    "voice_id": "5BP8gDVZ9dvJLlPqClsx",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "sPKP6KqdX4kMf5ZRs3tg",
+    "credits": 66
+  },
+  {
+    "character": "old-witch",
+    "locale": "pt-BR",
+    "file": "witch-dialogue/pt-BR/line-1.mp3",
+    "text": "Sua jornada chegou ao fim, viajante.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "On9XHHMKYVysNR6JNVyD",
+    "credits": 36
+  },
+  {
+    "character": "old-witch",
+    "locale": "pt-BR",
+    "file": "witch-dialogue/pt-BR/line-2.mp3",
+    "text": "Eu ouvi seus passos do outro lado da pedra.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "Tu0ZhH9lZwpagG2VJ3nd",
+    "credits": 43
+  },
+  {
+    "character": "old-witch",
+    "locale": "pt-BR",
+    "file": "witch-dialogue/pt-BR/line-3.mp3",
+    "text": "Achou mesmo que o corredor era a pior parte?",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "3g8ZNd2GnhoHtx9RCGzB",
+    "credits": 44
+  },
+  {
+    "character": "old-witch",
+    "locale": "pt-BR",
+    "file": "witch-dialogue/pt-BR/line-4.mp3",
+    "text": "Escute a chuva. Ela vai abafar seus gritos.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "FOPA2IA8f26EPNutqG09",
+    "credits": 43
+  },
+  {
+    "character": "old-witch",
+    "locale": "pt-BR",
+    "file": "witch-dialogue/pt-BR/line-5.mp3",
+    "text": "Eu mesma porei um fim em você.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "I0DJtdFoBxjC5w6eoHF7",
+    "credits": 30
+  },
+  {
+    "character": "Elara",
+    "locale": "pt-BR",
+    "file": "princess/pt-1.mp3",
+    "text": "Você conseguiu! Salvou nossa aldeia do mal que o dragão espalhava.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "Nf5IuoTmlpGjAzczk5y4",
+    "credits": 66
+  },
+  {
+    "character": "Elara",
+    "locale": "pt-BR",
+    "file": "princess/pt-2.mp3",
+    "text": "Nosso povo poderá viver em paz novamente. Terá para sempre a nossa gratidão, bravo herói.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "X3X3gLvkq4L7SVabbvM5",
+    "credits": 89
+  },
+  {
+    "character": "Elara",
+    "locale": "pt-BR",
+    "file": "princess/castle-pt-1.mp3",
+    "text": "Você conseguiu! Derrotou o rei maligno e libertou todo o reino das trevas.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "hFpUUtgkWclCOOwxdt4B",
+    "credits": 74
+  },
+  {
+    "character": "Elara",
+    "locale": "pt-BR",
+    "file": "princess/castle-pt-2.mp3",
+    "text": "A paz voltou ao castelo e à nossa vila. Terá para sempre a nossa gratidão, bravo herói.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "u4gQvqAxjk7G9iT0pgoH",
+    "credits": 87
+  },
+  {
+    "character": "Marina",
+    "locale": "pt-BR",
+    "file": "lake-guide/pt-1.mp3",
+    "text": "Chegue mais perto. Está ouvindo a cachoeira? Dizem que, há muito tempo, dois espíritos fizeram um pacto com este rio. Gosto de vir aqui e ouvir o que a água tem para contar.",
+    "voice_id": "EXAVITQu4vr4xnSDxMaL",
+    "generation_id": "MMbOdyyxcFD7Y48g1r7z",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 173
+  },
+  {
+    "character": "Marina",
+    "locale": "pt-BR",
+    "file": "lake-guide/pt-2.mp3",
+    "text": "Vê a cachoeira ali adiante? Há uma gruta atrás da queda. Quando quiser seguir viagem, pegue o barco. A passagem para as corredeiras fica lá.",
+    "voice_id": "EXAVITQu4vr4xnSDxMaL",
+    "generation_id": "oYvFDzPcITcztd3fxeB5",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 140
+  },
+  {
+    "character": "Duarte",
+    "locale": "pt-BR",
+    "file": "ruins-pirate/pt-1.mp3",
+    "text": "Ahoy, viajante! Meu navio naufragou entre estas rochas. Não faço ideia de onde estou, mas fico feliz em ver outro rosto por aqui.",
+    "voice_id": "N2lVS1w4EtoT3dr4eOWO",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "2AzitDZCWBo3GCmMAUgs",
+    "credits": 129
+  },
+  {
+    "character": "Duarte",
+    "locale": "pt-BR",
+    "file": "ruins-pirate/pt-2.mp3",
+    "text": "Aquela porta antiga parece esconder algum segredo. Acredito que exista uma maneira de abri-la. Talvez aquelas runas nas ilhas possam nos dar uma pista.",
+    "voice_id": "N2lVS1w4EtoT3dr4eOWO",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "1yVCqBrlxg8rBbTsn9o3",
+    "credits": 151
+  },
+  {
+    "character": "Davi",
+    "locale": "pt-BR",
+    "file": "cave/pt-1.mp3",
+    "text": "Estou perdido desde que as pedras fecharam o caminho. Há criaturas adiante. Por favor, tenha cuidado.",
+    "voice_id": "cjVigY5qzO86Huf0OWal",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "0bDimFVHy4UnmakxGRbe",
+    "credits": 101
+  },
+  {
+    "character": "Mara",
+    "locale": "pt-BR",
+    "file": "cave/pt-2.mp3",
+    "text": "Procurei abrigo aqui, mas não encontro a saída. O rugido do dragão vem das profundezas.",
+    "voice_id": "pFZP5JQG7iQjIQuC4Bku",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "CBd8ZX6rebHstJF2sTAB",
+    "credits": 87
+  },
+  {
+    "character": "Alden",
+    "locale": "pt-BR",
+    "file": "cursed-castle-npc/pt-1.mp3",
+    "text": "Sou Alden, antigo guarda dos arquivos. Antes da maldição, este castelo protegia o vale e abrigava um povoado cheio de vida.",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "qWID7OWcxbOEpH4qtzD3",
+    "credits": 123
+  },
+  {
+    "character": "Alden",
+    "locale": "pt-BR",
+    "file": "cursed-castle-npc/pt-2.mp3",
+    "text": "Dizem que o senhor do castelo tentou dominar uma força antiga. Naquela noite, os sinos tocaram sozinhos e uma névoa cobriu as muralhas.",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "APgJX39oYeqmrQXFj76V",
+    "credits": 135
+  },
+  {
+    "character": "Alden",
+    "locale": "pt-BR",
+    "file": "cursed-castle-npc/pt-3.mp3",
+    "text": "Os soldados que entraram não voltaram. Ninguém sabe o que ainda vive lá dentro. Tome cuidado, aventureiro.",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "ZBLSRca49EZweNvUWbc1",
+    "credits": 106
+  },
+  {
+    "character": "Aruã",
+    "locale": "pt-BR",
+    "file": "temple/pt-1.mp3",
+    "text": "O Ancião dorme além do templo. Somos seus súditos; fale baixo, viajante.",
+    "voice_id": "SAz9YHcvj6GT2YYXdXww",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "LrAyH4cPzjyvkJGqaA9l",
+    "credits": 72
+  },
+  {
+    "character": "Jaci",
+    "locale": "pt-BR",
+    "file": "temple/pt-2.mp3",
+    "text": "Nossas famílias vivem perto da caverna para servir ao deus-dragão. Ninguém quer chamar sua ira.",
+    "voice_id": "nPczCjzI2devNBz1zQrb",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "DFBwOlfvKKjg1ICdtDWy",
+    "credits": 95
+  },
+  {
+    "character": "Potira",
+    "locale": "pt-BR",
+    "file": "temple/pt-3.mp3",
+    "text": "Cada oferenda diante da escultura é um pedido: que o Ancião permaneça adormecido.",
+    "voice_id": "xrKqcvKLaQvveV07zBaR",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "ZovpTPAxSaZJaVxyQ1D3",
+    "credits": 81
+  },
+  {
+    "character": "Cauã",
+    "locale": "pt-BR",
+    "file": "temple/pt-4.mp3",
+    "text": "Vigio a entrada da caverna. Se ouvir as pedras tremerem, afaste-se e não olhe para trás.",
+    "voice_id": "SOYHLrjzK2X1ezoPC6cr",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "OnH5FJFTt7Ham0VzsIX9",
+    "credits": 88
+  },
+  {
+    "character": "Tupã",
+    "locale": "pt-BR",
+    "file": "temple/pt-5.mp3",
+    "text": "Dizem que o deus ancião exige súditos. Moramos aqui porque tememos o que aconteceria se partíssemos.",
+    "voice_id": "pNInz6obpgDQGcFmaJgB",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "yWFdKWIU5P8TKciyiH5I",
+    "credits": 100
+  },
+  {
+    "character": "Iara",
+    "locale": "pt-BR",
+    "file": "temple/pt-6.mp3",
+    "text": "As tochas queimam toda noite para o Ancião. Tenho medo do dia em que elas se apagarem.",
+    "voice_id": "0SPbwsQMh0YMtHHFcLu7",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "GtCBhbPkHimr8PQQ3hUR",
+    "credits": 86
+  },
+  {
+    "character": "Ubiratan",
+    "locale": "pt-BR",
+    "file": "temple/pt-7.mp3",
+    "text": "Os lobos se calam quando um rugido vem da montanha. Nessa hora, todos procuramos abrigo.",
+    "voice_id": "onwK4e9ZLuTAKqWW03F9",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "VuAlpOFekQU1laFU3Wio",
+    "credits": 88
+  },
+  {
+    "character": "Araci",
+    "locale": "pt-BR",
+    "file": "temple/pt-8.mp3",
+    "text": "Preparo as ervas da oferenda. Se o dragão despertar insatisfeito, nem os guardas poderão nos salvar.",
+    "voice_id": "V1UKBG07JncCBGNfCKPa",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "gUVovIsW84Xmj7LVVOkO",
+    "credits": 100
+  },
+  {
+    "character": "Apoena",
+    "locale": "pt-BR",
+    "file": "temple/pt-9.mp3",
+    "text": "Construímos as torres para observar a caverna. Uma sombra sobre o templo é sinal para tocar o alarme.",
+    "voice_id": "FQ5UEodLrlDPFJ74R9xh",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "XTkFVJIygHZ17muVdkZY",
+    "credits": 101
+  },
+  {
+    "character": "Moema",
+    "locale": "pt-BR",
+    "file": "temple/pt-10.mp3",
+    "text": "Cantamos ao redor da fogueira para honrar nosso deus e esconder o medo que sentimos dele.",
+    "voice_id": "5cHw2FPV11tjurURIttW",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "BzLxqaLAIm7iZKOBstxa",
+    "credits": 89
+  },
+  {
+    "character": "Ceci",
+    "locale": "pt-BR",
+    "file": "temple/pt-11.mp3",
+    "text": "Minha avó diz que o Ancião ouve até os sussurros. Por isso eu nunca grito perto do templo.",
+    "voice_id": "e3FEEanj39p8QCSMe8iV",
+    "generation_id": "x1z0gHauu99Kj0EpNUCM",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 90
+  },
+  {
+    "character": "Cauê",
+    "locale": "pt-BR",
+    "file": "temple/pt-12.mp3",
+    "text": "Quando a montanha ronca, eu fico junto da minha família e espero o dragão voltar a dormir.",
+    "voice_id": "EeQEodFZVtBkjtgK3HBc",
+    "generation_id": "FwluzobSx0zk4nBdHmNw",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 90
+  },
+  {
+    "character": "Yara",
+    "locale": "pt-BR",
+    "file": "temple/pt-13.mp3",
+    "text": "Aprendi a deixar flores na escultura. Quero que o deus ancião saiba que não queremos incomodá-lo.",
+    "voice_id": "VOGEEZj2Kly5dP9LrQy8",
+    "generation_id": "dUpKWy8Mm4HM5Rcn15fS",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 97
+  },
+  {
+    "character": "Abaré",
+    "locale": "pt-BR",
+    "file": "temple/pt-14.mp3",
+    "text": "Ouça-me, viajante. Além destas escadas dorme o dragão que chamamos de Ancião. Nós o servimos porque tememos sua ira. Tenha muito cuidado: se ele despertar, sua fúria poderá consumir toda a ilha.",
+    "voice_id": "pqHfZKP75CvOlQylNhV4",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "jNaYTKmqxOFkACF4LLh1",
+    "credits": 194
+  },
+  {
+    "character": "Bia",
+    "locale": "pt-BR",
+    "file": "villagers/bia-1.mp3",
+    "text": "Que bom receber você por aqui! Obrigada por visitar o portfólio do Felipe. Na biblioteca, você encontra a formação, as experiências e as ideias que acompanham essa jornada.",
+    "voice_id": "Xb7hH8MSUJpSbSDYk0k2",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "AAaUQuDosVNvqsqLJ0O5",
+    "credits": 172
+  },
+  {
+    "character": "Bia",
+    "locale": "pt-BR",
+    "file": "villagers/bia-2.mp3",
+    "text": "Cada visita traz uma nova história para a vila. Obrigada por dedicar seu tempo ao trabalho do Felipe. Explore com calma: sempre há algo para descobrir!",
+    "voice_id": "Xb7hH8MSUJpSbSDYk0k2",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "nLqa6kzoaGarzRXlqmBW",
+    "credits": 151
+  },
+  {
+    "character": "Tom",
+    "locale": "pt-BR",
+    "file": "villagers/tom-1.mp3",
+    "text": "Olá, viajante! Obrigado por visitar o portfólio do Felipe. Na oficina, as ideias ganham forma: entre para conhecer os projetos e as soluções que ele construiu.",
+    "voice_id": "IKne3meq5aSn9XLyUdCD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "tWMSqM99M0dvzyQvev1Q",
+    "credits": 159
+  },
+  {
+    "character": "Tom",
+    "locale": "pt-BR",
+    "file": "villagers/tom-2.mp3",
+    "text": "Uma boa criação começa com curiosidade. Obrigado por trazer a sua até aqui! Dê uma olhada nos projetos da oficina e, se uma ideia surgir, passe no correio para conversar.",
+    "voice_id": "IKne3meq5aSn9XLyUdCD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "TeloGt9QGEpjs5h2FsIW",
+    "credits": 170
+  },
+  {
+    "character": "Lia",
+    "locale": "pt-BR",
+    "file": "villagers/lia-1.mp3",
+    "text": "Boas-vindas à vila! Obrigada por conhecer o portfólio do Felipe. Se quiser trocar ideias ou conversar sobre um projeto, o correio tem os caminhos para entrar em contato.",
+    "voice_id": "FGY2WhTYpPnrIDTdsKH5",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "un4I7roBhTOwC5fMTVd8",
+    "credits": 169
+  },
+  {
+    "character": "Lia",
+    "locale": "pt-BR",
+    "file": "villagers/lia-2.mp3",
+    "text": "Sua visita já faz parte desta jornada. Obrigada por passear pela vila! Espero que você encontre inspiração por aqui e uma boa oportunidade de começar uma conversa.",
+    "voice_id": "FGY2WhTYpPnrIDTdsKH5",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "0R85gChsnWe3NQpWuOWh",
+    "credits": 163
+  },
+  {
+    "character": "Rui",
+    "locale": "pt-BR",
+    "file": "villagers/rui-1.mp3",
+    "text": "Entre e fique à vontade! Obrigado por visitar o portfólio do Felipe. A taverna guarda as histórias que deram origem a esta vila. Escolha uma porta e faça seu próprio caminho.",
+    "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "I6bLClmStKdKQHSaAeMt",
+    "credits": 174
+  },
+  {
+    "character": "Rui",
+    "locale": "pt-BR",
+    "file": "villagers/rui-2.mp3",
+    "text": "Sempre cabe mais uma pessoa nesta aventura. Obrigado pelo seu tempo e pela visita! Conheça a trajetória do Felipe, ouça as histórias e volte quando quiser.",
+    "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "uQqkqLXcbOwJHUakeUVM",
+    "credits": 155
+  },
+  {
+    "character": "Felipe",
+    "locale": "pt-BR",
+    "file": "felipe-1.mp3",
+    "text": "Olá! Eu sou Felipe Santos. Muito obrigado pela visita e por dedicar um pouco do seu tempo para conhecer meu trabalho. Fique à vontade para explorar a vila, descobrir minhas histórias e conhecer os projetos em cada construção.",
+    "voice_id": "iP95p4xoKVk53GoZ742B",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "hQKKi2Wuy8kNCx920fpu",
+    "credits": 225
+  },
+  {
+    "character": "Felipe",
+    "locale": "pt-BR",
+    "file": "felipe-2.mp3",
+    "text": "Se quiser explorar além da vila, atravesse o portal para conhecer o lago, as ruínas e a ilha do dragão. E, quando quiser conversar, passe pelo correio ou entre em contato. Vou gostar de conhecer você, trocar ideias e quem sabe trabalhar juntos.",
+    "voice_id": "iP95p4xoKVk53GoZ742B",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "ri3SfKcGYk7bpwXJ9HZp",
+    "credits": 244
+  },
+  {
+    "character": "cursed-king",
+    "locale": "en-US",
+    "file": "castle-king/en-1.mp3",
+    "text": "You've come farther than I expected.",
+    "voice_id": "QrI5hzjSoTw2k9P20I0r",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "GCoM3XCSkFGAVPBGzEru",
+    "credits": 36
+  },
+  {
+    "character": "cursed-king",
+    "locale": "en-US",
+    "file": "castle-king/en-2.mp3",
+    "text": "I admire your determination. Few have reached this hall.",
+    "voice_id": "QrI5hzjSoTw2k9P20I0r",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "Yrbr88FjEnc9DK7WcAfn",
+    "credits": 56
+  },
+  {
+    "character": "cursed-king",
+    "locale": "en-US",
+    "file": "castle-king/en-3.mp3",
+    "text": "But defying the Evil Throne has a price. Now, you will be punished!",
+    "voice_id": "QrI5hzjSoTw2k9P20I0r",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "MdfErbiQWejfnoeBYB4w",
+    "credits": 67
+  },
+  {
+    "character": "dragon",
+    "locale": "en-US",
+    "file": "dragon/en-finevoice-1.mp3",
+    "text": "I smell an intruder... Have you come to steal MY gold?!",
+    "voice_id": "5BP8gDVZ9dvJLlPqClsx",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "GjBc8jw4SNEBMiup1M7a",
+    "credits": 55
+  },
+  {
+    "character": "dragon",
+    "locale": "en-US",
+    "file": "dragon/en-finevoice-2.mp3",
+    "text": "So small... and yet you crossed my cavern.",
+    "voice_id": "5BP8gDVZ9dvJLlPqClsx",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "yTeOLV6MGPq41y44LA1X",
+    "credits": 42
+  },
+  {
+    "character": "dragon",
+    "locale": "en-US",
+    "file": "dragon/en-finevoice-3.mp3",
+    "text": "Come closer, thief. Your ashes will join those who came before you.",
+    "voice_id": "5BP8gDVZ9dvJLlPqClsx",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "he9WEewwPhBTgU2NyOCR",
+    "credits": 67
+  },
+  {
+    "character": "old-witch",
+    "locale": "en-US",
+    "file": "witch-dialogue/en-US/line-1.mp3",
+    "text": "Your journey ends here, traveler.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "5CeVLFO9vxfEsVh6P0zy",
+    "credits": 33
+  },
+  {
+    "character": "old-witch",
+    "locale": "en-US",
+    "file": "witch-dialogue/en-US/line-2.mp3",
+    "text": "I heard your footsteps through the stone.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "1SACeUHFrwvIcL3X53Ai",
+    "credits": 41
+  },
+  {
+    "character": "old-witch",
+    "locale": "en-US",
+    "file": "witch-dialogue/en-US/line-3.mp3",
+    "text": "Did you really think the corridor was the worst of it?",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "cIXP5WVyBRKXTZMeeb2h",
+    "credits": 54
+  },
+  {
+    "character": "old-witch",
+    "locale": "en-US",
+    "file": "witch-dialogue/en-US/line-4.mp3",
+    "text": "Listen to the rain. It’ll drown out your screams.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "UaQM19u0TIYd3YGyXhqi",
+    "credits": 49
+  },
+  {
+    "character": "old-witch",
+    "locale": "en-US",
+    "file": "witch-dialogue/en-US/line-5.mp3",
+    "text": "I’ll put an end to you myself.",
+    "voice_id": "85nTQEXrIYIpQxb83ADD",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "chbeVmHPpT247pIIWZCR",
+    "credits": 30
+  },
+  {
+    "character": "Elara",
+    "locale": "en-US",
+    "file": "princess/en-1.mp3",
+    "text": "You did it! You saved our village from the dragon and brought peace.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "fTWzO8jvPOrmCW2q4fXI",
+    "credits": 68
+  },
+  {
+    "character": "Elara",
+    "locale": "en-US",
+    "file": "princess/en-2.mp3",
+    "text": "Our people can live in peace again. You will always have our gratitude, brave hero.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "XkrMsMGYbGje9EwyBv1i",
+    "credits": 83
+  },
+  {
+    "character": "Elara",
+    "locale": "en-US",
+    "file": "princess/castle-en-1.mp3",
+    "text": "You did it! You defeated the evil king and freed the entire kingdom from darkness.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "W3GgMpAG6n5qK1Tzo7nm",
+    "credits": 82
+  },
+  {
+    "character": "Elara",
+    "locale": "en-US",
+    "file": "princess/castle-en-2.mp3",
+    "text": "Peace has returned to the castle and our village. You will always have our gratitude, brave hero.",
+    "voice_id": "XrExE9yKIg1WjnnlVkGX",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "By1QQEenHelu7D1GSNBo",
+    "credits": 97
+  },
+  {
+    "character": "Marina",
+    "locale": "en-US",
+    "file": "lake-guide/en-1.mp3",
+    "text": "Come a little closer. Can you hear the waterfall? They say two spirits made a pact with this river long ago. I like to sit here and listen to the stories the water tells.",
+    "voice_id": "EXAVITQu4vr4xnSDxMaL",
+    "generation_id": "tIkBPCATQa8SWZrLDzNS",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 170
+  },
+  {
+    "character": "Marina",
+    "locale": "en-US",
+    "file": "lake-guide/en-2.mp3",
+    "text": "See the waterfall up ahead? There's a grotto behind the falls. When you're ready, take the boat over. That's where you'll find the passage to the rapids.",
+    "voice_id": "EXAVITQu4vr4xnSDxMaL",
+    "generation_id": "jqesAJDW031KXMKtcNXG",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 153
+  },
+  {
+    "character": "Duarte",
+    "locale": "en-US",
+    "file": "ruins-pirate/en-1.mp3",
+    "text": "Ahoy, traveler! My ship was wrecked among these rocks. I have no idea where I am, but I am glad to see another face around here.",
+    "voice_id": "N2lVS1w4EtoT3dr4eOWO",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "MC77DJh3ztYbD5pDTeZ4",
+    "credits": 128
+  },
+  {
+    "character": "Duarte",
+    "locale": "en-US",
+    "file": "ruins-pirate/en-2.mp3",
+    "text": "That ancient door seems to hide a secret. I believe there must be a way to open it. Perhaps those runes on the islands will give us a clue.",
+    "voice_id": "N2lVS1w4EtoT3dr4eOWO",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "EZgU9oJxDnNAZDcWFdry",
+    "credits": 139
+  },
+  {
+    "character": "Davi",
+    "locale": "en-US",
+    "file": "cave/en-1.mp3",
+    "text": "I have been lost since the rocks blocked the way. There are creatures ahead. Please be careful.",
+    "voice_id": "cjVigY5qzO86Huf0OWal",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "bbssGqpk5Phbd0mDyMAF",
+    "credits": 95
+  },
+  {
+    "character": "Mara",
+    "locale": "en-US",
+    "file": "cave/en-2.mp3",
+    "text": "I sought shelter here, but I cannot find the way out. The dragon’s roar comes from the depths.",
+    "voice_id": "pFZP5JQG7iQjIQuC4Bku",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "5AjHwtOwe0SWaQmJ5tmP",
+    "credits": 94
+  },
+  {
+    "character": "Alden",
+    "locale": "en-US",
+    "file": "cursed-castle-npc/en-1.mp3",
+    "text": "I am Alden, former keeper of the archives. Before the curse, this castle guarded the valley and sheltered a lively settlement.",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "47npcJTmowRnHDNMhxhg",
+    "credits": 126
+  },
+  {
+    "character": "Alden",
+    "locale": "en-US",
+    "file": "cursed-castle-npc/en-2.mp3",
+    "text": "They say the lord of the castle tried to master an ancient power. That night, the bells rang by themselves and mist covered the walls.",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "N30FpXTWbI5L8ZMCUhHX",
+    "credits": 134
+  },
+  {
+    "character": "Iara",
+    "locale": "en-US",
+    "file": "temple/en-6.mp3",
+    "text": "The torches burn each night for the Elder. I fear the day they go out.",
+    "voice_id": "0SPbwsQMh0YMtHHFcLu7",
+    "model_id": "eleven_multilingual_v2",
+    "generation_id": "cfOV4gvB7j3GkTbP6vBk",
+    "credits": 70
+  },
+  {
+    "character": "Ceci",
+    "locale": "en-US",
+    "file": "temple/en-11.mp3",
+    "text": "Grandmother says the Elder hears even whispers. So I never shout near the temple.",
+    "voice_id": "e3FEEanj39p8QCSMe8iV",
+    "generation_id": "5HaK7nUswMW2vXKqzQGC",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 81
+  },
+  {
+    "character": "Cauê",
+    "locale": "en-US",
+    "file": "temple/en-12.mp3",
+    "text": "When the mountain growls, I stay with my family and wait for the dragon to sleep again.",
+    "voice_id": "EeQEodFZVtBkjtgK3HBc",
+    "generation_id": "oIKuFCrta3ncIJanlTZq",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 87
+  },
+  {
+    "character": "Yara",
+    "locale": "en-US",
+    "file": "temple/en-13.mp3",
+    "text": "I learned to leave flowers at the statue. I want the ancient god to know we do not wish to disturb him.",
+    "voice_id": "VOGEEZj2Kly5dP9LrQy8",
+    "generation_id": "dF2odlc43u8yahhtuXqr",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 103
+  },
+  {
+    "character": "Alden",
+    "locale": "en-US",
+    "file": "cursed-castle-npc/en-3.mp3",
+    "text": "The soldiers who went inside never returned. No one knows what still lives in there. Take care, adventurer.",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "generation_id": "Rv11FH0AT9D8KW8iS20V",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 107
+  },
+  {
+    "character": "Aruã",
+    "locale": "en-US",
+    "file": "temple/en-1.mp3",
+    "text": "The Elder sleeps beyond the temple. We are his subjects; speak softly, traveler.",
+    "voice_id": "SAz9YHcvj6GT2YYXdXww",
+    "generation_id": "qvsl1LniFCaVwpV7zeus",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 80
+  },
+  {
+    "character": "Jaci",
+    "locale": "en-US",
+    "file": "temple/en-2.mp3",
+    "text": "Our families live near the cave to serve the dragon god. No one wishes to invite his wrath.",
+    "voice_id": "nPczCjzI2devNBz1zQrb",
+    "generation_id": "TZXSme68DQHlKVbgWtNg",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 91
+  },
+  {
+    "character": "Potira",
+    "locale": "en-US",
+    "file": "temple/en-3.mp3",
+    "text": "Every offering before the statue is a plea for the Elder to remain asleep.",
+    "voice_id": "xrKqcvKLaQvveV07zBaR",
+    "generation_id": "CcXarVpMeqwL4gYTbAIN",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 74
+  },
+  {
+    "character": "Cauã",
+    "locale": "en-US",
+    "file": "temple/en-4.mp3",
+    "text": "I guard the cave entrance. If you hear the stones tremble, step away and do not look back.",
+    "voice_id": "SOYHLrjzK2X1ezoPC6cr",
+    "generation_id": "TK2hIsGXL4eyl1mgzWbC",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 90
+  },
+  {
+    "character": "Tupã",
+    "locale": "en-US",
+    "file": "temple/en-5.mp3",
+    "text": "They say the ancient god demands subjects. We live here because we fear what would happen if we left.",
+    "voice_id": "pNInz6obpgDQGcFmaJgB",
+    "generation_id": "zKAuklfbZdL90Atbhizq",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 101
+  },
+  {
+    "character": "Ubiratan",
+    "locale": "en-US",
+    "file": "temple/en-7.mp3",
+    "text": "The wolves fall silent when a roar comes from the mountain. Then we all seek shelter.",
+    "voice_id": "onwK4e9ZLuTAKqWW03F9",
+    "generation_id": "PBfd84MKXUzjjFxPiZtr",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 85
+  },
+  {
+    "character": "Araci",
+    "locale": "en-US",
+    "file": "temple/en-8.mp3",
+    "text": "I prepare herbs for the offering. If the dragon wakes displeased, not even the guards can save us.",
+    "voice_id": "V1UKBG07JncCBGNfCKPa",
+    "generation_id": "nnvL3wh0uX2kVe0w2cFW",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 98
+  },
+  {
+    "character": "Apoena",
+    "locale": "en-US",
+    "file": "temple/en-9.mp3",
+    "text": "We built the towers to watch the cave. A shadow over the temple is the signal to sound the alarm.",
+    "voice_id": "FQ5UEodLrlDPFJ74R9xh",
+    "generation_id": "FOSX6kMSAhP27Gch0xoj",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 97
+  },
+  {
+    "character": "Moema",
+    "locale": "en-US",
+    "file": "temple/en-10.mp3",
+    "text": "We sing around the fire to honor our god and hide the fear we feel for him.",
+    "voice_id": "5cHw2FPV11tjurURIttW",
+    "generation_id": "kPVktnroaXdNFvmDj8oV",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 75
+  },
+  {
+    "character": "Abaré",
+    "locale": "en-US",
+    "file": "temple/en-14.mp3",
+    "text": "Listen to me, traveler. Beyond these steps sleeps the dragon we call the Elder. We serve him because we fear his wrath. Take great care: if he awakens, his fury could consume the whole island.",
+    "voice_id": "pqHfZKP75CvOlQylNhV4",
+    "generation_id": "D20czH8p5d8sf7PRH18c",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 192
+  },
+  {
+    "character": "Bia",
+    "locale": "en-US",
+    "file": "en/bia-1.mp3",
+    "text": "It's great to welcome you here! Thank you for visiting Felipe's portfolio. In the library, you will find the training, experiences and ideas that accompany this journey.",
+    "voice_id": "Xb7hH8MSUJpSbSDYk0k2",
+    "generation_id": "gdcW6NMIbWaQXviPFJQm",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 169
+  },
+  {
+    "character": "Bia",
+    "locale": "en-US",
+    "file": "en/bia-2.mp3",
+    "text": "Each visit brings a new story to the village. Thank you for dedicating your time to Felipe’s work. Explore calmly: there is always something to discover!",
+    "voice_id": "Xb7hH8MSUJpSbSDYk0k2",
+    "generation_id": "uef6SuBcmMbAtgcTqWno",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 153
+  },
+  {
+    "character": "Tom",
+    "locale": "en-US",
+    "file": "en/tom-1.mp3",
+    "text": "Hello, traveler! Thank you for visiting Felipe's portfolio. In the workshop, ideas take shape: come in to see the projects and solutions he created.",
+    "voice_id": "IKne3meq5aSn9XLyUdCD",
+    "generation_id": "zjnAHPdLdFwk7xgYuMRd",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 148
+  },
+  {
+    "character": "Tom",
+    "locale": "en-US",
+    "file": "en/tom-2.mp3",
+    "text": "Good parenting starts with curiosity. Thanks for bringing yours here! Take a look at the workshop projects and, if an idea comes up, drop by the post office to chat.",
+    "voice_id": "IKne3meq5aSn9XLyUdCD",
+    "generation_id": "qdVH9EwJeiQfIthAA5hN",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 165
+  },
+  {
+    "character": "Lia",
+    "locale": "en-US",
+    "file": "en/lia-1.mp3",
+    "text": "Welcome to the villa! Thank you for knowing Felipe’s portfolio. If you want to exchange ideas or talk about a project, the mail has ways to get in touch.",
+    "voice_id": "FGY2WhTYpPnrIDTdsKH5",
+    "generation_id": "FJz10o3PvsodYEirHV5b",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 153
+  },
+  {
+    "character": "Lia",
+    "locale": "en-US",
+    "file": "en/lia-2.mp3",
+    "text": "Your visit is already part of this journey. Thanks for strolling through the village! I hope you find inspiration here and a good opportunity to start a conversation.",
+    "voice_id": "FGY2WhTYpPnrIDTdsKH5",
+    "generation_id": "i0LKLKPIdg3kxLb3JDas",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 166
+  },
+  {
+    "character": "Rui",
+    "locale": "en-US",
+    "file": "en/rui-1.mp3",
+    "text": "Come in and make yourself comfortable! Thank you for visiting Felipe's portfolio. The tavern keeps the stories that gave rise to this village. Choose a door and make your own path.",
+    "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+    "generation_id": "GPrUJqm0kUg4JVDURT2d",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 180
+  },
+  {
+    "character": "Rui",
+    "locale": "en-US",
+    "file": "en/rui-2.mp3",
+    "text": "There is always room for one more person on this adventure. Thank you for your time and for visiting! Discover Felipe's journey, listen to the stories and come back whenever you want.",
+    "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+    "generation_id": "lpRcB9JOyAYj7UxMkgSL",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 183
+  },
+  {
+    "character": "Felipe",
+    "locale": "en-US",
+    "file": "en/felipe-1.mp3",
+    "text": "Hello! I'm Felipe Santos. Thank you very much for visiting and for taking some of your time to get to know my work. Feel free to explore the village, discover my stories and learn about the projects in each building.",
+    "voice_id": "iP95p4xoKVk53GoZ742B",
+    "generation_id": "zBFlMbycGRCdhefSVoTF",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 216
+  },
+  {
+    "character": "Felipe",
+    "locale": "en-US",
+    "file": "en/felipe-2.mp3",
+    "text": "If you want to explore beyond the village, use the portal to discover the lake, the ruins and the dragon island. And when you want to talk, visit the post office or get in touch. I would love to meet you, exchange ideas and perhaps work together.",
+    "voice_id": "iP95p4xoKVk53GoZ742B",
+    "generation_id": "mS6DJBul2nLwWIBOIKif",
+    "model_id": "eleven_multilingual_v2",
+    "credits": 246
+  }
+]

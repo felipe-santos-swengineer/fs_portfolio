@@ -1,4 +1,4 @@
-import { ENGLISH_GAMES, translateDungeonMessage, dungeonPortalLabel } from './dungeonI18n';
+import { ENGLISH_GAMES, translateDungeonMessage, dungeonPortalLabel, caveReturnPortalLabel } from './dungeonI18n';
 import { ENGLISH_VILLAGE_SIGNS } from './villageNavigation';
 
 const games = [{ help: 'Colete os cristais.' }];
@@ -20,4 +20,9 @@ test('as placas principais da vila possuem versoes em ingles', () => {
 test('a placa do portal acompanha o idioma selecionado', () => {
   expect(dungeonPortalLabel('pt-BR')).toBe('RETORNO \u00c0 VILA');
   expect(dungeonPortalLabel('en-US')).toBe('RETURN TO VILLAGE');
+});
+
+test('a placa do retorno da caverna indica a enseada nos dois idiomas', () => {
+  expect(caveReturnPortalLabel('pt-BR')).toBe('RETORNO \u00c0 ENSEADA');
+  expect(caveReturnPortalLabel('en-US')).toBe('RETURN TO THE COVE');
 });

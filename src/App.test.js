@@ -6,6 +6,7 @@ jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ on
 jest.mock('./audio/VillageAudio', () => jest.fn());
 jest.mock('./assets/audio/village-bards-tale.mp3', () => 'village-track.mp3');
 jest.mock('./assets/audio/castle-kings-feast.mp3', () => 'castle-track.mp3');
+jest.mock('./assets/audio/king-victory.mp3', () => 'king-victory-track.mp3');
 jest.mock('./assets/audio/dungeon.wav', () => 'dungeon-track.wav');
 jest.mock('./assets/audio/lake-ambient.wav', () => 'lake-track.wav');
 jest.mock('./assets/audio/rapids-theme.wav', () => 'rapids-track.wav');
@@ -15,11 +16,13 @@ jest.mock('./components/ThroneHall', () => ({ __esModule: true, default: ({ onEx
 jest.mock('./components/Lake', () => ({ __esModule: true, default: ({ onExit, onEnterRapids }) => <><button onClick={onExit}>Sair do lago de teste</button><button onClick={onEnterRapids}>Entrar nas corredeiras de teste</button></> }));
 jest.mock('./components/Rapids', () => ({ __esModule: true, default: ({ onExit, onAdvance }) => <><button onClick={onExit}>Sair das corredeiras de teste</button><button onClick={onAdvance}>Avançar das corredeiras de teste</button></> }));
 jest.mock('./components/Ruins', () => ({ __esModule: true, default: ({ onExit, onEnterTunnel }) => <><button onClick={onExit}>Sair das ruínas de teste</button><button onClick={onEnterTunnel}>Entrar no túnel de teste</button></> }));
+jest.mock('./components/AncientTunnel', () => ({ __esModule: true, default: ({ onExit, onArrive, onReturnCove }) => <><button onClick={onExit}>Sair do túnel de teste</button><button onClick={onArrive}>Chegar à aldeia de teste</button><button onClick={onReturnCove}>Voltar à enseada de teste</button></> }));
 jest.mock('./components/TempleVillage', () => ({ __esModule: true, default: ({ onExit, onEnterCave }) => <><button onClick={onExit}>Sair da aldeia de teste</button><button onClick={onEnterCave}>Entrar na caverna de teste</button></> }));
-jest.mock('./components/DragonCave', () => ({ __esModule: true, default: ({ onExit, onEnterChamber, startAtChamber }) => <><button onClick={onExit}>Sair da caverna de teste</button><button onClick={onEnterChamber}>Entrar na câmara de teste</button><span data-testid="cave-arrival">{startAtChamber?'chamber':'entrance'}</span></> }));
+jest.mock('./components/DragonCave', () => ({ __esModule: true, default: ({ onExit, onEnterChamber, onReturnCove, startAtChamber }) => <><button onClick={onExit}>Sair da caverna de teste</button><button onClick={onEnterChamber}>Entrar na câmara de teste</button><button onClick={onReturnCove}>Voltar à enseada de teste</button><span data-testid="cave-arrival">{startAtChamber?'chamber':'entrance'}</span></> }));
 jest.mock('./components/DragonChamber', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair da câmara de teste</button> }));
 jest.mock('./components/Dungeon', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do calabouco de teste</button> }));
 jest.mock('./components/CursedCastle', () => ({ __esModule: true, default: ({ onExit,onEnterCastle,startNearGate }) => <><button onClick={onExit}>{'Sair do castelo amaldi\u00e7oado de teste'}</button><button onClick={onEnterCastle}>Entrar no interior de teste</button><span data-testid="castle-return">{String(startNearGate)}</span></> }));
+jest.mock('./components/CastleThrone', () => ({ __esModule: true, default: ({ onVictoryChange }) => <button onClick={onVictoryChange}>Vencer rei de teste</button> }));
 jest.mock('./components/CursedCastleCourtyard', () => ({ __esModule: true, default: ({onExit,onEncounterChange,onAdvance,interior,throneUnlocked,onThroneUnlock}) => interior
   ? <><button onClick={onExit}>Voltar ao pátio de teste</button>
     <button onClick={onThroneUnlock}>Vencer xadrez de teste</button>
@@ -352,23 +355,45 @@ test('o portal exibe corretamente os caracteres acentuados', async () => {
   expect(screen.getByRole('button', { name: /Enseada das Ru\u00ednas Submersas/ })).toBeTruthy();
 });
 
-test('o tunel abre a partir das ruinas e retorna ao mesmo mapa', async () => {
+test('o tunel abre a partir das ruinas e a chegada leva a aldeia', async () => {
   sessionStorage.setItem('portfolio-map','ruins');
   await start();
   fireEvent.click(await screen.findByRole('button', { name: 'Entrar no t\u00fanel de teste' }));
+  expect(await screen.findByRole('button', { name: 'Chegar \u00e0 aldeia de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('tunnel');
+  expect(screen.queryByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Chegar \u00e0 aldeia de teste' }));
   expect(await screen.findByRole('button', { name: 'Sair da aldeia de teste' })).toBeTruthy();
   expect(sessionStorage.getItem('portfolio-map')).toBe('temple');
-  expect(screen.queryByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Sair da aldeia de teste' }));
-  expect(screen.getByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
+  expect(await screen.findByRole('button', { name: 'Sair do t\u00fanel de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('tunnel');
+  fireEvent.click(screen.getByRole('button', { name: 'Voltar \u00e0 enseada de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
   expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
 });
 
-test('a sessao restaura o tunel com retorno para as ruinas', async () => {
-  sessionStorage.setItem('portfolio-map','tunnel');
+test('a porta da aldeia retorna a passagem antes da enseada', async () => {
+  sessionStorage.setItem('portfolio-map','temple');
   await start();
   fireEvent.click(await screen.findByRole('button', { name: 'Sair da aldeia de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair do t\u00fanel de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('tunnel');
+});
+
+test('a sessao restaura a passagem com retorno para as ruinas', async () => {
+  sessionStorage.setItem('portfolio-map','tunnel');
+  await start();
+  fireEvent.click(await screen.findByRole('button', { name: 'Sair do t\u00fanel de teste' }));
   expect(await screen.findByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
+});
+
+test('a passagem permite voltar a enseada na posicao inicial', async () => {
+  sessionStorage.setItem('portfolio-map','tunnel');
+  await start();
+  fireEvent.click(await screen.findByRole('button', { name: 'Voltar \u00e0 enseada de teste' }));
+  expect(await screen.findByRole('button', { name: 'Sair das ru\u00ednas de teste' })).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
 });
 
 test('o portal abre as ruínas e permite retornar à vila', async () => {
@@ -450,6 +475,14 @@ test('the portal reaches the cave and chamber and returns to the chamber entranc
   fireEvent.click(screen.getByRole('button', {name:'Sair da c\u00e2mara de teste'}));
   expect((await screen.findByTestId('cave-arrival')).textContent).toBe('chamber');
   expect(sessionStorage.getItem('portfolio-map')).toBe('cave');
+});
+
+test('a caverna permite voltar à enseada', async () => {
+  sessionStorage.setItem('portfolio-map','cave');
+  await start();
+  fireEvent.click(await screen.findByRole('button', {name:'Voltar à enseada de teste'}));
+  expect(await screen.findByRole('button', {name:'Sair das ruínas de teste'})).toBeTruthy();
+  expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
 });
 
 test('the portal opens the dragon chamber directly', async () => {
@@ -562,4 +595,15 @@ test.each(['cursed-castle-vestibule', 'cursed-castle-throne'])('restaura %s com 
   expect(enter.disabled).toBe(false);
   expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-throne-entrance');
   expect(screen.queryByRole('button', { name: 'Sair do salao de teste' })).toBeNull();
+});
+
+test('derrotar o rei troca a música da sala do trono e reinicia ao reviver o encontro', async () => {
+  sessionStorage.setItem('portfolio-map', 'cursed-castle-throne-entrance');
+  await start();
+  fireEvent.click(screen.getByRole('button', { name: 'Vencer xadrez de teste' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar no trono de teste' }));
+  const background = document.querySelector('audio[loop]');
+  expect(background.getAttribute('src')).toBe('cursed-castle-track.ogg');
+  fireEvent.click(await screen.findByRole('button', { name: 'Vencer rei de teste' }));
+  expect(background.getAttribute('src')).toBe('king-victory-track.mp3');
 });

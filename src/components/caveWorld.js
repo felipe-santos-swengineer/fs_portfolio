@@ -3,6 +3,9 @@ export const CAVE_SPAWN = {x:0,z:5};
 export const CAVE_CHECKPOINT = {x:0,z:-76};
 export const CAVE_CHECKPOINT_RADIUS = 3.2;
 export function nearCaveCheckpoint(x,z) { return Math.hypot(x-CAVE_CHECKPOINT.x,z-CAVE_CHECKPOINT.z)<=CAVE_CHECKPOINT_RADIUS; }
+export const CAVE_EXIT = {x:-3.5,z:7.5};
+export const CAVE_EXIT_RADIUS = 4.6;
+export function nearCaveExit(x,z) { return Math.hypot(x-CAVE_EXIT.x,z-CAVE_EXIT.z)<=CAVE_EXIT_RADIUS; }
 export const CAVE_HAZARDS = [
   {type:'lava',x:-5,z:-18,radius:3.1},{type:'lava',x:5,z:-32,radius:3.2},
   {type:'spikes',x:-4,z:-47,radius:2.4},{type:'spikes',x:4,z:-63,radius:2.4},

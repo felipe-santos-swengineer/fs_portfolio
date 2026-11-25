@@ -186,6 +186,61 @@ export function buildRoyalArena(scene) {
     const item=mesh(parent,column,color,x,y,z); item.scale.set(r,h,r); return item;
   };
   const localCamera=new THREE.Vector3();
+  const prosperousGroup=new THREE.Group();
+  prosperousGroup.visible=false;
+  scene.add(prosperousGroup);
+  const beamMat=new THREE.MeshBasicMaterial({color:'#ffe8a6',transparent:true,opacity:.14,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
+  const beamGeo=new THREE.CylinderGeometry(.9,2.8,14,12,1,true);
+  for(const [x,z] of [[-7,-6],[7,-6],[-7,6],[7,6],[0,-11]]) {
+    const beam=new THREE.Mesh(beamGeo,beamMat);
+    beam.position.set(x,7,z);
+    beam.rotation.z=x<0?-.14:x>0?.14:0;
+    prosperousGroup.add(beam);
+  }
+  for(const [x,z] of [[-9,-10],[9,-10],[-9,8],[9,8]]) {
+    const hallLight=new THREE.PointLight('#ffdf94',120,28);
+    hallLight.position.set(x,6.5,z);
+    prosperousGroup.add(hallLight);
+  }
+  const petalColors=['#f5c542','#e77c9b','#82d18e'];
+  for(const side of [-1,1]) {
+    for(let i=0;i<8;i++) {
+      const z=12-i*3.2;
+      const vase=cylinder(prosperousGroup,.34,.55,'#d9b86c',side*3.2,.28,z);
+      vase.rotation.y=i*.4;
+      sphere(prosperousGroup,.42,'#4d8b55',side*3.2,.68,z);
+      sphere(prosperousGroup,.18,petalColors[i%3],side*3.2,.95,z,true);
+    }
+  }
+  function setProsperous(enabled) {
+    prosperousGroup.visible=enabled;
+    const base=materials.get('#fffffffalse');
+    if(base) {
+      base.color.set(enabled?'#fff6e6':'#ffffff');
+      base.emissive.set(enabled?'#2d2215':'#000000');
+      base.emissiveIntensity=enabled?.45:0;
+    }
+    const goldMat=materials.get(gold+'false');
+    if(goldMat) {
+      goldMat.color.set(enabled?'#ebd07b':gold);
+      goldMat.emissive.set(enabled?'#5c4314':'#000000');
+      goldMat.emissiveIntensity=enabled?.4:0;
+    }
+    const flameMat=materials.get('#df9c61true');
+    if(flameMat) {
+      flameMat.color.set(enabled?'#ffe58f':'#df9c61');
+      flameMat.emissive.set(enabled?'#ffd166':'#df9c61');
+      flameMat.emissiveIntensity=enabled?1.6:.8;
+    }
+    const gemMat=materials.get('#785991true');
+    if(gemMat) {
+      gemMat.color.set(enabled?'#ffe894':'#785991');
+      gemMat.emissive.set(enabled?'#ffda66':'#785991');
+      gemMat.emissiveIntensity=enabled?1.6:.8;
+    }
+    ceiling.color.set(enabled?'#9c9282':'#535058');
+    gableStone.color.set(enabled?'#948b7c':'#514f52');
+  }
   function updateView(position) {
     const span=Math.min(1,Math.abs(position.x)/14.2);
     vault.visible=position.y<12.8-5.1*Math.sqrt(span)-.45;
@@ -194,7 +249,7 @@ export function buildRoyalArena(scene) {
       wall.visible=localCamera.z>1.65;
     }
   }
-  return {box,mesh,sphere,cylinder,updateView};
+  return {box,mesh,sphere,cylinder,updateView,setProsperous};
 }
 
 export function createCastleLord(scene,{box,mesh,cylinder,sphere}) {

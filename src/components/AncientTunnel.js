@@ -1,89 +1,203 @@
-import { isRunning, setTouchMovement } from './touchMovement';
+import { setTouchMovement } from './touchMovement';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createAdventurer } from './VillageScene';
 import { createLakeBoat } from './lakeBoat';
-import { cameraRelativeDirection } from './cameraRelativeDirection';
 import MapControlGuide from './MapControlGuide';
+import { sceneFrameDelta } from './sceneFrameDelta';
+import { TUNNEL, createDragonTunnel, tunnelCenter, tunnelFloor, tunnelRegion } from './dragonTunnelWorld';
 import './Lake.css';
 import './AncientTunnel.css';
-import TempleVillage from './TempleVillage';
 
-export default function AncientTunnel({language,paused,reduceMotion,onExit,onSound,inVillage,onVillageChange}) {
-  const mount=useRef(null),keys=useRef(new Set()),settings=useRef(null),messageRef=useRef(false),nearRef=useRef(false);
-  settings.current={paused,reduceMotion,onSound};
-  const [near,setNear]=useState(false),[message,setMessage]=useState(false),[error,setError]=useState(false);
-  const en=language==='en-US';
-  const examine=()=>{if(settings.current.paused || !nearRef.current)return;keys.current.clear();onVillageChange(true);settings.current.onSound?.('passage');};
-  const closeMessage=()=>{messageRef.current=false;setMessage(false);mount.current?.querySelector('canvas')?.focus({preventScroll:true});};
-  const actions=useRef({examine,closeMessage});actions.current={examine,closeMessage};
-  useEffect(()=>{
-    if(inVillage)return;
-    const el=mount.current;let renderer;
-    try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{setError(true);return;}
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.domElement.tabIndex=0;
-    renderer.domElement.setAttribute('aria-label','Ancient tunnel / Tunel antigo');el.appendChild(renderer.domElement);renderer.domElement.focus({preventScroll:true});
-    const scene=new THREE.Scene();scene.background=new THREE.Color('#0d1719');scene.fog=new THREE.Fog('#0d1719',12,46);
-    scene.add(new THREE.HemisphereLight('#566a62','#1b2420',.8));
-    const camera=new THREE.PerspectiveCamera(50,1,.1,80);
-    const add=(parent,geometry,color,x,y,z)=>{const object=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.9}));object.position.set(x,y,z);parent.add(object);return object;};
-    const water=add(scene,new THREE.PlaneGeometry(12,66),'#284d4d',0,0,-10);water.rotation.x=-Math.PI/2;water.material.roughness=.35;
-    add(scene,new THREE.BoxGeometry(16,1,66),'#273a35',0,-.8,-10);
-    add(scene,new THREE.BoxGeometry(16,1.2,66),'#303c35',0,9,-10);
-    [-1,1].forEach(side=>{
-      add(scene,new THREE.BoxGeometry(3,9,66),'#39483f',side*7.2,4,-10);
-      for(let i=0;i<9;i++){
-        const z=5-i*5.5;
-        const buttress=add(scene,new THREE.BoxGeometry(.85,7.5,1),'#4b584b',side*5.45,3.75,z);buttress.rotation.z=side*.035;
-        add(scene,new THREE.BoxGeometry(1.15,.35,1.25),'#687564',side*5.45,7.6,z);
-        if(i%2===0){
-          const bracket=add(scene,new THREE.ConeGeometry(.15,.55,7),'#755b3c',side*5.05,4,z);bracket.rotation.z=side*.3;
-          const flame=add(scene,new THREE.SphereGeometry(.16,8,6),'#e9b55f',side*4.95,4.35,z);flame.material.emissive=new THREE.Color('#c97d37');flame.material.emissiveIntensity=1;
-          const lamp=new THREE.PointLight('#ffb866',9,10);lamp.position.set(side*4.8,4.35,z);scene.add(lamp);
-        }
+const ROW_SPEED = 4.2;
+const REGION_TEXT = {
+  entrance: ['ENTRADA · A SUPERFÍCIE', 'ENTRANCE · THE SURFACE', 'Luz do dia, musgo e raízes antigas', 'Daylight, moss and ancient roots'],
+  descent: ['DESCIDA · O ABANDONO', 'DESCENT · LEAVING THE LIGHT', 'As paredes fecham-se sobre a passagem', 'The walls close in around the passage'],
+  depths: ['PROFUNDEZAS', 'THE DEEPS', 'Cristais, brasas e ecos ancestrais', 'Crystals, embers and ancestral echoes'],
+  arrival: ['CHEGADA · O VILAREJO', 'ARRIVAL · THE VILLAGE', 'Uma civilização oculta revela-se', 'A hidden civilization is revealed'],
+};
+
+export default function AncientTunnel({ campaignNavigation, language, paused, reduceMotion, fromVillage = false, onExit, onArrive, onReturnCove, onSound }) {
+  const spawnZ = fromVillage ? TUNNEL.endZ + 8 : TUNNEL.startZ - 2;
+  const mount = useRef(null), keys = useRef(new Set()), settings = useRef({}), nearRef = useRef(fromVillage), startRef = useRef(!fromVillage);
+  settings.current = { paused, reduceMotion, onSound, onArrive, onReturnCove };
+  const [near, setNear] = useState(fromVillage), [atStart, setAtStart] = useState(!fromVillage), [region, setRegion] = useState(fromVillage ? 'arrival' : 'entrance'), [error, setError] = useState(false);
+  const en = language === 'en-US';
+  const interact = () => {
+    if (settings.current.paused) return;
+    const destination = nearRef.current ? settings.current.onArrive
+      : startRef.current ? settings.current.onReturnCove : null;
+    if (!destination) return;
+    keys.current.clear();
+    settings.current.onSound?.('passage');
+    destination();
+  };
+  const actions = useRef({ interact }); actions.current = { interact };
+
+  useEffect(() => {
+    const el = mount.current; let renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch { setError(true); return; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    renderer.domElement.tabIndex = 0;
+    renderer.domElement.setAttribute('aria-label', 'Dragon village tunnel / Túnel do vilarejo do dragão');
+    el.appendChild(renderer.domElement);
+    renderer.domElement.focus({ preventScroll: true });
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(52, 1, .1, 110);
+    const world = createDragonTunnel(scene);
+    scene.add(new THREE.HemisphereLight('#93a69b', '#2b211a', 1.05));
+    const daylight = new THREE.DirectionalLight('#d4dcc8', 1.5);
+    daylight.position.set(7, 20, 26);
+    scene.add(daylight);
+
+    const add = (parent, geometry, color, x, y, z) => {
+      const object = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, roughness: .9 }));
+      object.position.set(x, y, z); parent.add(object); return object;
+    };
+    const boat = createLakeBoat(add);
+    const sail = boat.getObjectByName('boat-sail');
+    if (sail) {
+      sail.material.transparent = false;
+      sail.material.opacity = 1;
+      sail.material.depthWrite = true;
+      sail.material.fog = false;
+      sail.material.emissive.set('#4a3a24');
+      sail.material.emissiveIntensity = .28;
+      sail.material.needsUpdate = true;
+    }
+    const faceAlongPath = z => {
+      const tangentX = tunnelCenter(z - .6) - tunnelCenter(z + .6);
+      boat.rotation.y = Math.atan2(-tangentX, 1.2);
+    };
+    scene.add(boat);
+    boat.position.set(tunnelCenter(spawnZ), tunnelFloor(spawnZ) + .12, spawnZ);
+    faceAlongPath(spawnZ);
+    const lamp = new THREE.PointLight('#ffc07a', 9, 14);
+    lamp.position.set(0, 2.2, .2); boat.add(lamp);
+
+    const mesh = (parent, geometry, color, x, y, z) => add(parent, geometry, color, x, y, z);
+    const box = (parent, w, h, d, color, x, y, z) => add(parent, new THREE.BoxGeometry(w, h, d), color, x, y, z);
+    const sphere = (parent, r, color, x, y, z) => add(parent, new THREE.IcosahedronGeometry(r, 1), color, x, y, z);
+    const cylinder = (parent, r, h, color, x, y, z, segments = 8) => add(parent, new THREE.CylinderGeometry(r, r, h, segments), color, x, y, z);
+    const { player } = createAdventurer(boat, { box, sphere, mesh, cylinder });
+    player.position.set(0, 1, .55);
+    player.rotation.y = Math.PI;
+
+    let sceneDt = 0;
+    const updateCamera = instant => {
+      const aheadZ = Math.max(TUNNEL.endZ, boat.position.z - 8);
+      const aheadX = tunnelCenter(aheadZ);
+      const desired = new THREE.Vector3(
+        THREE.MathUtils.lerp(boat.position.x, aheadX, .34),
+        boat.position.y + 5.6,
+        Math.min(boat.position.z + 7.6, TUNNEL.startZ + 4));
+      if (instant) camera.position.copy(desired);
+      else camera.position.lerp(desired, Math.min(1, sceneDt * 3.2));
+      camera.lookAt(THREE.MathUtils.lerp(boat.position.x, aheadX, .45), boat.position.y + 1.4, boat.position.z - 5.5);
+    };
+    updateCamera(true);
+
+    const resize = () => {
+      const w = el.clientWidth, h = el.clientHeight;
+      if (!w || !h) return;
+      renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
+    };
+    const observer = new ResizeObserver(resize); observer.observe(el); resize();
+    const down = e => {
+      const k = e.key.toLowerCase();
+      if (document.activeElement !== renderer.domElement || settings.current.paused) return;
+      if (k === 'e') { e.preventDefault(); actions.current.interact(); return; }
+      if (['w', 's', 'arrowup', 'arrowdown'].includes(k)) {
+        e.preventDefault();
+        keys.current.add(k);
       }
-    });
-    for(let i=0;i<5;i++){const arch=add(scene,new THREE.BoxGeometry(11,.48,.6),'#626e5e',0,7.85,3-i*9);arch.rotation.z=(i%2?1:-1)*.015;}
-    const door=new THREE.Group();door.position.set(0,0,-31);scene.add(door);
-    add(door,new THREE.BoxGeometry(10,8,1),'#303a32',0,4,0);
-    const outline=add(door,new THREE.TorusGeometry(2.1,.15,8,32,Math.PI),'#8b9b81',0,3.65,.58);outline.rotation.z=0;
-    [-2.1,2.1].forEach(x=>add(door,new THREE.BoxGeometry(.3,3.65,.3),'#8b9b81',x,1.83,.58));
-    const seal=add(door,new THREE.OctahedronGeometry(.32,0),'#8cb4a0',0,4,.65);seal.material.emissive=new THREE.Color('#397a68');seal.material.emissiveIntensity=.8;
-    const boat=createLakeBoat(add);scene.add(boat);boat.position.set(0,0,4);
-    const mesh=(parent,geometry,color,x,y,z)=>add(parent,geometry,color,x,y,z);
-    const box=(parent,w,h,d,color,x,y,z)=>add(parent,new THREE.BoxGeometry(w,h,d),color,x,y,z);
-    const sphere=(parent,r,color,x,y,z)=>add(parent,new THREE.IcosahedronGeometry(r,1),color,x,y,z);
-    const cylinder=(parent,r,h,color,x,y,z,segments=8)=>add(parent,new THREE.CylinderGeometry(r,r,h,segments),color,x,y,z);
-    const {player}=createAdventurer(boat,{box,sphere,mesh,cylinder});player.position.set(0,1,.55);player.rotation.y=Math.PI;
-    const updateCamera=()=>{camera.position.set(boat.position.x,6,Math.min(boat.position.z+8,15));camera.lookAt(boat.position.x,1,boat.position.z-3);};
-    updateCamera();
-    const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
-    const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&messageRef.current&&!settings.current.paused){e.preventDefault();actions.current.closeMessage();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||messageRef.current)return;if(k==='e'){e.preventDefault();actions.current.examine();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
-    const up=e=>keys.current.delete(e.key.toLowerCase());const clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);renderer.domElement.addEventListener('blur',clear);
-    let frame,last=performance.now(),time=0,nextImpact=0;
-    const animate=now=>{
-      frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;
-      if(!settings.current.paused&&!messageRef.current){
-        time+=dt;const x=(keys.current.has('d')||keys.current.has('arrowright')?1:0)-(keys.current.has('a')||keys.current.has('arrowleft')?1:0),z=(keys.current.has('s')||keys.current.has('arrowdown')?1:0)-(keys.current.has('w')||keys.current.has('arrowup')?1:0);
-        if(x||z){const direction=cameraRelativeDirection(camera,x,z),speed=isRunning(keys.current)?6.5:4,rawX=boat.position.x+direction.x*speed*dt,rawZ=boat.position.z+direction.z*speed*dt;
-          const nx=THREE.MathUtils.clamp(rawX,-3.2,3.2),nz=THREE.MathUtils.clamp(rawZ,-26,6);
-          if((nx!==rawX||nz!==rawZ)&&time>=nextImpact){settings.current.onSound?.('stone');nextImpact=time+.9;}
-          boat.position.set(nx,boat.position.y,nz);boat.rotation.y=Math.atan2(-direction.x,-direction.z);
+    };
+    const up = e => keys.current.delete(e.key.toLowerCase()), clear = () => keys.current.clear();
+    window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
+    renderer.domElement.addEventListener('blur', clear);
+
+    let frame, last = performance.now(), time = 0, nextImpact = 0, nextAmbient = 7, nextEcho = 0, previousRegion = fromVillage ? 'arrival' : 'entrance';
+    const animate = now => {
+      frame = requestAnimationFrame(animate);
+      sceneDt = sceneFrameDelta(now, last); last = now;
+      if (!settings.current.paused) {
+        time += sceneDt;
+        const row = (keys.current.has('s') || keys.current.has('arrowdown') ? 1 : 0) - (keys.current.has('w') || keys.current.has('arrowup') ? 1 : 0);
+        if (row) {
+          const wantedZ = boat.position.z + row * ROW_SPEED * sceneDt;
+          const zNext = THREE.MathUtils.clamp(wantedZ, TUNNEL.endZ + 1, TUNNEL.startZ - 2);
+          if (zNext !== wantedZ && time >= nextImpact) {
+            settings.current.onSound?.('stone'); nextImpact = time + .9;
+          }
+          boat.position.z = zNext;
+          boat.position.x = tunnelCenter(zNext);
+          faceAlongPath(zNext);
+          if (time >= nextEcho) { settings.current.onSound?.('echo'); nextEcho = time + 1.1; }
         }
-        boat.position.y=settings.current.reduceMotion?0:Math.sin(time*1.4)*.04;
-        const isNear=boat.position.z < -22;if(isNear!==nearRef.current){nearRef.current=isNear;setNear(isNear);}
-      }else clear();
-      if(!settings.current.reduceMotion)seal.rotation.y=time*.4;
-      updateCamera();renderer.render(scene,camera);
-    };frame=requestAnimationFrame(animate);
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();scene.traverse(object=>{object.geometry?.dispose();if(Array.isArray(object.material))object.material.forEach(m=>m.dispose());else object.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
-  },[inVillage]);
-  const press=(key,down)=>{if(paused||messageRef.current)return;setTouchMovement(keys.current, key, down);};
-  if(inVillage)return <TempleVillage language={language} paused={paused} reduceMotion={reduceMotion} onExit={()=>onVillageChange(false)}/>;
-  return <section className="lake ancient-tunnel"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/><button className="lake-exit" onClick={onExit}>{en?'Return to ruins':'Voltar às ruínas'}</button><MapControlGuide language={language} scene="tunnel"/>
-    {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'}</p>}
-    {near&&!message&&<button className="lake-portal-action" onClick={examine}>{en?'Enter the village':'Entrar na aldeia'} <kbd>E</kbd></button>}
-    {message&&<section className="npc-dialogue ancient-tunnel-dialogue" role="dialog" aria-labelledby="tunnel-title"><h2 id="tunnel-title">{en?'Ancient temple':'Templo antigo'}</h2><p>{en?'The passage leads to an ancient temple. This area is still under construction.':'A passagem leva a um templo antigo. Esta área ainda está em construção.'}</p><button autoFocus onClick={closeMessage}>{en?'Continue exploring':'Continuar explorando'}</button></section>}
-    </div><div className="lake-touch" aria-label={en?'Boat controls':'Controles do barco'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}<TouchInteract language={language} onInteract={examine} disabled={paused || message || !near} /></div></section>;
+        boat.position.y = tunnelFloor(boat.position.z) + .12 + (settings.current.reduceMotion ? 0 : Math.sin(time * 1.4) * .045);
+        daylight.intensity = Math.max(0, 1.5 - THREE.MathUtils.clamp((TUNNEL.startZ - boat.position.z) / 28, 0, 1) * 1.5);
+        const current = tunnelRegion(boat.position.z);
+        if (current !== previousRegion) {
+          previousRegion = current; setRegion(current);
+          settings.current.onSound?.(current === 'depths' ? 'deep' : current === 'arrival' ? 'village' : 'passage');
+        }
+        if (time >= nextAmbient) {
+          nextAmbient = time + 7 + Math.random() * 5;
+          const ambience = current === 'arrival' ? 'village'
+            : current === 'depths' ? ['drip', 'wind', 'fire', 'deep'][Math.floor(Math.random() * 4)]
+              : ['drip', 'fire'][Math.floor(Math.random() * 2)];
+          settings.current.onSound?.(ambience);
+        }
+        const close = boat.position.z < TUNNEL.endZ + 9;
+        if (close !== nearRef.current) { nearRef.current = close; setNear(close); }
+        const atEntrance = boat.position.z >= TUNNEL.startZ - 4;
+        if (atEntrance !== startRef.current) { startRef.current = atEntrance; setAtStart(atEntrance); }
+      } else clear();
+      world.update(time, sceneDt, settings.current.reduceMotion, previousRegion);
+      updateCamera();
+      renderer.render(scene, camera);
+    };
+    frame = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear);
+      renderer.domElement.removeEventListener('blur', clear); clear();
+      const geometries = new Set(), materials = new Set();
+      scene.traverse(object => {
+        if (object.isInstancedMesh) object.dispose();
+        if (object.geometry) geometries.add(object.geometry);
+        if (Array.isArray(object.material)) object.material.forEach(material => materials.add(material));
+        else if (object.material) materials.add(object.material);
+      });
+      geometries.forEach(geometry => geometry.dispose());
+      materials.forEach(material => { material.map?.dispose(); material.dispose(); });
+      renderer.dispose(); renderer.domElement.remove();
+    };
+  }, [fromVillage, spawnZ]);
+
+  const press = (key, down) => { if (paused) return; setTouchMovement(keys.current, key, down); };
+  const caption = REGION_TEXT[region];
+  return <section className="lake ancient-tunnel">
+    <div className="lake-viewport">
+      <div className="lake-canvas" ref={mount} />
+      {campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en ? 'Return to ruins' : 'Voltar às ruínas'}</button>}
+      <MapControlGuide language={language} scene="tunnel" />
+      <div className="tunnel-region" aria-live="polite"><strong>{en ? caption[1] : caption[0]}</strong><span>{en ? caption[3] : caption[2]}</span></div>
+      {error && <p className="lake-scene-error">{en ? '3D is unavailable in this browser.' : 'O 3D não está disponível neste navegador.'}</p>}
+      {(near || atStart) && <div className="village-actions"><button onClick={interact}>
+        {near ? (en ? 'Enter the dragon village' : 'Entrar no vilarejo do dragão')
+          : en ? 'Return to the cove' : 'Voltar à enseada'} <kbd>E</kbd>
+      </button></div>}
+    </div>
+    <div className="lake-touch" aria-label={en ? 'Boat controls' : 'Controles do barco'}>
+      {[['arrowup', en ? 'Forward' : 'Frente', '↑'], ['arrowdown', en ? 'Back' : 'Trás', '↓']].map(([key, label, symbol]) =>
+        <button key={key} type="button" aria-label={label} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); press(key, true); }}
+          onPointerUp={() => press(key, false)} onPointerCancel={() => press(key, false)} onLostPointerCapture={() => press(key, false)}>{symbol}</button>)}
+      <TouchInteract language={language} onInteract={interact} disabled={paused || (!near && !atStart)} />
+    </div>
+  </section>;
 }

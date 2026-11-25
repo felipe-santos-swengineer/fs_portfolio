@@ -5,6 +5,7 @@
 - Batalha do dragão e combate com o rei: “Epic Boss Battle”, por Juhani Junkala (SubspaceAudio) — [CC0](https://opengameart.org/content/boss-battle-music). Convertida de WAV para Ogg Vorbis.
 
 - Vitória: “Treasure Hunter”, por TAD — [CC0](https://opengameart.org/content/treasure-hunter).
+- Vitória na sala do trono: “Medieval: Victory Theme”, por RandomMind — [CC0](https://opengameart.org/content/medieval-victory-theme).
 
 - Arredores do castelo amaldiçoado: "Abandoned Castle Music (Loop)", por StarNinjas — [CC0](https://opengameart.org/content/abandoned-castle-music-loop).
 - Corredor do Infinito. “Dark Shrine Loop”, por qubodup, remix de “Shrine”, de yd. [Fonte e licença CC0](https://opengameart.org/content/dark-shrine-loop).

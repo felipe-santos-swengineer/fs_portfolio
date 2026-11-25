@@ -9,7 +9,7 @@ export function createLakeBoat(add) {
   add(boat,new THREE.CylinderGeometry(.1,.13,4.7,10),'#64442c',0,3.25,-.85);
   add(boat,new THREE.BoxGeometry(2.5,.12,.12),'#64442c',0,4.85,-.85);
   const shape=new THREE.Shape(); shape.moveTo(-1.13,0); shape.lineTo(1.13,0); shape.lineTo(.86,2.55); shape.lineTo(-.86,2.55); shape.closePath();
-  const sail=add(boat,new THREE.ShapeGeometry(shape),'#f1e4c7',0,2.12,-.84); sail.material.side=THREE.DoubleSide;
+  const sail=add(boat,new THREE.ShapeGeometry(shape),'#f1e4c7',0,2.12,-.84); sail.name='boat-sail'; sail.material.side=THREE.DoubleSide;
   add(boat,new THREE.BoxGeometry(2.45,.1,.1),'#765235',0,2.1,-.85);
   add(boat,new THREE.BoxGeometry(1.7,.15,.48),'#8b643d',0,1.05,1.55);
   return boat;

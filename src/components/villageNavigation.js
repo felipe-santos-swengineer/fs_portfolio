@@ -29,13 +29,28 @@ export function isThroneExit(x, z) {
   return Math.abs(x) < 2.1 && z > 13;
 }
 
-export function nearbySite(x, z) {
-  if (Math.hypot(x - MARKET_FOOD.x, z - MARKET_FOOD.z) < 1.65) return 7;
-  if (Math.hypot(x - MARKET_POTIONS.x, z - MARKET_POTIONS.z) < 1.65) return 8;
-  if (Math.hypot(x - MARKET_DISPLAY.x, z - MARKET_DISPLAY.z) < 1.65) return 6;
-  if (Math.abs(x - CASTLE_ENTRANCE.x) < 1.5 && z > CASTLE_ENTRANCE.z - .1 && z < CASTLE_ENTRANCE.z + 1.6) return 5;
-  if (Math.hypot(x - PORTAL.x, z - PORTAL.z) < 2.5) return 4;
-  return SITES.findIndex(b => Math.hypot(x - b.x, z - (b.z + 3.1)) < 2.8);
+const interactionSites = [
+  ...SITES.map(site => ({ x: site.x, z: site.z + 3.1, radius: 2.8 })),
+  { ...PORTAL, radius: 2.5 },
+  CASTLE_ENTRANCE,
+  ...[MARKET_DISPLAY, MARKET_FOOD, MARKET_POTIONS].map(site => ({ ...site, radius: 1.65 })),
+];
+
+export function nearbySite(x, z, maxDistance = Infinity) {
+  let closest = -1;
+  let closestDistance = maxDistance;
+  interactionSites.forEach((site, index) => {
+    const dx = x - site.x, dz = z - site.z;
+    const distance = Math.hypot(dx, dz);
+    const inReach = site === CASTLE_ENTRANCE
+      ? Math.abs(dx) < 1.5 && dz > -.1 && dz < 1.6
+      : distance < site.radius;
+    if (inReach && distance < closestDistance) {
+      closest = index;
+      closestDistance = distance;
+    }
+  });
+  return closest;
 }
 
 export function walkingSurface(x, z) {
@@ -62,5 +77,5 @@ export const ENGLISH_VILLAGE_SIGNS = {
   'CORREIO': 'POST OFFICE', 'Contato': 'Contact',
   'EXPERI\u00caNCIA': 'EXPERIENCE', 'FORMA\u00c7\u00c3O': 'EDUCATION',
   'TECNOLOGIAS': 'TECHNOLOGIES', 'Toque para conhecer': 'Tap to explore',
-  'F \u00b7 CONVERSAR': 'F \u00b7 TALK',
+  'E \u00b7 INTERAGIR': 'E \u00b7 INTERACT',
 };

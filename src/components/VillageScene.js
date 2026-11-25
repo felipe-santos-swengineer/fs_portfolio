@@ -11,6 +11,7 @@ import { createDragon, createDayNight } from './VillageAtmosphere';
 import { createMissionFireworks } from './MissionFireworks';
 import mountainHorizon from '../assets/images/mountain-horizon.png';
 import { addFaceDetails } from './addFaceDetails';
+import { dressForestAdventurer } from './forestAdventurer';
 import './VillageScene.css';
 
 export { addFaceDetails };
@@ -19,22 +20,27 @@ export function createAdventurer(scene, { box, sphere, mesh, cylinder }, { armor
   // Articulated, fully volumetric adventurer.
   const player = new THREE.Group(); scene.add(player); player.position.set(0, .2, 5);
   const body = new THREE.Group(); player.add(body);
-  box(body, .65, .85, .4, '#496e76', 0, 1.12, 0);
-  box(body, .71, .13, .45, '#9e8054', 0, .87, 0); box(body, .13, .17, .48, '#dec38c', 0, .87, .02);
-  sphere(body, .28, '#c5a27f', 0, 1.82, 0); sphere(body, .29, '#463c39', 0, 1.94, -.06);
-  [-1, 1].forEach(s => sphere(body, .035, '#17232d', s * .11, 1.83, .285));
-  addFaceDetails(body, { box, sphere }, { headY: 1.82, skin: '#c5a27f' });
-  const hat = mesh(body, new THREE.ConeGeometry(.43, .5, 8), '#345360', 0, 2.22, 0); hat.rotation.z = -.16;
-  hat.visible = !armored;
-  const brim = cylinder(body, .47, .08, '#345360', 0, 2.02, 0); brim.visible = !armored;
-  const cape = box(body, .7, 1.05, .08, '#933e4d', 0, 1.1, -.29); cape.rotation.x = -.13;
-  const pack = box(body, .42, .5, .25, '#7e6248', 0, 1.3, -.42); pack.visible = !armored;
-  cape.visible = !armored;
   const limbs = [];
   [-1, 1].forEach(s => {
-    const leg = new THREE.Group(); leg.position.set(s * .19, .8, 0); body.add(leg); box(leg, .24, .62, .25, '#303846', 0, -.3, 0); box(leg, .28, .2, .42, '#514737', 0, -.61, .07); limbs.push(leg);
-    const arm = new THREE.Group(); arm.position.set(s * .46, 1.5, 0); body.add(arm); box(arm, .22, .62, .25, '#496e76', 0, -.28, 0); sphere(arm, .12, '#c5a27f', 0, -.61, 0); limbs.push(arm);
+    const leg = new THREE.Group(); leg.position.set(s * .19, .8, 0); body.add(leg); limbs.push(leg);
+    const arm = new THREE.Group(); arm.position.set(s * .46, 1.5, 0); body.add(arm); limbs.push(arm);
   });
+  let cape;
+  if (armored) {
+    // Os guardas mantêm a silhueta original; o redesign é apenas do protagonista.
+    box(body, .65, .85, .4, '#496e76', 0, 1.12, 0);
+    box(body, .71, .13, .45, '#9e8054', 0, .87, 0); box(body, .13, .17, .48, '#dec38c', 0, .87, .02);
+    sphere(body, .28, '#c5a27f', 0, 1.82, 0); sphere(body, .29, '#463c39', 0, 1.94, -.06);
+    [-1, 1].forEach(s => sphere(body, .035, '#17232d', s * .11, 1.83, .285));
+    addFaceDetails(body, { box, sphere }, { headY: 1.82, skin: '#c5a27f' });
+    [0, 1].forEach(i => {
+      box(limbs[i], .24, .62, .25, '#303846', 0, -.3, 0); box(limbs[i], .28, .2, .42, '#514737', 0, -.61, .07);
+      box(limbs[i + 2], .22, .62, .25, '#496e76', 0, -.28, 0); sphere(limbs[i + 2], .12, '#c5a27f', 0, -.61, 0);
+    });
+    cape = box(body, .7, 1.05, .08, '#933e4d', 0, 1.1, -.29); cape.rotation.x = -.13; cape.visible = false;
+  } else {
+    cape = dressForestAdventurer(body, limbs, { box, sphere });
+  }
   // A espada acompanha o movimento do braço do aventureiro.
   const sword = new THREE.Group(); sword.position.set(0, -.6, .12); sword.rotation.z = Math.PI; sword.rotation.x = .15; limbs[3].add(sword);
   box(sword, .11, .35, .11, '#6e4b35', 0, -.13, 0);
@@ -408,7 +414,7 @@ export function createVillage(scene) {
       const leg = new THREE.Group(); leg.position.set(s * (feminine ? .16 : .18), .79, 0); torso.add(leg); box(leg, feminine ? .19 : .23, .6, .24, '#333d48', 0, -.3, 0); box(leg, feminine ? .23 : .26, .19, .38, '#514639', 0, -.61, .06); joints.push(leg);
       const arm = new THREE.Group(); arm.position.set(s * (feminine ? .36 : .43), 1.5, 0); torso.add(arm); box(arm, feminine ? .17 : .2, .57, .24, person.color, 0, -.27, 0); sphere(arm, feminine ? .095 : .11, person.skin, 0, -.58, 0); joints.push(arm);
     });
-    const sign = label(group, person.name.toUpperCase(), 'F · CONVERSAR', person.color, 0, 3.05, 0); sign.scale.set(2.5, .73, 1);
+    const sign = label(group, person.name.toUpperCase(), 'E · INTERAGIR', person.color, 0, 3.05, 0); sign.scale.set(2.5, .73, 1);
     const hit = new THREE.Mesh(new THREE.CylinderGeometry(.7, .7, 3, 8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); hit.position.y = 1.5; group.add(hit);
     return { group, body: torso, limbs: joints, route: [], wait: 0, speed: person.speed, phase: index * 1.7 };
   });
@@ -450,14 +456,14 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     renderer.domElement.tabIndex = 0;
     renderer.domElement.setAttribute('role', 'img');
     renderer.domElement.setAttribute('aria-describedby', 'village-keyboard-help');
-    renderer.domElement.setAttribute('aria-label', 'Cenário 3D: arraste para girar a câmera e use WASD para caminhar');
+    renderer.domElement.setAttribute('aria-label', 'Cenário 3D: use WASD para caminhar');
     container.appendChild(renderer.domElement);
     const scene = new THREE.Scene(); scene.background = new THREE.Color('#0c131c'); scene.fog = new THREE.FogExp2('#0c131c', .009);
     const hemisphere = new THREE.HemisphereLight('#9fb9df', '#28382d', 1.3); scene.add(hemisphere);
     const moon = new THREE.DirectionalLight('#a9c6ef', 2.6); moon.position.set(-12, 22, 8); moon.castShadow = true;
     moon.shadow.mapSize.set(2048, 2048); Object.assign(moon.shadow.camera, { left: -23, right: 23, top: 23, bottom: -23, far: 70 }); moon.shadow.camera.updateProjectionMatrix(); moon.shadow.normalBias = .035; scene.add(moon);
     const world = createVillage(scene);
-    updateSigns.current = next => { scene.traverse(object => object.userData.setLanguage?.(next)); renderer.domElement.setAttribute('aria-label', next === 'en-US' ? '3D scene: drag to rotate the camera and use WASD to walk' : 'Cenário 3D: arraste para girar a câmera e use WASD para caminhar'); };
+    updateSigns.current = next => { scene.traverse(object => object.userData.setLanguage?.(next)); renderer.domElement.setAttribute('aria-label', next === 'en-US' ? '3D scene: use WASD to walk' : 'Cenário 3D: use WASD para caminhar'); };
     updateSigns.current(language);
     const dragon = createDragon(scene);
     const dayNight = createDayNight(scene, hemisphere, moon, world);
@@ -564,7 +570,13 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
         if (actor.kind === 'watch') actor.torso.rotation.y = Math.sin(clock * .35 + actor.phase) * .12;
         if (actor.kind === 'vendor') actor.arm.rotation.x = -.25 - Math.max(0, Math.sin(clock * .8 + actor.phase)) * .7;
       });
-      if (!reducedMotion && !ambientPaused) { world.crystal.rotation.y += dt * .45; world.crystal.position.y = 2.2 + Math.sin(clock * 1.4) * .1; world.cape.rotation.x = -.13 + Math.sin(clock * (walking ? 10 : 2)) * (walking ? .13 : .025); world.fireflies.rotation.y += dt * .012; world.flames.forEach(f => { f.scale.y = 1 + Math.sin(clock * 9) * .18; }); }
+      if (!ambientPaused) {
+        // Positive tilt moves the hem away from the legs throughout the stride.
+        world.cape.rotation.x = reducedMotion ? .08 : walking
+          ? .19 + .09 * Math.sin(clock * 10)
+          : .08 + .015 * Math.sin(clock * 2);
+      }
+      if (!reducedMotion && !ambientPaused) { world.crystal.rotation.y += dt * .45; world.crystal.position.y = 2.2 + Math.sin(clock * 1.4) * .1; world.fireflies.rotation.y += dt * .012; world.flames.forEach(f => { f.scale.y = 1 + Math.sin(clock * 9) * .18; }); }
       const p = world.player.position;
       const touchingCastle = isCastleThreshold(p.x, p.z);
       if (!live.current.paused && touchingCastle && !castleContact) { castleContact = true; live.current.onOpen(5); }
@@ -572,10 +584,17 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
       const touchingPortal = Math.hypot(p.x - PORTAL.x, p.z - PORTAL.z) < 1.1;
       if (!live.current.paused && touchingPortal && !portalContact) { portalContact = true; live.current.onOpen(4); }
       if (!touchingPortal) portalContact = false;
-      const near = nearbySite(p.x, p.z);
-      if (near !== oldNear) { oldNear = near; live.current.onNear(near); }
       let closestNpc = -1, closestDistance = 2.7;
-      world.npcs.forEach((npc, index) => { const d = Math.hypot(npc.group.position.x - p.x, npc.group.position.z - p.z); if (d < closestDistance) { closestNpc = index; closestDistance = d; } });
+      world.npcs.forEach((npc, index) => {
+        const distance = Math.hypot(npc.group.position.x - p.x, npc.group.position.z - p.z);
+        if (distance < closestDistance) {
+          closestNpc = index;
+          closestDistance = distance;
+        }
+      });
+      const near = nearbySite(p.x, p.z, closestNpc >= 0 ? closestDistance : Infinity);
+      if (near >= 0) closestNpc = -1;
+      if (near !== oldNear) { oldNear = near; live.current.onNear(near); }
       if (closestNpc !== oldNearNpc) { oldNearNpc = closestNpc; live.current.onNearNpc?.(closestNpc); }
       if (live.current.cameraTurn !== oldCameraTurn) { camera.position.sub(controls.target).applyAxisAngle(verticalAxis, (live.current.cameraTurn - oldCameraTurn) * Math.PI / 6).add(controls.target); oldCameraTurn = live.current.cameraTurn; }
       if (live.current.zoom !== oldZoom) { camera.position.sub(controls.target).multiplyScalar(oldZoom / live.current.zoom).add(controls.target); oldZoom = live.current.zoom; }
@@ -602,5 +621,5 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keys, compassRef, rendererAttempt]);
 
-  return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">{language === 'en-US' ? 'Interactive scene. Use Tab or click to focus it. Use WASD or arrow keys to walk, E to enter a nearby building and F to talk to a nearby villager. Press Tab to leave the scene. All content is also available in reading mode and through the destination buttons.' : 'Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para entrar em um edifício próximo e F para conversar com um morador próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.'}</p>{error && <div className="scene-error" role="status"><strong>{error === 'lost' ? (language === 'en-US' ? 'The 3D scene was interrupted.' : 'O cenário 3D foi interrompido.') : (language === 'en-US' ? 'The 3D scene could not be started.' : 'Não foi possível iniciar o cenário 3D.')}</strong><p>{language === 'en-US' ? 'Try again, or access every story in reading mode and through the destinations below.' : 'Tente novamente ou acesse todas as histórias pelo modo leitura e pelos destinos abaixo.'}</p><button type="button" onClick={() => setRendererAttempt(attempt => attempt + 1)}>{language === 'en-US' ? 'Try 3D again' : 'Tentar abrir o 3D novamente'}</button></div>}</div>;
+  return <div className="webgl-scene" ref={mount}><p id="village-keyboard-help" className="sr-only">{language === 'en-US' ? 'Interactive scene. Use Tab or click to focus it. Use WASD or arrow keys to walk, E to interact with a nearby villager or building. Press Tab to leave the scene. All content is also available in reading mode and through the destination buttons.' : 'Cenário interativo. Use Tab para dar foco ao cenário ou clique nele. Com o cenário em foco, use WASD ou setas para caminhar, E para interagir com um morador ou edifício próximo. Tab sai do cenário. Todo o conteúdo também está disponível pelo modo leitura e pelos botões de destinos.'}</p>{error && <div className="scene-error" role="status"><strong>{error === 'lost' ? (language === 'en-US' ? 'The 3D scene was interrupted.' : 'O cenário 3D foi interrompido.') : (language === 'en-US' ? 'The 3D scene could not be started.' : 'Não foi possível iniciar o cenário 3D.')}</strong><p>{language === 'en-US' ? 'Try again, or access every story in reading mode and through the destinations below.' : 'Tente novamente ou acesse todas as histórias pelo modo leitura e pelos destinos abaixo.'}</p><button type="button" onClick={() => setRendererAttempt(attempt => attempt + 1)}>{language === 'en-US' ? 'Try 3D again' : 'Tentar abrir o 3D novamente'}</button></div>}</div>;
 }

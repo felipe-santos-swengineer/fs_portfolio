@@ -102,8 +102,14 @@ function createCapeGeometry(
     const originalX = positions.getX(i);
     const originalY = positions.getY(i);
 
+    // Arredondamento de Float32 pode deixar v ligeiramente negativo na primeira
+    // fileira; limitar a faixa evita NaN nas potências fracionárias.
     const u = originalX / (width / 2);
-    const v = (height / 2 - originalY) / height;
+    const v = THREE.MathUtils.clamp(
+      (height / 2 - originalY) / height,
+      0,
+      1
+    );
 
     const edge = Math.abs(u);
 

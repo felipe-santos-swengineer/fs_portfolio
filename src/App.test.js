@@ -316,7 +316,7 @@ test('a entrada e a conversa usam botoes padronizados sem se sobrepor', async ()
   fireEvent.click(screen.getByRole('button', { name: 'Aproximar da taverna' }));
   fireEvent.click(screen.getByRole('button', { name: 'Aproximar da Bia' }));
   const entrance=screen.getByRole('button', { name: /Entrar: Taverna.* E/i });
-  const talk=screen.getByRole('button', { name: 'Conversar com Bia F' });
+  const talk=screen.getByRole('button', { name: 'Conversar com Bia E' });
   expect(entrance.parentElement).toBe(talk.parentElement);
   fireEvent.click(entrance);
   expect(screen.getByRole('dialog', { name: /Minha hist/ })).toBeTruthy();
@@ -325,10 +325,10 @@ test('a entrada e a conversa usam botoes padronizados sem se sobrepor', async ()
 test('a vila mostra o botao padronizado ao aproximar de um morador', async () => {
   await start();
   fireEvent.click(screen.getByRole('button', { name: 'Aproximar da Bia' }));
-  const prompt=screen.getByRole('button', { name: 'Conversar com Bia F' });
+  const prompt=screen.getByRole('button', { name: 'Conversar com Bia E' });
   expect(prompt.className).toBe('villager-talk');
   fireEvent.click(prompt);
-  expect(screen.queryByRole('button', { name: 'Conversar com Bia F' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Conversar com Bia E' })).toBeNull();
   expect(screen.getByLabelText('Conversa com Bia')).toBeTruthy();
 });
 

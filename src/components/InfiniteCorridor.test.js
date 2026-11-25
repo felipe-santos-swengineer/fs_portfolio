@@ -54,6 +54,6 @@ test('sem WebGL o erro é informado e o guia não anuncia ataques', () => {
   renderRoom();
   expect(screen.getByText('O 3D não está disponível neste navegador.')).toBeTruthy();
   const guide = screen.getByLabelText('Controles do jogo').textContent;
-  expect(guide).toContain('interagir');
+  expect(guide).toContain('Interação');
   expect(guide).not.toMatch(/atacar|revidar/i);
 });

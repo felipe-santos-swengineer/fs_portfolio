@@ -12,8 +12,8 @@ test.each([
   expect(screen.getByText('Shift').parentElement.textContent).toContain(action);
 });
 
-test.each(['rapids', 'tunnel'])('omits Shift from the %s tutorial in %s', (scene, language) => {
-  render(<MapControlGuide scene={scene} language={language} />);
+test.each(['rapids', 'tunnel'])('omits Shift from the %s tutorial', scene => {
+  render(<MapControlGuide scene={scene} language="pt-BR" />);
   expect(screen.queryByText('Shift')).toBeNull();
 });
 

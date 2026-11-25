@@ -2,7 +2,7 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import App from './App';
 import VillageAudio from './audio/VillageAudio';
 
-jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onTalk, onOpen, onNear, onNearNpc, zoom, missionRound, weatherMode, returnToPortal }) => <div data-testid="village-canvas" data-portal-return={String(returnToPortal)} data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button><button onClick={() => onNearNpc(0)}>Aproximar da Bia</button><button onClick={() => onNear(0)}>Aproximar da taverna</button></div> }));
+jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onTalk, onOpen, onNear, onNearNpc, zoom, missionRound, weatherMode, villageArrival }) => <div data-testid="village-canvas" data-village-arrival={villageArrival || ''} data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button><button onClick={() => onNearNpc(0)}>Aproximar da Bia</button><button onClick={() => onNear(0)}>Aproximar da taverna</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
 jest.mock('./assets/audio/village-bards-tale.mp3', () => 'village-track.mp3');
 jest.mock('./assets/audio/castle-kings-feast.mp3', () => 'castle-track.mp3');
@@ -304,7 +304,7 @@ test('voltar do lago solicita chegada no portal da vila', async () => {
   sessionStorage.setItem('portfolio-map', 'lake');
   await start();
   fireEvent.click(await screen.findByRole('button', { name: 'Sair do lago de teste' }));
-  expect(screen.getByTestId('village-canvas').getAttribute('data-portal-return')).toBe('true');
+  expect(screen.getByTestId('village-canvas').getAttribute('data-village-arrival')).toBe('portal');
   expect(sessionStorage.getItem('portfolio-map')).toBe('village');
 });
 
@@ -471,7 +471,7 @@ test('a campanha do castelo permite entrar, preservar o mapa e voltar ao portal'
   expect(await screen.findByRole('button', { name: 'Sair do castelo amaldi\u00e7oado de teste' })).toBeTruthy();
   expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
   fireEvent.click(screen.getByRole('button', { name: 'Sair do castelo amaldi\u00e7oado de teste' }));
-  expect(screen.getByTestId('village-canvas').getAttribute('data-portal-return')).toBe('true');
+  expect(screen.getByTestId('village-canvas').getAttribute('data-village-arrival')).toBe('portal');
   expect(sessionStorage.getItem('portfolio-map')).toBe('village');
 });
 
@@ -552,14 +552,14 @@ test('recarregar no interior restaura o sal?o e o retorno aos arredores', async 
   expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle');
 });
 
-test.each(['cursed-castle-vestibule', 'cursed-castle-throne'])('restaura %s na entrada sem abrir o trono de Felipe', async map => {
+test.each(['cursed-castle-vestibule', 'cursed-castle-throne'])('restaura %s com o trono bloqueado até vencer o xadrez', async map => {
   sessionStorage.setItem('portfolio-map', map);
   await start();
   const enter = await screen.findByRole('button', { name: 'Entrar no trono de teste' });
   expect(enter.disabled).toBe(true);
   expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-throne-entrance');
   fireEvent.click(screen.getByRole('button', { name: 'Vencer xadrez de teste' }));
-  expect(enter.disabled).toBe(true);
+  expect(enter.disabled).toBe(false);
   expect(sessionStorage.getItem('portfolio-map')).toBe('cursed-castle-throne-entrance');
   expect(screen.queryByRole('button', { name: 'Sair do salao de teste' })).toBeNull();
 });

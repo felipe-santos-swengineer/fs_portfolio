@@ -59,13 +59,16 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     const boat = createLakeBoat(add);
     const sail = boat.getObjectByName('boat-sail');
     if (sail) {
-      sail.material.transparent = false;
-      sail.material.opacity = 1;
-      sail.material.depthWrite = true;
-      sail.material.fog = false;
-      sail.material.emissive.set('#4a3a24');
-      sail.material.emissiveIntensity = .28;
-      sail.material.needsUpdate = true;
+      // Material exclusivo deste mapa: sem blending, sempre totalmente opaco.
+      sail.material.dispose();
+      sail.material = new THREE.MeshBasicMaterial({
+        color: '#f1e4c7',
+        side: THREE.DoubleSide,
+        transparent: false,
+        opacity: 1,
+        depthWrite: true,
+        fog: false,
+      });
     }
     const faceAlongPath = (z, direction) => {
       const tangentX = tunnelCenter(z - .6) - tunnelCenter(z + .6);

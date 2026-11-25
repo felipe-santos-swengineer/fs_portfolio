@@ -1,3 +1,4 @@
+import TouchInteract from './TouchInteract';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -18,7 +19,7 @@ import './Lake.css';
 import './CursedCastle.css';
 import './InfiniteCorridor.css';
 
-export default function InfiniteCorridor({ language, paused, reduceMotion, onExit, onAdvance, onStep, onSound }) {
+export default function InfiniteCorridor({ campaignNavigation, language, paused, reduceMotion, onExit, onAdvance, onStep, onSound }) {
   const mount = useRef(null), canvasRef = useRef(null), keys = useRef(new Set()), state = useRef({});
   const noticeOpenRef = useRef(false), signsRef = useRef(null), exitRequested = useRef(false);
   const cloakNearRef = useRef(false), floorDoorNearRef = useRef(false), doorNearRef = useRef(false);
@@ -709,24 +710,26 @@ export default function InfiniteCorridor({ language, paused, reduceMotion, onExi
   return <section className="lake cursed-castle corridor">
     <div className="lake-viewport">
       <div ref={mount} className="lake-canvas" />
-      <button className="lake-exit" onClick={exitScene}>{en ? 'Return to outskirts' : 'Voltar aos arredores'}</button>
-      <div className="cursed-heading">
-        <strong>{en ? 'HALL OF INFINITY' : 'CORREDOR DO INFINITO'}</strong>
-        <small>{en ? 'Every tenth door turns the room.' : 'A cada dez trechos, a sala gira.'}</small>
-        <button type="button" className="lake-exit corridor-skip" onClick={advanceScene} disabled={paused}>
-          {en ? 'Skip to next room' : 'Pular para a próxima sala'}
-        </button>
+      {campaignNavigation ?? <button className="lake-exit" onClick={exitScene}>{en ? 'Return to outskirts' : 'Voltar aos arredores'}</button>}
+      <div className="corridor-status">
+        <div className="cursed-heading">
+          <strong>{en ? 'HALL OF INFINITY' : 'CORREDOR DO INFINITO'}</strong>
+          <small>{en ? 'Every tenth door turns the room.' : 'A cada dez trechos, a sala gira.'}</small>
+          {!campaignNavigation && <button type="button" className="lake-exit corridor-skip" onClick={advanceScene} disabled={paused}>
+            {en ? 'Skip to next room' : 'Pular para a próxima sala'}
+          </button>}
+        </div>
+        <div className="corridor-hud" aria-label={en ? 'Cloak status' : 'Estado do manto'}>
+          <span className="corridor-stretch">{en ? `Stretch ${segment}` : `Trecho ${segment}`}</span>
+          <span className="corridor-spins">{en ? `Turns ${spinCount}/${SPINS_TO_ESCAPE}` : `Giros ${spinCount}/${SPINS_TO_ESCAPE}`}</span>
+          {spinCount > 0 && <span className="corridor-checkpoint">{en ? 'Door checkpoint set' : 'Checkpoint da porta marcado'}</span>}
+          {spinCount > 0 && !spinning && <span className="corridor-surface">{surface === 'floor' ? (en ? 'Back on the floor' : 'De volta ao chão') : surface === 'ceiling' ? (en ? 'On the ceiling' : 'No teto') : (en ? 'On the wall' : 'Na parede')}</span>}
+          {cloakTaken && <><div className={`corridor-phase ${phase.invisible ? 'invisible' : 'visible'}`} aria-live="polite"><strong>{phase.invisible ? (en ? 'Invisible · aura active' : 'Invisível · aura ativa') : (en ? 'Visible · no aura' : 'Visível · sem aura')}</strong><span>{Math.ceil(phase.remaining)}s</span></div><div className="corridor-sanity"><small>{en ? 'Sanity' : 'Sanidade'}</small><span>{Array.from({ length: 3 }, (_, index) => <i key={index} className={index < sanity ? 'alive' : ''} />)}</span></div></>}
+          {spinning && <span className="corridor-turning">{en ? 'The room is turning...' : 'A sala está girando...'}</span>}
+          {corridorEnded && <span className="corridor-end">{en ? 'Corridor over · door ahead' : 'Corredor encerrado · porta adiante'}</span>}
+        </div>
+        {toast && <p className={`corridor-toast${toast.warning ? ' corridor-back-warning' : ''}${toast.warning && !reduceMotion ? ' corridor-back-warning-pulse' : ''}`} role="status">{toast.warning ? (en ? 'You cannot go back. Keep moving forward.' : 'Não é possível voltar. Siga em frente.') : toast.text}</p>}
       </div>
-      <div className="corridor-hud" aria-label={en ? 'Cloak status' : 'Estado do manto'}>
-        <span className="corridor-stretch">{en ? `Stretch ${segment}` : `Trecho ${segment}`}</span>
-        <span className="corridor-spins">{en ? `Turns ${spinCount}/${SPINS_TO_ESCAPE}` : `Giros ${spinCount}/${SPINS_TO_ESCAPE}`}</span>
-        {spinCount > 0 && <span className="corridor-checkpoint">{en ? 'Door checkpoint set' : 'Checkpoint da porta marcado'}</span>}
-        {spinCount > 0 && !spinning && <span className="corridor-surface">{surface === 'floor' ? (en ? 'Back on the floor' : 'De volta ao chão') : surface === 'ceiling' ? (en ? 'On the ceiling' : 'No teto') : (en ? 'On the wall' : 'Na parede')}</span>}
-        {cloakTaken && <><div className={`corridor-phase ${phase.invisible ? 'invisible' : 'visible'}`} aria-live="polite"><strong>{phase.invisible ? (en ? 'Invisible · aura active' : 'Invisível · aura ativa') : (en ? 'Visible · no aura' : 'Visível · sem aura')}</strong><span>{Math.ceil(phase.remaining)}s</span></div><div className="corridor-sanity"><small>{en ? 'Sanity' : 'Sanidade'}</small><span>{Array.from({ length: 3 }, (_, index) => <i key={index} className={index < sanity ? 'alive' : ''} />)}</span></div></>}
-        {spinning && <span className="corridor-turning">{en ? 'The room is turning...' : 'A sala está girando...'}</span>}
-        {corridorEnded && <span className="corridor-end">{en ? 'Corridor over · door ahead' : 'Corredor encerrado · porta adiante'}</span>}
-      </div>
-      {toast && <p className={`corridor-toast${toast.warning ? ' corridor-back-warning' : ''}${toast.warning && !reduceMotion ? ' corridor-back-warning-pulse' : ''}`} role="status">{toast.warning ? (en ? 'You cannot go back. Keep moving forward.' : 'Não é possível voltar. Siga em frente.') : toast.text}</p>}
       {flash && <div className="corridor-flash" aria-hidden="true" />}
       {caught && <div className="corridor-caught" role="status">{en ? 'The shadows caught you. The corridor starts this stretch again.' : 'As sombras alcançaram você. O trecho recomeça.'}</div>}
       <div className="village-actions">
@@ -740,7 +743,7 @@ export default function InfiniteCorridor({ language, paused, reduceMotion, onExi
     </div>
     <div className="lake-touch" aria-label={en ? 'Walking controls' : 'Controles de caminhada'}>
       {[['arrowleft', en ? 'Left' : 'Esquerda', '←'], ['arrowup', en ? 'Forward' : 'Frente', '↑'], ['arrowdown', en ? 'Back' : 'Trás', '↓'], ['arrowright', en ? 'Right' : 'Direita', '→']].map(([key, label, symbol]) => <button key={key} type="button" aria-label={label} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); press(key, true); }} onPointerUp={() => press(key, false)} onPointerCancel={() => press(key, false)} onLostPointerCapture={() => press(key, false)}>{symbol}</button>)}
-      <button type="button" aria-label={en ? 'Interact' : 'Interagir'} disabled={spinning || (((!nearCloak || cloakTaken) && !nearFloorDoor) && !nearDoor)} onClick={interact}>E</button>
+      <TouchInteract language={language} disabled={paused || noticeOpen || caught || spinning || (((!nearCloak || cloakTaken) && !nearFloorDoor) && !nearDoor)} onInteract={interact} />
     </div>
   </section>;
 }

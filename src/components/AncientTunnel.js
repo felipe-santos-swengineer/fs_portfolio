@@ -1,3 +1,4 @@
+import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createAdventurer } from './VillageScene';
@@ -83,5 +84,5 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'}</p>}
     {near&&!message&&<button className="lake-portal-action" onClick={examine}>{en?'Enter the village':'Entrar na aldeia'} <kbd>E</kbd></button>}
     {message&&<section className="npc-dialogue ancient-tunnel-dialogue" role="dialog" aria-labelledby="tunnel-title"><h2 id="tunnel-title">{en?'Ancient temple':'Templo antigo'}</h2><p>{en?'The passage leads to an ancient temple. This area is still under construction.':'A passagem leva a um templo antigo. Esta área ainda está em construção.'}</p><button autoFocus onClick={closeMessage}>{en?'Continue exploring':'Continuar explorando'}</button></section>}
-    </div><div className="lake-touch" aria-label={en?'Boat controls':'Controles do barco'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}</div></section>;
+    </div><div className="lake-touch" aria-label={en?'Boat controls':'Controles do barco'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}<TouchInteract language={language} onInteract={examine} disabled={paused || message || !near} /></div></section>;
 }

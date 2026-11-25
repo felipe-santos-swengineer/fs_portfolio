@@ -17,7 +17,7 @@ Um portfólio interativo em forma de vilarejo: explore o cenário com um persona
 | Mercado a leste | Alimentos, misturas de poções e vitrine de tecnologias |
 
 - Personagem articulado, obstáculos e câmera com rotação e zoom. A jornada começa na doca ao sul da vila.
-- Castelo com salão do trono e falas gravadas de Felipe; portal para explorar o lago, as ruínas e a ilha do dragão.
+- O castelo da vila abriga o salão do trono de Felipe Santos, com falas gravadas e a trilha *King's Feast*.
 - Quatro moradores passeando pela vila, com diálogos em texto e gravações de vozes distintas.
 - Dragão que sobrevoa o cenário e pousa nos telhados, com transição gradual entre dia e noite.
 - Missão de visitar os quatro destinos, com uma breve celebração de fogos ao concluir.
@@ -28,11 +28,13 @@ O botão **Recomeçar** reinicia o progresso da missão e a celebração, preser
 
 ## Campanhas do portal
 
-O portal reúne os mapas em campanhas recolhíveis, com salas numeradas na ordem da jornada. É possível escolher uma sala diretamente; a última área visitada é restaurada ao recarregar a página durante a sessão. Os portais de retorno levam à vila inicial.
+O portal reúne os mapas em campanhas recolhíveis, com salas numeradas na ordem da jornada. É possível escolher uma sala diretamente. A última área visitada é restaurada ao recarregar a página durante a sessão.
+
+Dentro de uma campanha, o ícone de portal no canto superior direito pausa o cenário e abre as opções para voltar à vila, retornar ao mapa anterior, reiniciar o mapa atual ou avançar quando houver um destino disponível. O mapa de destino começa com o progresso reiniciado.
 
 ### Campanha do Dragão Maligno
 
-1. **Lago das Interfaces:** explore de barco, conheça Marina e encontre a passagem para as corredeiras.
+1. **Lago das Interfaces:** explore de barco, veja o santuário à margem do lago, conheça Marina e encontre a passagem para as corredeiras.
 2. **Corredeiras do Desfiladeiro:** conduza o barco pelo percurso e desvie dos obstáculos.
 3. **Enseada das Ruínas Submersas:** navegue pelas ruínas, converse com Duarte e ative as runas para alcançar a passagem ao templo.
 4. **Aldeia do Templo Antigo:** visite o templo, seus santuários e moradores, incluindo Abaré, antes de seguir para a caverna.
@@ -44,7 +46,9 @@ Depois da vitória, converse com a princesa Elara para voltar à vila inicial ou
 ### Campanha do Castelo Amaldiçoado
 
 1. **Arredores do Castelo:** caminhe pela passarela sob chuva e neblina, converse com o arquivista Alden e observe os soldados diante da fortaleza. Ao se aproximar, o portão se abre e os soldados fogem. O portal no início da passarela leva de volta à vila.
-2. **Interior do Castelo:** explore a primeira versão do salão, com colunas, vitrais, tochas, estandartes e trono. Risadas de bruxas alternam ao fundo; há uma saída para os arredores e um portal de retorno à vila.
+2. **Corredor do Infinito:** use o manto do fantasma para passar pelas criaturas durante os períodos de invisibilidade. A cada dez trechos, uma porta marca um ponto de retorno e permite girar a sala para continuar pelas paredes e pelo teto.
+3. **Pátio do Castelo:** sobreviva às investidas da bruxa, busque abrigo durante as descargas elétricas e recolha a chave para abrir a saída.
+4. **Câmara do Guardião Arcano:** dispute o Xadrez de Bruxo no tabuleiro 3D ou na versão acessível por teclado. A vitória rompe o selo. Esta é a última etapa disponível da campanha. A sala do trono do Rei das Trevas ainda não está disponível.
 
 Marina, Duarte, Abaré, Elara e Alden acompanham o jogador com o olhar. Os personagens com balões de fala nos cenários comentam os acontecimentos sem abrir uma conversa.
 
@@ -64,17 +68,17 @@ Marina, Duarte, Abaré, Elara e Alden acompanham o jogador com o olhar. Os perso
 | Fechar uma janela | Escape ou botão de fechar |
 | Centralizar a câmera | Botão Focar personagem |
 
-No celular, use os botões direcionais. As seções também podem ser abertas pelos atalhos da interface, sem precisar caminhar. Os atalhos do jogo só capturam teclas enquanto o cenário está em foco; Tab permite sair dele.
+No celular, use as setas abaixo do cenário. Nos mapas que oferecem essas ações, os botões **Interagir** e **Atacar** aparecem junto às setas. As seções também podem ser abertas pelos atalhos da interface, sem precisar caminhar. Os atalhos do jogo só capturam teclas enquanto o cenário está em foco; Tab permite sair dele.
 
 ## Acessibilidade e áudio
 
-O painel **Acessibilidade** oferece tamanho de texto, alto contraste, fonte simples, redução de movimentos, pausa das animações e modo leitura sem 3D. A interface inclui navegação por teclado, foco visível, link para pular ao conteúdo e gerenciamento de foco nas janelas. As preferências são salvas no navegador, e a redução de movimentos do sistema é respeitada.
+O painel **Acessibilidade** oferece tamanho de texto, alto contraste, fonte simples, redução de movimentos, pausa das animações e modo leitura sem 3D. **Ocultar UI** recolhe o botão de portal e os painéis opcionais e mantém disponíveis as ações essenciais e os indicadores de vida durante os combates com chefes. A interface inclui navegação por teclado, foco visível, link para pular ao conteúdo e gerenciamento de foco nas janelas. As preferências são salvas no navegador, e a redução de movimentos do sistema é respeitada.
 
 O modo leitura permite acessar todas as seções e os diálogos dos moradores sem depender de WebGL. A experiência 3D requer um navegador com WebGL 2; o desempenho varia conforme o dispositivo.
 
 O som geral e todas as categorias começam ativados a cada visita; a reprodução pode começar após a primeira interação, conforme o navegador. No painel **Áudio**, é possível ativar ou silenciar tudo ou escolher cada categoria individualmente. As narrações originais foram preservadas; as falas dos moradores são arquivos locais, sem consulta a serviços de voz durante a visita.
 
-As campanhas têm trilhas próprias para exploração, caverna, batalha, vitória e castelo amaldiçoado. Os efeitos do portão, gritos e risadas usam o canal de efeitos; as falas de personagens usam o canal de vozes. Os créditos das músicas e efeitos CC0 usados nas campanhas estão em [MUSIC_CREDITS.md](MUSIC_CREDITS.md).
+As campanhas têm trilhas próprias para exploração, caverna, batalha, vitória, Castelo Amaldiçoado, Corredor do Infinito e Xadrez de Bruxo. Os efeitos do portão, gritos e risadas usam o canal de efeitos; as falas de personagens usam o canal de vozes. Os créditos das músicas e efeitos CC0 usados nas campanhas estão em [MUSIC_CREDITS.md](MUSIC_CREDITS.md).
 
 ## Tecnologias
 
@@ -83,7 +87,7 @@ As campanhas têm trilhas próprias para exploração, caverna, batalha, vitóri
 - CSS para a interface responsiva e os ajustes de acessibilidade.
 - Web Audio API para efeitos sonoros e arquivos de áudio para música e vozes.
 - Jest, React Testing Library e axe-core para verificações automatizadas.
-- GitHub Pages para hospedagem, com publicação via `gh-pages`.
+- GitHub Pages para hospedagem, com publicação via GitHub Actions.
 
 ## Executar localmente
 
@@ -144,7 +148,13 @@ src/
     DragonCave.js               Exploração e combate na caverna
     DragonChamber.js            Cena, batalha e desfecho do dragão
     CursedCastle.js             Arredores do castelo amaldiçoado
-    CursedCastleInterior.js     Salão inicial do castelo
+    InfiniteCorridor.js         Corredor com manto, pontos de retorno e giros
+    CursedCastleCourtyard.js    Pátio da bruxa e Câmara do Guardião Arcano
+    WizardChess.js              Xadrez de Bruxo em 3D e tabuleiro acessível
+    ThroneHall.js               Salão do trono de Felipe na vila
+    CampaignNavigation.js       Botão de navegação entre mapas
+    TouchInteract.js            Controle de interação por toque
+    TouchAttack.js              Controle de ataque por toque
     returnPortal.js             Portal de retorno padronizado
     facePlayer.js               Orientação de personagens para o jogador
     villageNavigation.js        Destinos e regras de movimentação
@@ -161,7 +171,7 @@ Consulte [VILAREJO.md](VILAREJO.md) para detalhes do cenário, áudio, controles
 
 [E-mail](mailto:felipesantosswengineer@gmail.com) · [LinkedIn](https://www.linkedin.com/in/felipe-santos-rodrigues/)
 
-### Musicas de ambiente
+### Músicas de ambiente
 
 - Vila: [The Bard's Tale, de RandomMind](https://opengameart.org/content/medieval-the-bards-tale), CC0.
 - Castelo: [King's Feast, de RandomMind](https://opengameart.org/content/medieval-kings-feast), CC0.

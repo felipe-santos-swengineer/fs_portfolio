@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { buildChamberArchitecture } from './arcaneChamberArchitecture';
-import { buildArcaneRitual } from './arcaneChamberRitual';
+import { buildArcaneRitual, runeArc } from './arcaneChamberRitual';
 
 function createGargoyle(scene, { mesh, box, cylinder, sphere }, x, z) {
   const statue = new THREE.Group();
@@ -50,51 +50,6 @@ function createGargoyle(scene, { mesh, box, cylinder, sphere }, x, z) {
   return statue;
 }
 
-function createSpider(scene, { mesh, sphere }, x, z, scale, phase) {
-  const spider = new THREE.Group();
-  spider.position.set(x, 0, z);
-  spider.rotation.y = x > 0 ? -.94 : .92;
-  spider.scale.setScalar(scale);
-  scene.add(spider);
-  const body = new THREE.Group();
-  spider.add(body);
-  sphere(body, .63, '#242431', 0, .7, -.51).scale.set(1.02, .88, 1.26);
-  sphere(body, .36, '#42343f', 0, .58, .24).scale.set(1.17, .78, 1.04);
-  sphere(body, .27, '#694554', 0, 1.19, -.58).scale.set(.63, .14, 1.18);
-  const limbs = [];
-  const segment = (parent, from, to, radius, color) => {
-    const axis = new THREE.Vector3().subVectors(to, from);
-    const middle = from.clone().addScaledVector(axis, .5);
-    const shape = new THREE.CylinderGeometry(radius * .72, radius, axis.length(), 5);
-    const leg = mesh(parent, shape, color, middle.x, middle.y, middle.z);
-    leg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis.normalize());
-  };
-  for (const side of [-1, 1]) {
-    for (let i = 0; i < 4; i++) {
-      const leg = new THREE.Group();
-      leg.position.set(side * .26, .62, .36 - i * .205);
-      spider.add(leg);
-      const sweep = (.9 - i * .6);
-      const knee = new THREE.Vector3(side * .89, .57, sweep * .43);
-      const foot = new THREE.Vector3(side * (1.42 + .18 * Math.sin(i)), -.59, sweep);
-      segment(leg, new THREE.Vector3(), knee, .086, '#37303b');
-      segment(leg, knee, foot, .064, '#282835');
-      sphere(leg, .105, '#594251', knee.x, knee.y, knee.z);
-      limbs.push({ leg, phase: phase + i * 1.27 + side });
-    }
-    for (let i = 0; i < 3; i++) {
-      sphere(body, .046 - i * .007, '#ff8465', side * (.073 + i * .071), .66 - i * .028, .579 - i * .034);
-    }
-    const fang = mesh(body, new THREE.ConeGeometry(.06, .21, 5), '#c4b2a6', side * .12, .47, .605);
-    fang.rotation.x = Math.PI;
-  }
-  return (time, reduced, chessView) => {
-    spider.visible = !chessView;
-    body.position.y = reduced ? 0 : Math.sin(time * 2 + phase) * .044;
-    for (const limb of limbs) limb.leg.rotation.y = reduced ? 0 : Math.sin(time * 1.62 + limb.phase) * .044;
-  };
-}
-
 function createFloorMist(scene) {
   const mist = new THREE.Group();
   scene.add(mist);
@@ -139,43 +94,23 @@ function createFloorMist(scene) {
 }
 
 export function furnishThroneEntrance(scene, helpers, boardZ, doorZ) {
-  const { box, cylinder } = helpers;
-  const obstacles = [];
   const gargoyles = [];
-  const ceiling = box(scene, 36, .65, 48, '#242833', 0, 8, 0);
-  buildChamberArchitecture(scene, helpers, ceiling);
-  const ritual = buildArcaneRitual(scene, helpers, boardZ, doorZ);
-  obstacles.push(...ritual.stones);
-  for (let z = -19; z <= 15; z += 2.6) {
-    box(scene, 4.9, .055, 2.42, '#373c48', 0, .02, z);
-    for (const side of [-1, 1]) box(scene, .18, .075, 2.42, '#626572', side * 2.4, .038, z);
+  const architecture = buildChamberArchitecture(scene, helpers);
+  const stoneInk = new THREE.LineBasicMaterial({ color: '#c1ada0' });
+  for (const panel of architecture.inscriptionPanels) {
+    runeArc(panel, stoneInk, { count: 9, radius: .33, size: .16, plane: 'wall', z: .123 });
   }
-
+  const ritual = buildArcaneRitual(scene, helpers, boardZ, doorZ);
+  const obstacles = [...ritual.stones, ...architecture.columns];
   for (const side of [-1, 1]) {
-    box(scene, .65, 7.7, 44, '#313642', side * 11.8, 3.85, 0);
-    for (const z of [-16, -6, 4, 14]) {
-      cylinder(scene, .67, 7.65, '#494e59', side * 9.5, 3.82, z);
-      box(scene, 1.6, .38, 1.6, '#414653', side * 9.5, .2, z);
-      box(scene, 1.5, .36, 1.5, '#505361', side * 9.5, 7.5, z);
-      box(scene, .16, .75, .25, '#333041', side * 9.5, 3.03, z + .64);
-      box(scene, .27, .37, .24, '#9cb8d3', side * 9.5, 3.55, z + .7);
-      const light = new THREE.PointLight(side === 1 ? '#ac91ee' : '#87c6d5', 24, 12);
-      light.position.set(side * 9.2, 3.5, z + 1.05);
-      scene.add(light);
-    }
     gargoyles.push(createGargoyle(scene, helpers, side * 5.25, -3.7));
     obstacles.push({ x: side * 5.25, z: -3.7, radius: 1.28 });
   }
 
-  const spiders = [[-5.25, -9.2, 1.55, .4], [5.95, -12, 1.68, 2.1], [5.35, 2.4, 1.48, 3.6]]
-    .map(([x, z, scale, phase]) => {
-      obstacles.push({ x, z, radius: scale * .78 });
-      return createSpider(scene, helpers, x, z, scale, phase);
-    });
   const updateMist = createFloorMist(scene);
   let motionTime = 0;
   return {
-    ceiling,
+    updateArchitectureView: architecture.updateArchitectureView,
     blocks(x, z) {
       return obstacles.some(place => Math.hypot(x - place.x, z - place.z) < place.radius);
     },
@@ -183,7 +118,6 @@ export function furnishThroneEntrance(scene, helpers, boardZ, doorZ) {
       if (!reduced) motionTime += dt;
       updateMist(reduced ? 0 : motionTime, showMist);
       for (const statue of gargoyles) statue.visible = !chessView;
-      for (const pose of spiders) pose(motionTime, reduced, chessView);
       ritual.update(motionTime, revealed, unlocked, reduced, chessView);
     },
   };

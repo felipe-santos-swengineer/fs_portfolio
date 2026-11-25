@@ -1,4 +1,22 @@
-.rapids-hud { position:absolute; top:20px; left:5%; display:flex; gap:16px; padding:10px 14px; border-radius:6px; color:#fff; background:#173b40e8; font-weight:700; }
+.rapids-hud {
+  position: absolute;
+  top: 22px;
+  left: 5%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  max-width: 42%;
+  padding: 10px 14px;
+  border-radius: 6px;
+  color: #fff;
+  background: #173b40e8;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.game-ui-hidden .rapids-hud { max-width: 90%; }
+@media (max-width: 600px) {
+  .rapids-hud { top: 12px; padding: 7px 9px; font-size: .85em; }
+}
 .rapids-overlay { position:absolute; inset:0; display:grid; place-items:center; padding:20px; background:#102a32a6; }
 .rapids-card { max-width:460px; padding:24px; border:1px solid #b7ddd1; border-radius:10px; background:#173b40f5; color:#fff; text-align:center; }
 .rapids-card h2 { margin:0 0 12px; font-family:Georgia,serif; }

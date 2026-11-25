@@ -14,6 +14,15 @@ Estas regras se aplicam a novos mapas e a alterações nos mapas existentes. Sig
 - Mantenha o retorno por contato com o portal, por interação de proximidade com a tecla indicada e por clique/toque no próprio portal, conforme o lago. O retorno deve funcionar em teclado, mouse e toque, limpar as teclas pressionadas e evitar disparos duplicados. Preserve o destino e o posicionamento de retorno à vila definidos pelo fluxo existente.
 - Mostre a placa e os textos nos dois idiomas. Não substitua o contato pelo portal por um botão de tela ou atalho isolado; um botão adicional pode coexistir quando solicitado ou necessário para acessibilidade.
 
+## Interface das campanhas e botão de portal
+
+- Use um único botão com ícone de portal no canto superior direito para a navegação entre mapas. Reaproveite `src/components/CampaignNavigation.js` e o modal em `src/App.js`. O modal permite voltar à vila, voltar ao mapa anterior, reiniciar o mapa atual e avançar ao próximo mapa ou campanha. Desabilite as opções sem destino. Ao abrir, pause a cena e limpe as teclas pressionadas. Permita fechar com Escape.
+- Organize os painéis de status à esquerda em uma coluna, com o topo alinhado ao botão de portal e margens laterais simétricas. Use o espaçamento e os estilos compartilhados de `src/components/Lake.css`. Reserve espaço para textos em português e inglês e deixe os painéis crescerem sem sobreposição, inclusive no celular.
+- Use o controle global **Ocultar UI** para esconder o botão de portal e os painéis opcionais. Mantenha disponíveis o controle de reexibir a UI, os diálogos ativos e as ações necessárias para continuar o jogo. Nas corredeiras, com a UI ligada, o portal permanece visível na abertura, durante a descida e no resultado. Sua visibilidade depende apenas desse controle.
+- Durante lutas contra chefes, inclusive a bruxa e o dragão, mantenha visíveis e atualizadas as vidas do jogador e a vida restante do chefe, mesmo com a UI ocultada. Aplique a ocultação aos detalhes opcionais do combate, preservando o painel que contém esses indicadores.
+- Na luta contra o dragão, o golpe final encerra a exibição do painel de vidas do jogador e do chefe. Mantenha o painel oculto durante a animação de morte e a celebração.
+- Ao voltar ou avançar entre mapas, reinicie o estado de jogo do destino. Portas e selos começam fechados, mecanismos voltam à posição inicial e chefes derrotados reaparecem com a vida completa. Trate o ponto de chegada separadamente do progresso da visita anterior.
+
 ## NPCs cenográficos e balões de diálogo
 
 - Para NPCs que apenas comentam o ambiente sem abrir uma conversa, siga os balões acima da cabeça dos prisioneiros em `src/components/Dungeon.js` e dos moradores em `src/components/dragonAftermath.js`: formato, cores, escala, legibilidade, posicionamento e texto localizado em português e inglês.
@@ -29,6 +38,10 @@ Estas regras se aplicam a novos mapas e a alterações nos mapas existentes. Sig
 - Não aplique esse giro automaticamente a todos os NPCs interativos. Outros personagens podem patrulhar, caminhar ou manter a orientação própria de sua cena; só altere esse comportamento quando o papel de guia ou uma instrução específica exigir.
 
 ## Tutoriais e controles
+
+- Em telas menores, coloque as setas de movimento imediatamente abaixo da área jogável, antes de missões, destinos e ações de desafio. Agrupe os botões na ordem **setas**, **Interagir**, **Atacar**, conforme as ações disponíveis no mapa. Permita a quebra de linha quando faltar espaço.
+- Nos mapas que usam F ou E, use `src/components/TouchInteract.js` para oferecer **Interagir** junto às setas. Cada toque deve executar uma única ação de contexto, seguindo as condições do teclado. Mantenha o botão visível e desabilitado, com aparência esmaecida, enquanto não houver um alvo próximo com uma ação disponível. Reavalie a disponibilidade ao se afastar, concluir a ação, abrir um diálogo ou pausar.
+- Para o ataque de toque, siga o botão da caverna e reutilize `src/components/TouchAttack.js`, com o mesmo estilo e os rótulos em português e inglês. Posicione **Atacar** após **Interagir**. Na câmara do dragão, exiba o botão durante o combate e desabilite-o quando o jogo estiver pausado.
 
 - Use `src/components/MapControlGuide.js` e os guias `.scene-guide` existentes como referência. Mostre apenas comandos que o mapa realmente oferece, com versões adequadas para teclado e toque e textos nos dois idiomas.
 - Separe as instruções com espaço, sem bolinhas ou pontos de interrogação decorativos. Preserve a legibilidade em celular e os nomes acessíveis dos botões.

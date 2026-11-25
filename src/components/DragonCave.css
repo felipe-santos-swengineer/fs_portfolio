@@ -5,8 +5,5 @@
 .cave-notice { position:absolute; z-index:3; left:50%; top:20px; transform:translateX(-50%); padding:10px 14px; border-radius:5px; background:#302920ed; color:#fff1cb; text-align:center; }
 @media(max-width:600px) { .cave-status { top:12px; padding:8px 10px; } .cave-notice { top:100px; width:max-content; max-width:90%; } }
 
-.dragon-cave .lake-touch button:last-child { width:auto; min-width:70px; padding:0 10px; font-size:14px; }
-@media(max-width:420px) { .dragon-cave .lake-touch { gap:5px; padding:10px 5px; } .dragon-cave .lake-touch button { width:44px; height:48px; } .dragon-cave .lake-touch button:last-child { width:auto; min-width:62px; } }
-
 .cave-chamber-shortcut { position:absolute; z-index:3; top:76px; right:5%; max-width:40%; padding:10px 14px; background:#112b32ed; border:1px solid #98b9ad; border-radius:5px; color:white; }
 @media(max-width:600px) { .cave-chamber-shortcut { top:70px; padding:8px 10px; font-size:12px; } }

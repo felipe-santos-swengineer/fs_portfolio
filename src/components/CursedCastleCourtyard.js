@@ -1,3 +1,4 @@
+import TouchInteract from './TouchInteract';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -15,7 +16,7 @@ import './Lake.css';
 import './CursedCastle.css';
 import './DragonChamber.css';
 
-export default function CursedCastleCourtyard({language,paused,reduceMotion,onExit,onAdvance,onStep,onSound,onWeather,onEncounterChange,onSpeak,onStopVoice,voiceEnabled,weatherEffects=true,interior=false,completed=false,throneUnlocked=false,onThroneUnlock,onChessPieceFocus,onChessAttack,onChessOpenChange}) {
+export default function CursedCastleCourtyard({ campaignNavigation,language,paused,reduceMotion,onExit,onAdvance,onStep,onSound,onWeather,onEncounterChange,onSpeak,onStopVoice,voiceEnabled,weatherEffects=true,interior=false,completed=false,throneUnlocked=false,onThroneUnlock,onChessPieceFocus,onChessAttack,onChessOpenChange}) {
   const mount=useRef(null),keys=useRef(new Set()),state=useRef({});
   const [chessOpen, setChessOpen] = useState(false);
   useEffect(() => {
@@ -119,42 +120,44 @@ export default function CursedCastleCourtyard({language,paused,reduceMotion,onEx
     const mesh=(p,g,c,x,y,z)=>{const m=new THREE.Mesh(g,material(c));m.position.set(x,y,z);p.add(m);return m;};const box=(p,w,h,d,c,x,y,z)=>mesh(p,new THREE.BoxGeometry(w,h,d),c,x,y,z),sphere=(p,r,c,x,y,z)=>mesh(p,new THREE.IcosahedronGeometry(r,1),c,x,y,z),cylinder=(p,r,h,c,x,y,z,n=8)=>mesh(p,new THREE.CylinderGeometry(r,r,h,n),c,x,y,z);
     const ground = mesh(scene, new THREE.PlaneGeometry(42, 52), '#252c2b', 0, -.08, 0);
     ground.rotation.x = -Math.PI / 2;
-    const stones = ['#454e50', '#50585a', '#3e4849', '#49534e'];
-    const pavers = new THREE.InstancedMesh(new THREE.BoxGeometry(2.06, .08, 2.4),
-      new THREE.MeshStandardMaterial({ roughness: .65 }), 20 * 17);
-    const paverTransform = new THREE.Matrix4(), paverColor = new THREE.Color();
-    let paverIndex = 0;
-    for (let row = 0; row < 20; row++) {
-      for (let col = -8; col <= 8; col++) {
-        const x = col * 2.15 + (row % 2) * 1.075;
-        const z = -23.75 + row * 2.5;
-        const color = stones[Math.abs(row * 7 + col * 13 + (row * col) % 5) % stones.length];
-        pavers.setMatrixAt(paverIndex, paverTransform.makeTranslation(x, -.035, z));
-        pavers.setColorAt(paverIndex, paverColor.set(color));
-        paverIndex++;
+    if (!interior) {
+      const stones = ['#454e50', '#50585a', '#3e4849', '#49534e'];
+      const pavers = new THREE.InstancedMesh(new THREE.BoxGeometry(2.06, .08, 2.4),
+        new THREE.MeshStandardMaterial({ roughness: .65 }), 20 * 17);
+      const paverTransform = new THREE.Matrix4(), paverColor = new THREE.Color();
+      let paverIndex = 0;
+      for (let row = 0; row < 20; row++) {
+        for (let col = -8; col <= 8; col++) {
+          const x = col * 2.15 + (row % 2) * 1.075;
+          const z = -23.75 + row * 2.5;
+          const color = stones[Math.abs(row * 7 + col * 13 + (row * col) % 5) % stones.length];
+          pavers.setMatrixAt(paverIndex, paverTransform.makeTranslation(x, -.035, z));
+          pavers.setColorAt(paverIndex, paverColor.set(color));
+          paverIndex++;
+        }
       }
-    }
-    scene.add(pavers);
+      scene.add(pavers);
 
-    for (const side of [-1, 1]) {
-      box(scene, 1.4, 8, 50, '#424b55', side * 18.5, 4, 0);
-      box(scene, 1.75, .45, 50, '#677379', side * 18.5, 8, 0);
-      box(scene, 38, 8, 1.4, '#424b55', 0, 4, side * 24.5);
-      box(scene, 38, .45, 1.75, '#677379', 0, 8, side * 24.5);
-      for (let z = -20; z <= 20; z += 3.3) {
-        box(scene, 1.55, 1.6, 1.5, '#536068', side * 18.5, 8.9, z);
-        box(scene, .15, .85, 2.9, '#535e64', side * 17.74, 2, z);
-      }
-      for (let x = -15; x <= 15; x += 3) {
-        box(scene, 1.55, 1.6, 1.55, '#536068', x, 8.9, side * 24.5);
-      }
-      for (const z of [-24, 24]) {
-        cylinder(scene, 3.2, 12.5, '#4f5a62', side * 18.5, 6.25, z, 10);
-        cylinder(scene, 3.45, .55, '#66747b', side * 18.5, 12.6, z, 10);
-        for (let i = 0; i < 8; i++) {
-          const angle = i * Math.PI / 4;
-          box(scene, .85, 1.3, .85, '#56646d',
-            side * 18.5 + Math.cos(angle) * 2.9, 13.4, z + Math.sin(angle) * 2.9);
+      for (const side of [-1, 1]) {
+        box(scene, 1.4, 8, 50, '#424b55', side * 18.5, 4, 0);
+        box(scene, 1.75, .45, 50, '#677379', side * 18.5, 8, 0);
+        box(scene, 38, 8, 1.4, '#424b55', 0, 4, side * 24.5);
+        box(scene, 38, .45, 1.75, '#677379', 0, 8, side * 24.5);
+        for (let z = -20; z <= 20; z += 3.3) {
+          box(scene, 1.55, 1.6, 1.5, '#536068', side * 18.5, 8.9, z);
+          box(scene, .15, .85, 2.9, '#535e64', side * 17.74, 2, z);
+        }
+        for (let x = -15; x <= 15; x += 3) {
+          box(scene, 1.55, 1.6, 1.55, '#536068', x, 8.9, side * 24.5);
+        }
+        for (const z of [-24, 24]) {
+          cylinder(scene, 3.2, 12.5, '#4f5a62', side * 18.5, 6.25, z, 10);
+          cylinder(scene, 3.45, .55, '#66747b', side * 18.5, 12.6, z, 10);
+          for (let i = 0; i < 8; i++) {
+            const angle = i * Math.PI / 4;
+            box(scene, .85, 1.3, .85, '#56646d',
+              side * 18.5 + Math.cos(angle) * 2.9, 13.4, z + Math.sin(angle) * 2.9);
+          }
         }
       }
     }
@@ -390,11 +393,12 @@ export default function CursedCastleCourtyard({language,paused,reduceMotion,onEx
           reduced, revealed, unlocked: throneUnlocked, chessView: game?.show3D,
           showMist: state.current.weatherEffects && !game?.show3D,
         });
-        entranceDecor.ceiling.visible = !game?.show3D;
         if (state.current.chessOpen && game?.show3D) {
           orbit.enabled = false;
           const hudFraction = (game.hudHeight.current + 16) / el.clientHeight;
-          renderer.render(scene, throne.view(camera.aspect, hudFraction));
+          const chessCamera = throne.view(camera.aspect, hudFraction);
+          entranceDecor.updateArchitectureView(chessCamera.position, true);
+          renderer.render(scene, chessCamera);
           return;
         }
       }
@@ -438,7 +442,7 @@ export default function CursedCastleCourtyard({language,paused,reduceMotion,onEx
             const nz = player.position.z + direction.z * speed * dt;
             if (Math.abs(nx) < (interior ? 9.3 : 16.5) && Math.abs(nz) < 22
               && (!throne || (!entranceDecor.blocks(nx, nz) && !throne.blocks(nx, nz, revealed, state.current.throneUnlocked)
-                && (nz > THRONE_DOOR_Z + .45 || (state.current.throneUnlocked && Math.abs(nx) < 1.65))))
+                && (nz > THRONE_DOOR_Z + .45 || (state.current.onAdvance && state.current.throneUnlocked && Math.abs(nx) < 1.65))))
               && Math.hypot(18.5 - Math.abs(nx), 24 - Math.abs(nz)) > 3.55) {
               player.position.set(nx, 0, nz);
               player.rotation.y = Math.atan2(direction.x, direction.z);
@@ -462,7 +466,7 @@ export default function CursedCastleCourtyard({language,paused,reduceMotion,onEx
               nearDoor = close;
               setNearSeal(close);
             }
-            if (!entering && state.current.throneUnlocked && Math.abs(px) < 1.65 && pz <= THRONE_DOOR_Z + .65) {
+            if (!entering && state.current.onAdvance && state.current.throneUnlocked && Math.abs(px) < 1.65 && pz <= THRONE_DOOR_Z + .65) {
               entering = true;
               clear();
               state.current.onAdvance?.();
@@ -637,6 +641,7 @@ export default function CursedCastleCourtyard({language,paused,reduceMotion,onEx
       look.copy(target);
       if (skyFocus > 0) look.lerp(witch.root.position, reduced ? Number(battle.phase === 'strike' || battle.phase === 'spin') * .8 : skyFocus * .82);
       camera.lookAt(look);
+      entranceDecor?.updateArchitectureView(camera.position);
       renderer.render(scene,camera);};frame=requestAnimationFrame(animate);
     return()=>{chessControls.current=null;chessGesture.current=null;skipScene.current=null;restartFight.current=null;skipFight.current=null;rewardAction.current=null;state.current.onSound?.('witch-stop');state.current.onWeather?.(0);cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);renderer.domElement.removeEventListener('wheel',wheelChess);clear();orbit.dispose();throne?.dispose();shockFlash.dispose();scene.traverse(o=>{if(o.isInstancedMesh)o.dispose();o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(![...materials.values()].includes(m))m.dispose();});});materials.forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();};
   },[completed, interior]);
@@ -662,16 +667,16 @@ export default function CursedCastleCourtyard({language,paused,reduceMotion,onEx
   return <section className="lake cursed-castle castle-courtyard"><div className="lake-viewport"><div ref={mount} className="lake-canvas"
       onPointerDown={interior ? startChessGesture : undefined} onPointerMove={interior ? moveChessGesture : undefined}
       onPointerUp={interior ? endChessGesture : undefined} onLostPointerCapture={interior ? endChessGesture : undefined}
-      onPointerCancel={interior ? endChessGesture : undefined}/><button className="lake-exit" hidden={chessOpen} disabled={paused || chessOpen} onClick={onExit}>{interior ? (en ? 'Return to courtyard' : 'Voltar ao pátio') : (en ? 'Return to outskirts' : 'Voltar aos arredores')}</button><div className="cursed-heading" hidden={chessOpen}><strong>{mapName}</strong></div>{error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D n\u00e3o est\u00e1 dispon\u00edvel neste navegador.'}</p>}{intro && <button type="button" className="chamber-skip" disabled={paused} onClick={() => skipScene.current?.()}>{en ? 'Skip cutscene' : 'Pular cutscene'}</button>}{intro && line !== -1 && <div className="chamber-subtitle" role="status" aria-live="polite"><strong>{en ? 'THE WITCH' : 'A BRUXA'}</strong><p>{line === -2 ? (en ? '[The witch cackles]' : '[A bruxa gargalha]') : witchDialogue[en ? 'en-US' : 'pt-BR'][line]}</p></div>}{fightActive && <div className="witch-battle-status">
+      onPointerCancel={interior ? endChessGesture : undefined}/><div className="encounter-controls" hidden={chessOpen}>
+      {campaignNavigation ?? <button className="lake-exit" hidden={chessOpen} disabled={paused || chessOpen} onClick={onExit}>{interior ? (en ? 'Return to courtyard' : 'Voltar ao pátio') : (en ? 'Return to outskirts' : 'Voltar aos arredores')}</button>}
+      {intro && <button type="button" className="battle-skip" disabled={paused} onClick={() => skipScene.current?.()}>{en ? 'Skip cutscene' : 'Pular cutscene'}</button>}
+      {fightActive && <button type="button" className="battle-skip" disabled={paused} onClick={() => skipFight.current?.()}>{en ? 'Skip fight' : 'Pular luta'}</button>}
+    </div><div className="courtyard-status" hidden={chessOpen}><div className="cursed-heading"><strong>{mapName}</strong></div>{fightActive && <div className="witch-battle-status">
       <span className="witch-lives" role="img" aria-label={en ? `${fight.lives} of ${WITCH_LIVES} lives` : `${fight.lives} de ${WITCH_LIVES} vidas`}>{'♥'.repeat(fight.lives)}{'♡'.repeat(WITCH_LIVES - fight.lives)}</span>
+      <small className="witch-health">{en ? 'Witch health' : 'Vida da bruxa'}: {WITCH_LIGHTNING_HITS - fight.strikes}/{WITCH_LIGHTNING_HITS}</small>
       <small>{en ? `Wave ${fight.wave}/${WITCH_WAVES}` : `Onda ${fight.wave}/${WITCH_WAVES}`}</small>
       <small>{en ? `Lightning strikes ${fight.strikes}/${WITCH_LIGHTNING_HITS}` : `Raios na bruxa ${fight.strikes}/${WITCH_LIGHTNING_HITS}`}</small>
       {fightActive && <><strong role="status" className={['groundCast', 'shock', 'poisonWarning', 'poison'].includes(fight.phase) ? 'witch-danger' : 'witch-refuge'}>{fightMessages[fight.phase]}</strong>{fight.phase === 'warning' && <span>{en ? `Shock in ${fight.seconds}s` : `Choque em ${fight.seconds}s`}</span>}</>}
-      <button type="button" className="courtyard-action" disabled={paused} onClick={() => skipFight.current?.()}>{en ? 'Skip fight' : 'Pular luta'}</button>
-    </div>}
-    {fight?.phase === 'lost' && <div className="battle-result" role="region" aria-label={en ? 'Battle result' : 'Resultado da batalha'}>
-      <strong role="status">{en ? 'You fell in battle.' : 'Você caiu em batalha.'}</strong>
-      <button type="button" disabled={paused} onClick={() => restartFight.current?.()}>{en ? 'Fight again' : 'Lutar novamente'}</button>
     </div>}
     {(reward === 'key' || reward === 'exit') && <div className="witch-battle-status courtyard-progress">
       <strong role="status">{reward === 'key'
@@ -681,14 +686,21 @@ export default function CursedCastleCourtyard({language,paused,reduceMotion,onEx
     </div>}
     {interior && (sealRevealed || throneUnlocked || error) && !chessOpen &&
       <div className="witch-battle-status courtyard-progress" role="status">{throneUnlocked
-        ? (en ? 'The seal is broken. The throne room is open.' : 'O selo foi quebrado. A sala do trono está aberta.')
+        ? (en ? 'The seal is broken. The Dark King’s throne room is unavailable.' : 'O selo foi quebrado. A sala do trono do Rei das Trevas está indisponível.')
         : (en ? 'An ancient seal blocks the door.' : 'Um selo antigo bloqueia a porta.')}</div>}
-    {interior && !chessOpen && (nearSeal || error || throneUnlocked) && <div className="village-actions">
+    </div>
+    {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D n\u00e3o est\u00e1 dispon\u00edvel neste navegador.'}</p>}{intro && line !== -1 && <div className="chamber-subtitle" role="status" aria-live="polite"><strong>{en ? 'THE WITCH' : 'A BRUXA'}</strong><p>{line === -2 ? (en ? '[The witch cackles]' : '[A bruxa gargalha]') : witchDialogue[en ? 'en-US' : 'pt-BR'][line]}</p></div>}
+    {fight?.phase === 'lost' && <div className="battle-result" role="region" aria-label={en ? 'Battle result' : 'Resultado da batalha'}>
+      <strong role="status">{en ? 'You fell in battle.' : 'Você caiu em batalha.'}</strong>
+      <button type="button" disabled={paused} onClick={() => restartFight.current?.()}>{en ? 'Fight again' : 'Lutar novamente'}</button>
+    </div>}
+
+    {interior && !chessOpen && (throneUnlocked ? onAdvance : nearSeal || error) && <div className="village-actions">
       <button type="button" aria-keyshortcuts={throneUnlocked ? undefined : 'E'} disabled={paused}
         onClick={throneUnlocked ? onAdvance : showChess}>{throneUnlocked
           ? (en ? 'Enter the throne room' : 'Entrar na sala do trono')
           : <>{en ? 'Play Wizard’s Chess' : 'Jogar Xadrez de Bruxo'} <kbd aria-hidden="true">E</kbd></>}</button>
     </div>}
     {interior && <WizardChess interaction={chessInteraction} has3D={!error} onPieceFocus={onChessPieceFocus} onResetView={() => chessControls.current?.reset()} onZoom={factor => chessControls.current?.zoom(factor)} en={en} open={chessOpen} paused={paused} onClose={closeChess} onBoard={updateChessBoard} capturePending={!error && capturePending} onWin={releaseSeal} onSkip={skipChess}/>}
-    <div className="scene-guide map-control-guide" hidden={intro || chessOpen}><div className="scene-caption"><span className="live-dot"/> {mapName}</div><div className="walk-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> {en?'or arrows to walk':'ou setas para caminhar'} {' '}<kbd>Shift</kbd> {en?'run':'correr'}</span><span className="keyboard-guide">{en?'Drag to rotate':'Arraste para girar'}</span><span className="touch-guide">{en?'Use arrows to walk and drag to rotate':'Use as setas para caminhar e arraste para girar'}</span></div></div></div><div className={chessOpen ? "lake-touch chess-walking-hidden" : "lake-touch"} aria-label={en?'Walking controls':'Controles de caminhada'}>{[['arrowleft',en?'Left':'Esquerda','\u2190'],['arrowup',en?'Forward':'Frente','\u2191'],['arrowdown',en?'Back':'Tr\u00e1s','\u2193'],['arrowright',en?'Right':'Direita','\u2192']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} disabled={paused || chessOpen || intro || fight?.phase === 'lost'} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}</div></section>;
+    <div className="scene-guide map-control-guide" hidden={intro || chessOpen}><div className="scene-caption"><span className="live-dot"/> {mapName}</div><div className="walk-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> {en?'or arrows to walk':'ou setas para caminhar'} {' '}<kbd>Shift</kbd> {en?'run':'correr'}</span><span className="keyboard-guide">{en?'Drag to rotate':'Arraste para girar'}</span><span className="touch-guide">{en?'Use arrows to walk and drag to rotate':'Use as setas para caminhar e arraste para girar'}</span></div></div></div><div className={chessOpen ? "lake-touch chess-walking-hidden" : "lake-touch"} aria-label={en?'Walking controls':'Controles de caminhada'}>{[['arrowleft',en?'Left':'Esquerda','\u2190'],['arrowup',en?'Forward':'Frente','\u2191'],['arrowdown',en?'Back':'Tr\u00e1s','\u2193'],['arrowright',en?'Right':'Direita','\u2192']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} disabled={paused || chessOpen || intro || fight?.phase === 'lost'} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}<TouchInteract language={language} onInteract={interior ? (throneUnlocked ? onAdvance : showChess) : () => rewardAction.current?.()} disabled={paused || chessOpen || intro || !(interior ? nearSeal && (!throneUnlocked || onAdvance) : nearReward && (reward === 'key' || reward === 'exit'))} /></div></section>;
 }

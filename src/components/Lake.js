@@ -1,3 +1,4 @@
+import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -13,9 +14,12 @@ import { LAKE_PORTAL_Z, nearLakePortal, touchingLakePortal } from './lakePortal'
 import lakeGuide from './lakeGuide.json';
 import LakeGuideDialogue from './LakeGuideDialogue';
 import MapControlGuide from './MapControlGuide';
+import { createLakeWater, lakeFogColor } from './lakeWater';
+import { buildLakeSanctuary } from './lakeSanctuary';
+import { sceneFrameDelta } from './sceneFrameDelta';
 
 
-export default function Lake({ language, paused, reduceMotion, onExit, onSound, onEnterRapids, onSpeak, onStop, speaking, voiceEnabled, voiceNotice }) {
+export default function Lake({ campaignNavigation, language, paused, reduceMotion, onExit, onSound, onEnterRapids, onSpeak, onStop, speaking, voiceEnabled, voiceNotice }) {
   const mount = useRef(null);
   const portalSignRef = useRef(null);
   const guideSignRef = useRef(null);
@@ -32,6 +36,7 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
   state.current = { paused, reduceMotion, language, onSound };
   const [error, setError] = useState(false);
   const [aboard, setAboard] = useState(false);
+  const [nearPortal, setNearPortal] = useState(false);
   const [nearCave, setNearCave] = useState(false);
   const enterRapidsRef = useRef(onEnterRapids); enterRapidsRef.current = onEnterRapids;
   const exitRef = useRef(onExit); exitRef.current = onExit;
@@ -51,16 +56,34 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
     renderer.domElement.setAttribute('aria-label', 'Lake / Lago');
     el.appendChild(renderer.domElement);
     renderer.domElement.focus({ preventScroll: true });
-    const scene = new THREE.Scene(); scene.background = new THREE.Color('#a7d3d1'); scene.fog = new THREE.Fog('#a7d3d1', 32, 75);
-    scene.add(new THREE.HemisphereLight('#e6f4e6', '#4a6450', 2));
-    const light = new THREE.DirectionalLight('#fff3d0', 2); light.position.set(5, 15, 8); scene.add(light);
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(lakeFogColor);
+    scene.fog = new THREE.Fog(lakeFogColor, 35, 78);
+    scene.add(new THREE.HemisphereLight('#c4ddf5', '#53605c', 1.65));
+    const moonlight = new THREE.DirectionalLight('#bbd9f6', 1.75);
+    moonlight.position.set(-10, 18, -15);
+    scene.add(moonlight);
     const camera = new THREE.PerspectiveCamera(45, 1, .1, 100);
     // A camera-centred panorama keeps distant shores visible along the river.
     const horizonCanvas=document.createElement('canvas'); horizonCanvas.width=2048; horizonCanvas.height=512;
     const horizonContext=horizonCanvas.getContext('2d');
     const sky=horizonContext.createLinearGradient(0,0,0,512);
-    sky.addColorStop(0,'#93c7cc'); sky.addColorStop(.65,'#c4dcd0'); sky.addColorStop(1,'#d7d4b0');
+    sky.addColorStop(0, '#0b1b35'); sky.addColorStop(.59, '#344e65'); sky.addColorStop(1, '#526879');
     horizonContext.fillStyle=sky; horizonContext.fillRect(0,0,2048,512);
+    const moonX = 1370, moonY = 154;
+    const moonHalo = horizonContext.createRadialGradient(moonX, moonY, 9, moonX, moonY, 62);
+    moonHalo.addColorStop(0, 'rgba(188,218,238,.48)');
+    moonHalo.addColorStop(1, 'rgba(188,218,238,0)');
+    horizonContext.fillStyle = moonHalo;
+    horizonContext.fillRect(moonX - 62, moonY - 62, 124, 124);
+    horizonContext.fillStyle = '#cedbe9';
+    horizonContext.beginPath();
+    horizonContext.arc(moonX, moonY, 13, 0, Math.PI * 2);
+    horizonContext.fill();
+    for (let i = 0; i < 92; i++) {
+      horizonContext.fillStyle = 'rgba(196,219,239,' + (.17 + i % 5 * .085) + ')';
+      horizonContext.fillRect((i * 327 + 61) % 2048, 25 + (i * 113 + 29) % 215, i % 12 === 0 ? 2 : 1, 1);
+    }
     const ridge=(base,amplitude,color,phase)=>{
       horizonContext.fillStyle=color; horizonContext.beginPath(); horizonContext.moveTo(0,512);
       for(let x=0;x<=2048;x+=8) {
@@ -70,12 +93,9 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
       }
       horizonContext.lineTo(2048,512); horizonContext.closePath(); horizonContext.fill();
     };
-    ridge(340,45,'#a0bcb2',.4); ridge(385,55,'#7fa59a',1.3); ridge(435,35,'#678f80',2.1);
-    // Warm distant hills blend into the desert bank.
-    const warmth=horizonContext.createLinearGradient(0,0,2048,0);
-    warmth.addColorStop(0,'rgba(199,171,122,0)'); warmth.addColorStop(.35,'rgba(199,171,122,0)');
-    warmth.addColorStop(.55,'rgba(199,171,122,.55)'); warmth.addColorStop(.8,'rgba(199,171,122,.4)'); warmth.addColorStop(1,'rgba(199,171,122,0)');
-    horizonContext.fillStyle=warmth; horizonContext.fillRect(0,300,2048,212);
+    ridge(340, 45, '#455a6c', .4);
+    ridge(385, 55, '#354b56', 1.3);
+    ridge(435, 35, '#263e46', 2.1);
     const horizonTexture=new THREE.CanvasTexture(horizonCanvas); horizonTexture.colorSpace=THREE.SRGBColorSpace;
     const alphaPixels=new Uint8Array(256*4);
     for(let y=0;y<256;y++) { const opacity=Math.round(255*Math.min(1,Math.max(0,(1-y/255)*5))); alphaPixels.set([opacity,opacity,opacity,255],y*4); }
@@ -86,14 +106,8 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
 
     const mat = color => new THREE.MeshStandardMaterial({ color, roughness: .85 });
     const add = (parent, geo, color, x, y, z) => { const m = new THREE.Mesh(geo, mat(color)); m.position.set(x,y,z); parent.add(m); return m; };
-    // A straight river separates the forest and desert along its full length.
-    // A translucent, softly undulating surface reveals the fish below it.
-    add(scene,new THREE.BoxGeometry(24,.12,138),'#316f78',0,-.8,-49);
-    const waterGeometry=new THREE.PlaneGeometry(24,138,24,100);
-    waterGeometry.rotateX(-Math.PI/2);
-    const waterBase=waterGeometry.attributes.position.array.slice();
-    const water=new THREE.Mesh(waterGeometry,new THREE.MeshStandardMaterial({color:'#62b5bb',transparent:true,opacity:.68,roughness:.28,metalness:.12,side:THREE.DoubleSide,depthWrite:false}));
-    water.position.set(0,.02,-49); water.renderOrder=2; scene.add(water);
+    add(scene, new THREE.BoxGeometry(27.3, .12, 138), '#235060', 0, -.8, -49);
+    const updateWater = createLakeWater(scene);
     const fish=[];
     for(let i=0;i<20;i++) {
       const group=new THREE.Group(); scene.add(group);
@@ -103,60 +117,12 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
       fish.push({group,tail,x:-8+(i%5)*4,z:10-Math.floor(i/5)*28-(i%3)*4,phase:i*1.71});
     }
     let waterTime=0;
-    add(scene,new THREE.BoxGeometry(34,.4,145),'#728b5a',-29,-.3,-45);
-    add(scene,new THREE.BoxGeometry(34,.4,145),'#d7b779',29,-.3,-45);
-    add(scene,new THREE.BoxGeometry(30,.4,18),'#879363',0,-.2,29);
-    // Seeded rejection sampling keeps the landscape stable across renders while
-    // leaving room for landmarks and for the horses' animated paths.
-    let scenerySeed=87321;
-    const random=()=>{ scenerySeed=(Math.imul(scenerySeed,1664525)+1013904223)>>>0; return scenerySeed/4294967296; };
-    const occupied=[
-      {x:-19,z:-16,r:5}, {x:-19,z:-35,r:12}, // cabin and horses
-      {x:17,z:-22,r:5}, {x:24,z:-21,r:3}, // camp and tent
-      {x:16,z:-57,r:3.5}, {x:24,z:-57,r:3.5},
-      {x:26,z:-83,r:8}, {x:-12.8,z:-42,r:2}, {x:12.8,z:-42,r:2}
-    ];
-    const place=(minX,maxX,minZ,maxZ,r)=>{
-      for(let attempt=0;attempt<500;attempt++) {
-        const x=minX+random()*(maxX-minX), z=minZ+random()*(maxZ-minZ);
-        const nearBridgeStairs=Math.abs(z+42)<3.5+r && Math.abs(x)>14 && Math.abs(x)<28+r;
-        if(!nearBridgeStairs && occupied.every(item=>Math.hypot(x-item.x,z-item.z)>=r+item.r)) {
-          occupied.push({x,z,r}); return {x,z};
-        }
-      }
-      return null;
+    add(scene, new THREE.BoxGeometry(30, .4, 18), '#495444', 0, -.2, 29);
+    let scenerySeed = 87321;
+    const random = () => {
+      scenerySeed = (Math.imul(scenerySeed, 1664525) + 1013904223) >>> 0;
+      return scenerySeed / 4294967296;
     };
-    for(let i=0;i<80;i++) {
-      const spot=place(-42,-14,-113,22,1.5);
-      if(!spot) break;
-      const {x,z}=spot;
-      add(scene,new THREE.CylinderGeometry(.25,.4,2.4,7),'#70513b',x,1,z);
-      add(scene,new THREE.ConeGeometry(1.4,3.5,7),i%2?'#32664e':'#4c8055',x,3,z);
-    }
-    for(let i=0;i<30;i++) {
-      const spot=place(14,42,-113,22,1.4);
-      if(!spot) break;
-      const {x:dx,z}=spot;
-      {
-        const cactus=new THREE.Group(); cactus.position.set(dx,0,z); cactus.scale.setScalar(.8+(i%4)*.13); scene.add(cactus);
-        const green=i%2 ? '#4f8050' : '#598d57';
-        add(cactus,new THREE.CylinderGeometry(.36,.42,2.5,10),green,0,1.25,0);
-        const cap=add(cactus,new THREE.SphereGeometry(.36,10,8),green,0,2.5,0); cap.scale.y=.8;
-        [-1,1].forEach((side,j)=>{
-          const height=j ? 1.4 : 1.05;
-          const branch=add(cactus,new THREE.CylinderGeometry(.22,.25,.68,9),green,side*.48,height,0); branch.rotation.z=side*Math.PI/2;
-          add(cactus,new THREE.CylinderGeometry(.22,.22,.8,9),green,side*.8,height+.4,0);
-          const tip=add(cactus,new THREE.SphereGeometry(.22,9,7),green,side*.8,height+.8,0); tip.scale.y=.8;
-        });
-        for(let rib=0;rib<8;rib++){const angle=rib*Math.PI/4; add(cactus,new THREE.CylinderGeometry(.018,.018,2.25,4),'#93ad76',Math.cos(angle)*.36,1.25,Math.sin(angle)*.36);}
-        if(i%2===0) { const bloom=add(cactus,new THREE.IcosahedronGeometry(.16,1),'#e9a5a0',0,2.82,0); bloom.scale.set(1,.6,1); }
-      }
-    }
-    for(let i=0;i<16;i++) {
-      const spot=place(14,42,-113,22,.95);
-      if(!spot) break;
-      const rock=add(scene,new THREE.DodecahedronGeometry(.9),'#bf985e',spot.x,.3,spot.z); rock.scale.y=.5;
-    }
     // Small stories along both shores unfold as the boat travels north.
     const horses=[];
     for(let i=0;i<4;i++) {
@@ -217,31 +183,41 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
     }
     const driftwood=[];
     for(let i=0;i<5;i++) { const log=add(scene,new THREE.CylinderGeometry(.2,.24,2.2,8),'#86684b',i%2?-6:6,.12,-12-i*21); log.rotation.z=Math.PI/2; log.rotation.y=i*.65; driftwood.push({log,phase:i}); }
-    const ripples=[];
-    for(let i=0;i<18;i++){const ring=new THREE.Mesh(new THREE.RingGeometry(.36,.41,24),new THREE.MeshBasicMaterial({color:'#d4efdf',transparent:true,opacity:.38,side:THREE.DoubleSide,depthWrite:false})); ring.rotation.x=-Math.PI/2; ring.position.set((i%2?-1:1)*(4+(i%3)*2),.12,8-i*7); scene.add(ring); ripples.push({ring,phase:i*.57});}
-    // A high timber crossing leaves ample clearance for the sail.
+    // Stonework follows the existing crossing, keeping the same clearance for the sail.
     const bridge=new THREE.Group(); bridge.position.set(0,0,-42); scene.add(bridge);
-    add(bridge,new THREE.BoxGeometry(30,.55,3.6),'#8b6746',0,7.3,0);
-    for(let x=-14;x<=14;x+=1.2) add(bridge,new THREE.BoxGeometry(.07,.08,3.5),'#654a34',x,7.61,0);
-    [-1,1].forEach(side=>{ add(bridge,new THREE.BoxGeometry(30,.16,.16),'#684a32',0,8.5,side*1.65); for(let x=-14;x<=14;x+=2.8) add(bridge,new THREE.BoxGeometry(.16,1.1,.16),'#684a32',x,8.02,side*1.65); });
-    [-12.8,12.8].forEach(x=>add(bridge,new THREE.BoxGeometry(.65,7.3,.65),'#6d5038',x,3.65,0));
-    // Stairs climb from both banks to the bridge deck.
-    [-1,1].forEach(side=>{
-      const steps=18, run=.7, rise=7.575/steps;
-      for(let i=0;i<steps;i++) {
-        const height=(i+1)*rise, x=side*(27.6-(i+.5)*run);
-        add(bridge,new THREE.BoxGeometry(run+.02,height,3.2),'#8b6746',x,height/2,0);
-        add(bridge,new THREE.BoxGeometry(run+.02,.06,3.2),'#a57c53',x,height+.03,0);
+    add(bridge, new THREE.BoxGeometry(30, .55, 3.6), '#4b535f', 0, 7.3, 0);
+    for (let i = 0; i < 23; i++) {
+      const x = -14.3 + i * 1.3;
+      add(bridge, new THREE.BoxGeometry(1.26, .12, 3.5), i % 3 ? '#69727b' : '#58626a', x, 7.59, 0);
+    }
+    for (const side of [-1, 1]) {
+      const edge = side * 1.65;
+      add(bridge, new THREE.BoxGeometry(30, .18, .29), '#676c70', 0, 8.48, edge);
+      for (let x = -14; x <= 14; x += 2) {
+        add(bridge, new THREE.CylinderGeometry(.135, .19, .87, 6), '#58636a', x, 8.02, edge);
+        add(bridge, new THREE.BoxGeometry(.43, .12, .41), '#7a7b75', x, 8.38, edge);
       }
-      [-1,1].forEach(edge=>{
-        for(let i=0;i<=steps;i+=3) {
-          const x=side*(27.6-i*run), height=i*rise;
-          add(bridge,new THREE.BoxGeometry(.14,1.1,.14),'#684a32',x,height+.55,edge*1.48);
+      for (let course = 0; course < 12; course++) {
+        const width = 1.18 - course * .03;
+        add(bridge, new THREE.BoxGeometry(width, .59, 1.26), course % 3 ? '#505962' : '#68716e',
+          side * 13.45, .3 + course * .6, 0);
+      }
+      const steps = 18, run = .7, rise = 7.575 / steps;
+      for (let i = 0; i < steps; i++) {
+        const height = (i + 1) * rise, x = side * (27.6 - (i + .5) * run);
+        add(bridge, new THREE.BoxGeometry(run + .02, height, 3.2), '#4e5960', x, height / 2, 0);
+        add(bridge, new THREE.BoxGeometry(run + .02, .07, 3.22), i % 3 ? '#677176' : '#757874', x, height + .03, 0);
+      }
+      for (const edgeZ of [-1.48, 1.48]) {
+        for (let i = 0; i <= steps; i += 3) {
+          const x = side * (27.6 - i * run);
+          add(bridge, new THREE.BoxGeometry(.25, 1.03, .25), '#60686d', x, i * rise + .55, edgeZ);
         }
-        const rail=add(bridge,new THREE.BoxGeometry(Math.hypot(steps*run,7.575),.15,.15),'#684a32',side*21.3,4.75,edge*1.48);
-        rail.rotation.z=-side*Math.atan2(7.575,steps*run);
-      });
-    });
+        const rail = add(bridge, new THREE.BoxGeometry(Math.hypot(steps * run, 7.575), .18, .2),
+          '#777b78', side * 21.3, 4.75, edgeZ);
+        rail.rotation.z = -side * Math.atan2(7.575, steps * run);
+      }
+    }
     // Fishermen stand by the rail with their lines reaching the water.
     [-7,6].forEach((x,i)=>{
       const fisher=new THREE.Group(); fisher.position.set(x,7.575,-43.05); scene.add(fisher);
@@ -263,7 +239,6 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
     const roof=add(cabin,new THREE.ConeGeometry(3.3,1.8,4),'#644639',0,3.8,0); roof.rotation.y=Math.PI/4;
     add(cabin,new THREE.BoxGeometry(1,1.8,.08),'#513a2c',0,.9,1.78);
     [-1.2,1.2].forEach(x=>add(cabin,new THREE.BoxGeometry(.65,.65,.09),'#f3c777',x,1.8,1.8));
-    for(let i=0;i<34;i++){const spot=place(-19,-13,-113,20,.2); if(!spot) continue; const {x,z}=spot; add(scene,new THREE.CylinderGeometry(.025,.03,.45,5),'#668a50',x,.2,z); add(scene,new THREE.IcosahedronGeometry(.12,0),['#e9c281','#f4c5bb','#e1d4e6'][i%3],x,.47,z);}
     const camp=new THREE.Group(); camp.position.set(17,0,-22); scene.add(camp);
     for(let i=0;i<7;i++){const a=i*Math.PI*2/7; add(camp,new THREE.DodecahedronGeometry(.25),'#a58e70',Math.cos(a)*.7,.18,Math.sin(a)*.7);}
     const flame=add(camp,new THREE.ConeGeometry(.36,1.1,7),'#f09a42',0,.7,0);
@@ -346,6 +321,7 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
     mistGradient.addColorStop(0,'rgba(237,255,245,.38)'); mistGradient.addColorStop(1,'rgba(237,255,245,0)');
     mistContext.fillStyle=mistGradient; mistContext.fillRect(0,0,128,128);
     const mistTexture=new THREE.CanvasTexture(mistCanvas); mistTexture.colorSpace=THREE.SRGBColorSpace;
+    const updateSanctuary = buildLakeSanctuary(scene, mistTexture);
     const spray=[];
     for(let i=0;i<12;i++) {
       const puff=new THREE.Sprite(new THREE.SpriteMaterial({map:mistTexture,transparent:true,depthWrite:false,opacity:.7}));
@@ -422,7 +398,7 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
 
     const resize = () => { const w=el.clientWidth, h=el.clientHeight; if (!w || !h) return; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(el); resize();
-    const keydown = e => { const k=e.key.toLowerCase(); if (k==='escape' && dialogueOpen.current && !state.current.paused) { e.preventDefault(); guideActions.current.closeGuide(); return; } if (document.activeElement !== renderer.domElement || state.current.paused || dialogueOpen.current) return; if(k==='f' && nearGuideRef.current) { e.preventDefault(); guideActions.current.openGuide(); return; } if (k === 'e' && aboardRef.current && boat.position.z < -107 && Math.abs(boat.position.x)<4) { e.preventDefault(); clear(); enterRapidsRef.current?.(); return; } if (k === 'e' && !aboardRef.current && nearLakePortal(player.position)) { e.preventDefault(); exitRef.current(); return; } if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)) { if (k !== 'shift') e.preventDefault(); controls.current.add(k); } };
+    const keydown = e => { const k=e.key.toLowerCase(); if (k==='escape' && dialogueOpen.current && !state.current.paused) { e.preventDefault(); guideActions.current.closeGuide(); return; } if (document.activeElement !== renderer.domElement || state.current.paused || dialogueOpen.current) return; if(k==='f' && nearGuideRef.current) { e.preventDefault(); guideActions.current.openGuide(); return; } if (k === 'e' && aboardRef.current && boat.position.z < -107 && Math.abs(boat.position.x)<4) { e.preventDefault(); clear(); enterRapidsRef.current?.(); return; } if (k === 'e' && !aboardRef.current && nearLakePortal(player.position)) { e.preventDefault(); enterVillage(); return; } if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)) { if (k !== 'shift') e.preventDefault(); controls.current.add(k); } };
     const keyup = e => controls.current.delete(e.key.toLowerCase());
     const clear = () => controls.current.clear();
     let exitRequested=false, pointerStart=null;
@@ -448,25 +424,23 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
     window.addEventListener('keydown',keydown); window.addEventListener('keyup',keyup); window.addEventListener('blur',clear);
     let frame, last = performance.now();
     const animate = now => {
-      frame=requestAnimationFrame(animate); const dt=Math.min((now-last)/1000,.05); last=now;
-      const k=controls.current; let moving=false;
-      if (!state.current.paused && !state.current.reduceMotion) {
-        waterTime+=dt;
-        const vertices=waterGeometry.attributes.position;
-        for(let i=0;i<vertices.count;i++) {
-          const x=waterBase[i*3], z=waterBase[i*3+2];
-          vertices.array[i*3+1]=Math.sin(x*.7+waterTime*1.15+z*.16)*.045+Math.sin(z*.35-waterTime*.8)*.035;
-        }
-        vertices.needsUpdate=true; waterGeometry.computeVertexNormals();
-      }
+      frame = requestAnimationFrame(animate);
+      const dt = sceneFrameDelta(now, last);
+      last = now;
+      const k = controls.current;
+      let moving = false;
+      if (!state.current.paused && !state.current.reduceMotion) waterTime += dt;
+      const sceneryTime = state.current.reduceMotion ? 0 : waterTime;
+      updateWater(sceneryTime, state.current.reduceMotion);
+      updateSanctuary(sceneryTime);
       fish.forEach((fishItem,i)=>{
-        const t=waterTime*.45+fishItem.phase;
-        const jumpPhase=(waterTime+i*2.13)%14;
+        const t=sceneryTime*.45+fishItem.phase;
+        const jumpPhase=(sceneryTime+i*2.13)%14;
         const jump=!state.current.reduceMotion && jumpPhase<1.4 ? Math.sin(jumpPhase/1.4*Math.PI) : 0;
         fishItem.group.position.set(fishItem.x+Math.sin(t)*1.2, -.13+jump*1.35, fishItem.z+Math.cos(t)*2);
         fishItem.group.rotation.y=Math.atan2(Math.cos(t)*1.2,-Math.sin(t)*2)+Math.PI;
         fishItem.group.rotation.x=jump ? Math.cos(jumpPhase/1.4*Math.PI)*.55 : 0;
-        fishItem.tail.rotation.y=Math.sin(waterTime*7+fishItem.phase)*.4;
+        fishItem.tail.rotation.y=Math.sin(sceneryTime*7+fishItem.phase)*.4;
       });
       if (!state.current.paused && !dialogueOpen.current) {
         const x=(k.has('d')||k.has('arrowright')?1:0)-(k.has('a')||k.has('arrowleft')?1:0);
@@ -498,11 +472,9 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
         boat.position.y=state.current.reduceMotion ? 0 : Math.sin(now*.002)*.06;
       } else clear();
       if(!state.current.paused)facePlayer(guide,player);
-      const sceneryTime=state.current.reduceMotion ? 0 : waterTime;
       lilies.forEach(({pad,phase})=>{pad.position.y=.09+Math.sin(sceneryTime*1.2+phase)*.035; pad.rotation.y=Math.sin(sceneryTime*.3+phase)*.12;});
       reeds.forEach(({reed,phase})=>{reed.rotation.z=Math.sin(sceneryTime*.8+phase)*.06;});
       driftwood.forEach(({log,phase})=>{log.position.y=.12+Math.sin(sceneryTime+phase)*.05; log.rotation.x=Math.sin(sceneryTime*.7+phase)*.04;});
-      ripples.forEach(({ring,phase})=>{const cycle=(sceneryTime*.35+phase)%1; ring.scale.setScalar(.6+cycle*1.5); ring.material.opacity=state.current.reduceMotion ? .2 : .4*(1-cycle);});
       skewers.forEach(({skewer,phase})=>{skewer.rotation.y=state.current.reduceMotion?0:Math.sin(sceneryTime*.8+phase)*.08;});
       flame.scale.set(.8+Math.sin(sceneryTime*7)*.15,1+Math.sin(sceneryTime*9)*.2,.8); firelight.intensity=3+Math.sin(sceneryTime*8)*.5;
       spray.forEach((p,i)=>{const t=(sceneryTime*.45+i*.12)%1; p.position.y=.3+t*1.4; p.scale.setScalar(.5+t);});
@@ -536,13 +508,21 @@ export default function Lake({ language, paused, reduceMotion, onExit, onSound, 
       }
       const guideNearby=!aboardRef.current && Math.hypot(player.position.x-guide.position.x,player.position.z-guide.position.z)<4.6;
       if(guideNearby!==nearGuideRef.current){nearGuideRef.current=guideNearby;setNearGuide(guideNearby);}
+      setNearPortal(!aboardRef.current && nearLakePortal(player.position));
       const isNearCave=aboardRef.current && boat.position.z < -107 && Math.abs(boat.position.x)<4; setNearCave(previous => previous === isNearCave ? previous : isNearCave);
       const follow=aboardRef.current ? boat.position : player.position;
       const nextTarget=new THREE.Vector3(follow.x,1,follow.z); const shift=nextTarget.clone().sub(orbit.target);
       camera.position.add(shift); orbit.target.copy(nextTarget); orbit.enabled=!state.current.paused && !dialogueOpen.current; orbit.update(); panorama.position.set(camera.position.x,6,camera.position.z); renderer.render(scene,camera);
     }; frame=requestAnimationFrame(animate);
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); renderer.domElement.removeEventListener('pointerdown',pointerDown); renderer.domElement.removeEventListener('pointerup',pointerUp); renderer.domElement.removeEventListener('pointercancel',pointerCancel); window.removeEventListener('keydown',keydown); window.removeEventListener('keyup',keyup); window.removeEventListener('blur',clear); clear(); stopVoice.current?.(); orbit.dispose(); portalSignRef.current=null; guideSignRef.current=null; labelTexture.dispose(); guideSignTexture.dispose(); horizonTexture.dispose(); horizonFade.dispose(); fallTexture.dispose(); mistTexture.dispose(); scene.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); renderer.dispose(); renderer.domElement.remove(); };
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); renderer.domElement.removeEventListener('pointerdown',pointerDown); renderer.domElement.removeEventListener('pointerup',pointerUp); renderer.domElement.removeEventListener('pointercancel',pointerCancel); window.removeEventListener('keydown',keydown); window.removeEventListener('keyup',keyup); window.removeEventListener('blur',clear); clear(); stopVoice.current?.(); orbit.dispose(); portalSignRef.current=null; guideSignRef.current=null; labelTexture.dispose(); guideSignTexture.dispose(); horizonTexture.dispose(); horizonFade.dispose(); fallTexture.dispose(); mistTexture.dispose(); const geometries = new Set(), materials = new Set();
+      scene.traverse(object => {
+        if (object.isInstancedMesh) object.dispose();
+        if (object.geometry) geometries.add(object.geometry);
+        if (object.material) materials.add(object.material);
+      });
+      geometries.forEach(geometry => geometry.dispose());
+      materials.forEach(material => material.dispose()); renderer.dispose(); renderer.domElement.remove(); };
   }, []);
   const press = (key, down) => { if (paused || dialogueOpen.current) return; if(down) controls.current.add(key); else controls.current.delete(key); };
-  return <section className="lake"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/><button className="lake-exit" onClick={onExit}>{en ? 'Return to village' : 'Voltar para a vila'}</button>{nearCave && <button className="lake-portal-action" onClick={onEnterRapids}>{en ? 'Enter the rapids' : 'Entrar nas corredeiras'} <kbd>E</kbd></button>}{nearGuide && !talking && <button className="marina-talk" onClick={openGuide}>{en ? 'Talk to Marina' : 'Conversar com Marina'} <kbd>F</kbd></button>}{talking && <LakeGuideDialogue ref={guidePanel} language={language} line={guideLine} speaking={speaking} voiceEnabled={voiceEnabled} voiceNotice={voiceNotice} onSpeak={onSpeak} onStop={onStop} onNext={openGuide} onClose={closeGuide} />}{error ? <p className="lake-scene-error">{en ? '3D is unavailable in this browser.' : 'O 3D não está disponível neste navegador.'}</p> : <MapControlGuide language={language} scene="lake" aboard={aboard}/>}</div><div className="lake-touch" aria-label={en ? 'Boat controls' : 'Controles do barco'}>{[['arrowleft','←'],['arrowup','↑'],['arrowdown','↓'],['arrowright','→']].map(([key,label]) => <button key={key} type="button" aria-label={{arrowleft: en?'Left':'Esquerda',arrowup: en?'Forward':'Frente',arrowdown: en?'Back':'Trás',arrowright: en?'Right':'Direita'}[key]} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId); press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{label}</button>)}</div></section>;
+  return <section className="lake"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en ? 'Return to village' : 'Voltar para a vila'}</button>}{nearCave && <button className="lake-portal-action" onClick={onEnterRapids}>{en ? 'Enter the rapids' : 'Entrar nas corredeiras'} <kbd>E</kbd></button>}{nearGuide && !talking && <button className="marina-talk" onClick={openGuide}>{en ? 'Talk to Marina' : 'Conversar com Marina'} <kbd>F</kbd></button>}{talking && <LakeGuideDialogue ref={guidePanel} language={language} line={guideLine} speaking={speaking} voiceEnabled={voiceEnabled} voiceNotice={voiceNotice} onSpeak={onSpeak} onStop={onStop} onNext={openGuide} onClose={closeGuide} />}{error ? <p className="lake-scene-error">{en ? '3D is unavailable in this browser.' : 'O 3D não está disponível neste navegador.'}</p> : <MapControlGuide language={language} scene="lake" aboard={aboard}/>}</div><div className="lake-touch" aria-label={en ? 'Boat controls' : 'Controles do barco'}>{[['arrowleft','←'],['arrowup','↑'],['arrowdown','↓'],['arrowright','→']].map(([key,label]) => <button key={key} type="button" aria-label={{arrowleft: en?'Left':'Esquerda',arrowup: en?'Forward':'Frente',arrowdown: en?'Back':'Trás',arrowright: en?'Right':'Direita'}[key]} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId); press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{label}</button>)}<TouchInteract language={language} scene={mount} disabled={paused || talking || !(nearGuide || nearCave || nearPortal)} /></div></section>;
 }

@@ -1,3 +1,4 @@
+import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -30,7 +31,7 @@ const PEOPLE = [
   {x:4.5,z:-15.3, elder:true, route:[[4.5,-15.3],[4.5,-15.3]]},
 ];
 
-export default function TempleVillage({language, paused, reduceMotion, onExit,onSpeak,onStop,speaking,voiceEnabled,voiceNotice,onEnterCave,startNearCave=false}) {
+export default function TempleVillage({ campaignNavigation,language, paused, reduceMotion, onExit,onSpeak,onStop,speaking,voiceEnabled,voiceNotice,onEnterCave,startNearCave=false}) {
   const mount=useRef(null), keys=useRef(new Set()), state=useRef({}), talkRef=useRef(null), signsRef=useRef([]), dialoguePanel=useRef(null), initialNearCave=useRef(startNearCave);
   state.current={...state.current,paused,reduceMotion,onExit,onEnterCave,language};
   const [near,setNear]=useState(-1), [nearExit,setNearExit]=useState(false), [nearCave,setNearCave]=useState(false), [talk,setTalk]=useState(null), [error,setError]=useState(false);
@@ -198,7 +199,7 @@ export default function TempleVillage({language, paused, reduceMotion, onExit,on
     return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();orbit.dispose();horizonTexture.dispose();signsRef.current=[];residents.forEach(npc=>npc.texture.dispose());scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[]);
   const press=(key,down)=>{if(paused||talkRef.current!==null)return;if(down)keys.current.add(key);else keys.current.delete(key);};
-  return <section className="lake ancient-tunnel"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/><button className="lake-exit" onClick={onExit}>{en?'Return to ruins':'Voltar às ruínas'}</button><MapControlGuide language={language} scene="temple"/>
+  return <section className="lake ancient-tunnel"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en?'Return to ruins':'Voltar às ruínas'}</button>}<MapControlGuide language={language} scene="temple"/>
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'}</p>}
     {nearExit&&talk===null&&<button className="lake-portal-action" onClick={interact}>{en?'Enter passage to ruins':'Entrar na passagem para as ruínas'} <kbd>E</kbd></button>}
     {nearCave&&talk===null&&<button className="lake-portal-action" onClick={interact}>{en?'Enter the cave':'Entrar na caverna'} <kbd>E</kbd></button>}
@@ -212,6 +213,6 @@ export default function TempleVillage({language, paused, reduceMotion, onExit,on
       <p aria-live="polite">{talk===-2?(en?'Beyond the temple lies the sleeping place of the Elder. The passage is sealed.':'Além do templo repousa o Ancião. A passagem está selada.'):dialogue[en?'en-US':'pt-BR'][talk]}</p>
       {talk!==-2&&<><div className="npc-dialogue-actions"><button disabled={!voiceEnabled} onClick={()=>speaking?onStop?.():onSpeak?.(talk)}>{speaking?(en?'Stop voice':'Parar voz'):(en?'Listen':'Ouvir mensagem')}</button></div><small className="npc-voice-note">{voiceNotice||(!voiceEnabled?(en?'Enable NPC voices in audio settings.':'Ative as vozes dos NPCs nas configurações de áudio.'):(en?'Recorded voice':'Voz gravada'))}</small></>}
     </section>}
-    </div><div className="lake-touch" aria-label={en?'Walking controls':'Controles de caminhada'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}</div></section>;
+    </div><div className="lake-touch" aria-label={en?'Walking controls':'Controles de caminhada'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}<TouchInteract language={language} onInteract={interact} disabled={paused || talk !== null || !(near >= 0 || nearExit || nearCave)} /></div></section>;
 }
 

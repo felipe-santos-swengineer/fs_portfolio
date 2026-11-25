@@ -1,3 +1,4 @@
+import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -14,14 +15,13 @@ import pirateLines from './ruinsPirate.json';
 import { SHRINES, SHIPWRECK, COLUMNS, SHORE_POINTS, shorePoint, ruinsObstacle, nearTempleEntrance } from './ruinsWorld';
 
 
-export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel,onSound,onSpeak,onStop,speaking,voiceEnabled,voiceNotice,active=true,templeReached=false}) {
+export default function Ruins({ campaignNavigation,language,paused,reduceMotion,onExit,onEnterTunnel,onSound,onSpeak,onStop,speaking,voiceEnabled,voiceNotice,active=true,startNearPassage=false}) {
   const mount=useRef(null),keys=useRef(new Set()), settings=useRef({paused,reduceMotion}), returnToPassage=useRef(null);
   settings.current={paused,reduceMotion,language,onSound,onEnterTunnel};
   const [talking,setTalking]=useState(false),[pirateNear,setPirateNear]=useState(false),[pirateLine,setPirateLine]=useState(0);
   const talkingRef=useRef(false),pirateNearRef=useRef(false),pirateVisits=useRef(0),piratePanel=useRef(null),pirateSignRef=useRef(null),stopVoice=useRef(onStop);stopVoice.current=onStop;
-  const [activated,setActivated]=useState(() => SHRINES.map(() => templeReached)), [near,setNear]=useState(-1), [nearTunnel,setNearTunnel]=useState(false), [error,setError]=useState(false);
+  const [activated,setActivated]=useState(() => SHRINES.map(() => false)), [near,setNear]=useState(-1), [nearTunnel,setNearTunnel]=useState(false), [error,setError]=useState(false);
   const activeRef=useRef(activated), nearRef=useRef(-1), tunnelNearRef=useRef(false); activeRef.current=activated;
-  useEffect(()=>{if(templeReached){const lit=SHRINES.map(()=>true);activeRef.current=lit;setActivated(lit);}},[templeReached]);
   const en=language==='en-US';
   const talkPirate=({fromClick=false}={})=>{if(paused||(!pirateNearRef.current&&!fromClick&&!talkingRef.current))return;keys.current.clear();const line=pirateVisits.current++%pirateLines['pt-BR'].length;setPirateLine(line);talkingRef.current=true;setTalking(true);settings.current.onSound?.('talk');onSpeak?.(line);};
   const closePirate=()=>{talkingRef.current=false;setTalking(false);onStop?.();mount.current?.querySelector('canvas')?.focus({preventScroll:true});};
@@ -244,13 +244,13 @@ export default function Ruins({language,paused,reduceMotion,onExit,onEnterTunnel
     return()=>{returnToPassage.current=null;cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();stopVoice.current?.();pirateSignRef.current=null;orbit.dispose();horizonTexture.dispose();haloTexture.dispose();pirateSignTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[]);
   const press=(key,down)=>{if(paused || talkingRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
-  useEffect(()=>{if(active && templeReached)returnToPassage.current?.();},[active,templeReached]);
+  useEffect(()=>{if(active && startNearPassage)returnToPassage.current?.();},[active,startNearPassage]);
   const count=activated.filter(Boolean).length;
-  return <section className="lake ruins"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/><button className="lake-exit" onClick={onExit}>{en?'Return to village':'Voltar para a vila'}</button>
+  return <section className="lake ruins"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en?'Return to village':'Voltar para a vila'}</button>}
     <MapControlGuide language={language} scene="ruins"/>
     {pirateNear && !talking && <button className="ruins-pirate-talk" onClick={talkPirate}>{en?'Talk to Duarte':'Conversar com Duarte'} <kbd>F</kbd></button>}
     {talking && <PirateDialogue ref={piratePanel} language={language} line={pirateLine} speaking={speaking} voiceEnabled={voiceEnabled} voiceNotice={voiceNotice} onSpeak={onSpeak} onStop={onStop} onNext={talkPirate} onClose={closePirate}/>}
     <div className="ruins-status" aria-live="polite"><strong>{en?'Sunken Ruins Cove':'Enseada das Ruínas Submersas'}</strong><span>{error?(en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'):count===3?(en?'The gate is open. Approach to enter the tunnel.':'A porta se abriu. Aproxime-se para entrar no túnel.'):(en?`Activate the island runes: ${count}/3`:`Ative as runas das ilhas: ${count}/3`)}</span></div>
     {(nearTunnel || near>=0)&&<button className="lake-portal-action" onClick={()=>{activate();if(!tunnelNearRef.current)mount.current?.querySelector('canvas')?.focus();}}>{nearTunnel?(en?'Enter tunnel':'Entrar no túnel'):(en?'Activate rune':'Ativar runa')} <kbd>E</kbd></button>}</div>
-    <div className="lake-touch" aria-label={en?'Boat controls':'Controles do barco'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}</div></section>;
+    <div className="lake-touch" aria-label={en?'Boat controls':'Controles do barco'}>{[['arrowleft',en?'Left':'Esquerda','←'],['arrowup',en?'Forward':'Frente','↑'],['arrowdown',en?'Back':'Trás','↓'],['arrowright',en?'Right':'Direita','→']].map(([key,label,symbol])=><button key={key} type="button" aria-label={label} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{symbol}</button>)}<TouchInteract language={language} scene={mount} disabled={paused || talking || !(pirateNear || nearTunnel || (near >= 0 && !activated[near]))} /></div></section>;
 }

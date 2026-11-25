@@ -2,6 +2,24 @@
 .lake-canvas { position: absolute; inset: 0; }
 .lake-canvas canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 .lake-exit { position: absolute; top: 22px; right: 5%; padding: 10px 14px; background: #112b32ed; border: 1px solid #98b9ad; border-radius: 5px; color: white; }
+.campaign-navigation {
+  position: absolute;
+  z-index: 5;
+  top: 22px;
+  right: 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  max-width: 48%;
+}
+.campaign-navigation[hidden] { display: none; }
+.campaign-navigation > button.lake-exit { position: static; max-width: 100%; }
+@media (max-width: 600px) {
+  .campaign-navigation { top: 12px; }
+  .campaign-navigation > button.lake-exit { padding: 6px 9px; min-height: 36px; font-size: .83rem; }
+  .lake-viewport:has(> .campaign-navigation) > .cursed-heading { max-width: 42%; }
+}
 .map-control-guide { color:#e4efeb; text-shadow:0 1px 5px #102b30,0 1px 3px #102b30; text-align:center; }
 .map-control-guide small { display:block; margin-top:6px; font-size:11px; }
 .lake-scene-error { position:absolute; left:5%; bottom:20px; color:#fff; text-shadow:0 2px 6px #102b30; }
@@ -14,3 +32,59 @@
 .marina-talk { position:absolute; z-index:4; left:50%; bottom:105px; transform:translateX(-50%); background:#20392ef2; border:1px solid #9dbca9; color:#e5f2e6; border-radius:5px; padding:10px 14px; }
 @media(max-width:800px) { .marina-talk { bottom:125px; } }
 .app .lake-guide-dialogue { left:50%; right:auto; bottom:20px; width:470px; max-width:90%; max-height:65%; overflow:auto; box-sizing:border-box; }
+.campaign-navigation > button.lake-exit { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; }
+.campaign-menu { display: grid; gap: 12px; max-width: min(92vw, 420px); }
+.campaign-menu > button { padding: 12px; border: 1px solid #789c99; border-radius: 6px; color: white; background: #203b3b; }
+.campaign-menu > button:disabled { opacity: .5; }
+
+.lake-viewport, .throne-viewport {
+  --campaign-top: 22px;
+  --campaign-side: 5%;
+  --campaign-card-padding: 10px 14px;
+}
+@media (max-width: 600px) {
+  .lake-viewport, .throne-viewport {
+    --campaign-top: 12px;
+    --campaign-card-padding: 8px 10px;
+  }
+}
+:is(.lake-viewport, .throne-viewport) > :is(.campaign-navigation, .encounter-controls) {
+  top: var(--campaign-top);
+  right: var(--campaign-side);
+}
+.lake-viewport > :is(.rapids-hud, .ruins-status, .cave-status, .cursed-heading,
+  .corridor-status, .dragon-chamber-status, .courtyard-status) {
+  top: var(--campaign-top);
+  left: var(--campaign-side);
+  max-width: min(44%, 30rem);
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+.lake-viewport > .courtyard-status {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+}
+.lake-viewport :is(.courtyard-status, .corridor-status, .dragon-chamber-status):not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.lake-viewport .courtyard-status > :is(.cursed-heading, .witch-battle-status) {
+  position: static;
+  max-width: 100%;
+}
+.lake .lake-viewport :is(.rapids-hud, .ruins-status, .cave-status, .cursed-heading,
+  .chamber-heading, .battle-hud, .witch-battle-status, .corridor-hud) {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: var(--campaign-card-padding);
+  border: 1px solid #789c99;
+  border-radius: 6px;
+  background: #112b32ed;
+  text-align: left;
+}
+
+.lake-touch.sword-controls button.touch-attack { width:auto; min-width:70px; padding:0 10px; font-size:14px; }
+@media(max-width:420px) { .lake-touch.sword-controls { gap:5px; padding:10px 5px; } .lake-touch.sword-controls button { width:44px; height:48px; } .lake-touch.sword-controls button.touch-attack { width:auto; min-width:62px; } }

@@ -7,7 +7,7 @@ import './Lake.css';
 import './Rapids.css';
 import MapControlGuide from './MapControlGuide';
 
-export default function Rapids({ language, paused, reduceMotion, onExit, onAdvance }) {
+export default function Rapids({ campaignNavigation, language, paused, reduceMotion, onExit, onAdvance }) {
   const mount=useRef(null), held=useRef(new Set()), current=useRef({ paused, reduceMotion });
   current.current={paused,reduceMotion};
   const [run,setRun]=useState(0), [status,setStatus]=useState('ready'), [lives,setLives]=useState(RAPIDS_LIVES), [progress,setProgress]=useState(0), [error,setError]=useState(false);
@@ -19,6 +19,7 @@ export default function Rapids({ language, paused, reduceMotion, onExit, onAdvan
     try { renderer=new THREE.WebGLRenderer({antialias:true}); } catch { setError(true); return; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
     renderer.domElement.tabIndex=0; renderer.domElement.setAttribute('aria-label','Rapids / Corredeiras'); el.appendChild(renderer.domElement);
+    if (phase.current === 'playing') renderer.domElement.focus();
     const scene=new THREE.Scene(); scene.background=new THREE.Color('#a8ceca'); scene.fog=new THREE.Fog('#a8ceca',40,95);
     scene.add(new THREE.HemisphereLight('#e4f3e7','#4a5643',2));
     const sun=new THREE.DirectionalLight('#fff2d3',2); sun.position.set(-8,18,12); scene.add(sun);
@@ -184,10 +185,20 @@ export default function Rapids({ language, paused, reduceMotion, onExit, onAdvan
     return ()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[run]); // Language and accessibility settings are read by the UI or refs.
   const start=()=>{phase.current='playing';setStatus('playing');mount.current?.querySelector('canvas')?.focus();};
-  const retry=()=>{held.current.clear();phase.current='ready';setStatus('ready');setLives(RAPIDS_LIVES);setProgress(0);setRun(value=>value+1);};
+  const retry=()=>{
+    held.current.clear();
+    phase.current='playing';
+    setStatus('playing');
+    setLives(RAPIDS_LIVES);
+    setProgress(0);
+    setRun(value=>value+1);
+  };
   const press=(key,down)=>{if(paused||phase.current!=='playing')return; if(down)held.current.add(key);else held.current.delete(key);};
   return <section className="lake rapids"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>
-    <button className="rapids-skip" onClick={onAdvance}>{en?'Skip to ruins':'Pular para as ruínas'}</button><button className="lake-exit" onClick={onExit}>{en?'Return to lake':'Voltar ao lago'}</button>
+    {campaignNavigation ?? (status === 'playing' && <>
+      <button className="rapids-skip" onClick={onAdvance}>{en?'Skip to ruins':'Pular para as ruínas'}</button>
+      <button className="lake-exit" onClick={onExit}>{en?'Return to lake':'Voltar ao lago'}</button>
+    </>)}
     <MapControlGuide language={language} scene="rapids"/>
     <div className="rapids-hud"><span>{en?'Lives':'Vidas'}: {lives}</span><span>{en?'Descent':'Descida'}: {progress}%</span></div>
     {status!=='playing'&&<div className="rapids-overlay"><div className="rapids-card"><h2>{en?'Canyon Rapids':'Corredeiras do Desfiladeiro'}</h2>

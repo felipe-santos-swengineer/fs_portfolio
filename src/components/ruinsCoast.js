@@ -412,7 +412,7 @@ export function addCoveHull(parent, add, damaged = false) {
   }
 }
 
-export function createCoveOcclusion(groups, { hiddenOpacity = .14, alwaysHidden = false } = {}) {
+export function createCoveOcclusion(groups, { blockedOpacity = .14, forcedOpacity = null } = {}) {
   const meshes = [], owners = new Map();
   const layers = groups.map(group => {
     const layer = { materials: new Set(), opacity: 1, blocked: false };
@@ -424,8 +424,8 @@ export function createCoveOcclusion(groups, { hiddenOpacity = .14, alwaysHidden 
     });
     return layer;
   });
-  const setOpacity = (layer, opacity) => {
-    if (opacity === layer.opacity) return;
+  const setOpacity = (layer, opacity, force = false) => {
+    if (!force && opacity === layer.opacity) return;
     layer.opacity = opacity;
     layer.materials.forEach(surface => {
       surface.opacity = opacity;
@@ -446,8 +446,8 @@ export function createCoveOcclusion(groups, { hiddenOpacity = .14, alwaysHidden 
   const hits = [];
   let previousGateHeight;
   return (camera, player, dt, immediate, gateHeight) => {
-    if (alwaysHidden) {
-      layers.forEach(layer => setOpacity(layer, hiddenOpacity));
+    if (forcedOpacity !== null) {
+      layers.forEach(layer => setOpacity(layer, forcedOpacity, true));
       return;
     }
     camera.getWorldPosition(origin);
@@ -470,7 +470,7 @@ export function createCoveOcclusion(groups, { hiddenOpacity = .14, alwaysHidden 
       }
     }
     layers.forEach(layer => {
-      const target = layer.blocked ? hiddenOpacity : 1;
+      const target = layer.blocked ? blockedOpacity : 1;
       // Clear newly obstructing silhouettes immediately, then ease the restoration.
       const opacity = immediate || target < layer.opacity ? target : Math.min(target, layer.opacity + dt * 4.6);
       setOpacity(layer, opacity);

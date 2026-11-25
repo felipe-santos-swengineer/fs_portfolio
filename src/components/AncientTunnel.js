@@ -78,9 +78,9 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     const { player } = createAdventurer(boat, { box, sphere, mesh, cylinder });
     player.position.set(0, 1, .55);
     player.rotation.y = Math.PI;
-    // Mesma transparência da enseada, mas a vela fica oculta o tempo todo:
-    // na passagem ela tapeia a visão tanto na ida quanto na volta.
-    const hideSail = sail ? createCoveOcclusion([sail], { hiddenOpacity: 0, alwaysHidden: true }) : null;
+    // Mesmo mecanismo de opacidade da enseada, forçado a 1: a vela continua
+    // sólida mesmo quando fica entre a câmera e o barco na volta.
+    const keepSailOpaque = sail ? createCoveOcclusion([sail], { forcedOpacity: 1 }) : null;
 
     let sceneDt = 0;
     const updateCamera = instant => {
@@ -165,7 +165,7 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       } else clear();
       world.update(time, sceneDt, settings.current.reduceMotion, previousRegion);
       updateCamera();
-      hideSail?.(camera, player, sceneDt, true, 0);
+      keepSailOpaque?.(camera, player, sceneDt, true, 0);
       renderer.render(scene, camera);
     };
     frame = requestAnimationFrame(animate);

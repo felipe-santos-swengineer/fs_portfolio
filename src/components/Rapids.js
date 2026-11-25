@@ -6,6 +6,8 @@ import { createRapidsCourse, rapidsCollision, RAPIDS_DISTANCE, RAPIDS_LIVES, RAP
 import './Lake.css';
 import './Rapids.css';
 import MapControlGuide from './MapControlGuide';
+import { createRapidsScenery } from './rapidsScenery';
+import { sceneFrameDelta } from './sceneFrameDelta';
 
 export default function Rapids({ campaignNavigation, language, paused, reduceMotion, onExit, onAdvance }) {
   const mount=useRef(null), held=useRef(new Set()), current=useRef({ paused, reduceMotion });
@@ -20,79 +22,12 @@ export default function Rapids({ campaignNavigation, language, paused, reduceMot
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
     renderer.domElement.tabIndex=0; renderer.domElement.setAttribute('aria-label','Rapids / Corredeiras'); el.appendChild(renderer.domElement);
     if (phase.current === 'playing') renderer.domElement.focus();
-    const scene=new THREE.Scene(); scene.background=new THREE.Color('#a8ceca'); scene.fog=new THREE.Fog('#a8ceca',40,95);
-    scene.add(new THREE.HemisphereLight('#e4f3e7','#4a5643',2));
-    const sun=new THREE.DirectionalLight('#fff2d3',2); sun.position.set(-8,18,12); scene.add(sun);
+    const scene=new THREE.Scene(); scene.background=new THREE.Color('#a9bdc2'); scene.fog=new THREE.Fog('#a9bdc2',35,108);
+    scene.add(new THREE.HemisphereLight('#d4e6ec','#485449',1.65));
+    const sun=new THREE.DirectionalLight('#e5c07b',2.25); sun.position.set(-16,22,-9); scene.add(sun);
     const camera=new THREE.PerspectiveCamera(48,1,.1,120); camera.position.set(0,11,19); camera.lookAt(0,0,-13);
     const add=(parent,geo,color,x,y,z)=>{const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:.85}));m.position.set(x,y,z);parent.add(m);return m;};
-    // A continuous sloping river and fixed landmarks let the boat travel through the world.
     const slope=.055, riverY=z=>(z-5)*slope;
-    const riverCenter=5-RAPIDS_DISTANCE/2;
-    const water=add(scene,new THREE.PlaneGeometry(18,RAPIDS_DISTANCE+100),'#4f9ca1',0,riverY(riverCenter),riverCenter);
-    water.rotation.x=-Math.PI/2-Math.atan(slope);
-    for(let i=0;i<Math.ceil((RAPIDS_DISTANCE+90)/8);i++) {
-      const group=new THREE.Group(); group.position.z=21-i*8; group.position.y=riverY(group.position.z); scene.add(group);
-      [-1,1].forEach(side=>{
-        // Overlapping angular cliff sections form a continuous canyon wall.
-        const height=7+(i%4)*.65;
-        const outline=new THREE.Shape(); outline.moveTo(0,-1); outline.lineTo(8,-1); outline.lineTo(8,height+1.5);
-        outline.lineTo(5.5,height+1+(i%3)*.3); outline.lineTo(3.1,height+.25); outline.lineTo(1.3,height-.65);
-        outline.lineTo(.7,height-2.2); outline.lineTo(0,1.4); outline.closePath();
-        const geometry=new THREE.ExtrudeGeometry(outline,{depth:8.5,bevelEnabled:false});
-        const cliff=add(group,geometry,i%3===0?'#76847a':i%3===1?'#6d7b71':'#65766d',side*9,0,-4.25);
-        cliff.scale.x=side; cliff.material.flatShading=true;
-        const ledge=add(group,new THREE.IcosahedronGeometry(1,0),'#859083',side*9.35,2.7+(i%3)*.8,-1.5);
-        ledge.scale.set(.65,.5,1.25); ledge.rotation.y=i*.8;
-        if(i%3!==1) {const shrub=add(group,new THREE.IcosahedronGeometry(.65,1),'#668760',side*9.5,3.5+(i%3)*.8,-1.5); shrub.scale.set(1.1,.7,1);}
-        if((i+(side===1?1:0))%4===0) {
-          // Pines on the rim and hanging vegetation make each bank easier to read.
-          const treeX=side*(11.1+(i%2)*1.3), treeZ=(i%3-1)*1.5;
-          add(group,new THREE.CylinderGeometry(.16,.25,2.2,6),'#66523e',treeX,height+1.2,treeZ);
-          const crown=add(group,new THREE.ConeGeometry(1.25,3.3,7),'#416d53',treeX,height+3.5,treeZ); crown.rotation.y=i*.4;
-          const top=add(group,new THREE.ConeGeometry(.9,2.3,7),'#507b59',treeX,height+4.5,treeZ); top.rotation.y=.2;
-        }
-        if((i+(side===1?2:0))%5===0) {
-          for(let vine=0;vine<3;vine++) {
-            const hanging=add(group,new THREE.CylinderGeometry(.025,.04,1.5+vine*.35,5),'#668b5c',side*9.06,height-1.4-vine*.15,-2+vine*.55);
-            hanging.rotation.z=side*(vine-1)*.08;
-          }
-        }
-        if((i+(side===1?7:0))%13===4) {
-          // Irregular streams follow the cliff instead of a rectangular sheet.
-          const shape=new THREE.Shape(); shape.moveTo(-.22,5.8);
-          shape.bezierCurveTo(-.38,4.5,-.1,3.4,-.28,2.3);
-          shape.bezierCurveTo(-.34,1.4,-.48,.6,-.52,0);
-          shape.lineTo(.48,0); shape.bezierCurveTo(.34,1.1,.21,2,.3,2.8);
-          shape.bezierCurveTo(.43,3.9,.15,5,.22,5.8); shape.closePath();
-          const cascade=add(group,new THREE.ShapeGeometry(shape),'#a8d8d0',side*9.05,.08,.2);
-          cascade.rotation.y=side*Math.PI/2; cascade.material.transparent=true; cascade.material.opacity=.78;
-          cascade.material.depthWrite=false; cascade.material.side=THREE.DoubleSide;
-          const pool=add(group,new THREE.RingGeometry(.55,.7,20),'#d4eee4',side*8.8,.06,.2);
-          pool.rotation.x=-Math.PI/2; pool.scale.set(.8,.7,1); pool.material.transparent=true; pool.material.opacity=.55;
-        }
-      });
-      const foam=add(group,new THREE.BoxGeometry(3,.025,.08),'#c3e8db',(i%3-1)*4,.04,-3); foam.rotation.y=.2;
-      if(i%3===0) {
-        const wave=add(group,new THREE.TorusGeometry(1.2,.045,5,18,Math.PI),'#d5eee4',(i%5-2)*2,.07,1);
-        wave.rotation.x=-Math.PI/2; wave.rotation.z=(i%2)*.3;
-      }
-      if(i===12 || i===34) {
-        // High crossings provide fixed landmarks without obstructing the boat or sail.
-        [-1,1].forEach(side=>{
-          // Stone abutments rise from the canyon walls to meet the deck.
-          const foundation=add(group,new THREE.BoxGeometry(1.8,10.4,3.1),'#69766d',side*9.7,5.1,0);
-          foundation.rotation.z=side*.025;
-          [-1,1].forEach(edge=>add(group,new THREE.BoxGeometry(.32,10.6,.32),'#604a35',side*9.15,5.25,edge*1.02));
-          add(group,new THREE.BoxGeometry(2.2,.28,3.3),'#899489',side*9.7,10.35,0);
-        });
-        add(group,new THREE.BoxGeometry(21,.35,2.2),'#826342',0,10.5,0);
-        for(let plank=-9;plank<=9;plank+=1.5) add(group,new THREE.BoxGeometry(.06,.04,2.1),'#5b4833',plank,10.7,0);
-        [-1,1].forEach(edge=>{
-          add(group,new THREE.BoxGeometry(21,.12,.12),'#6d5038',0,11.5,edge*.95);
-          for(let post=-9;post<=9;post+=3) add(group,new THREE.BoxGeometry(.13,1,.13),'#6d5038',post,11,edge*.95);
-        });
-      }
-    }
     const boat=createLakeBoat(add); scene.add(boat); boat.position.set(0,0,5);
     const mesh=(parent,geometry,color,x,y,z)=>add(parent,geometry,color,x,y,z);
     const box=(parent,w,h,d,color,x,y,z)=>add(parent,new THREE.BoxGeometry(w,h,d),color,x,y,z);
@@ -122,7 +57,7 @@ export default function Rapids({ campaignNavigation, language, paused, reduceMot
           vertices.setXYZ(v,x*uneven,y*uneven,z*uneven);
         }
         geometry.computeVertexNormals();
-        const rock=add(group,geometry,'#727e76',0,.55,0); rock.scale.set(1.05,.75,1.12); rock.rotation.y=.42; rock.material.flatShading=true;
+        const rock=add(group,geometry,'#4b5b62',0,.55,0); rock.scale.set(1.05,.75,1.12); rock.rotation.y=.42; rock.material.flatShading=true; rock.material.roughness=.57;
         const smaller=add(group,new THREE.IcosahedronGeometry(.5,0),'#899489',.9,.17,.5); smaller.scale.set(1,.55,.8);
       }
       else if(item.type==='log') {
@@ -147,6 +82,8 @@ export default function Rapids({ campaignNavigation, language, paused, reduceMot
       group.position.z=5-item.distance; group.position.y=riverY(group.position.z);
       return {...item,group,hit:false};
     });
+    const scenery=createRapidsScenery(scene,riverY,RAPIDS_DISTANCE,obstacles);
+    let sceneryTime=0;
     let distance=0, remaining=RAPIDS_LIVES, invulnerable=0, damageFlash=0, frame, last=performance.now(), lastPercent=-1;
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};
     const observer=new ResizeObserver(resize);observer.observe(el);resize();
@@ -155,7 +92,7 @@ export default function Rapids({ campaignNavigation, language, paused, reduceMot
     const clear=()=>held.current.clear();
     window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
     const animate=now=>{
-      frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;
+      frame=requestAnimationFrame(animate);const dt=sceneFrameDelta(now,last);last=now;
       if(phase.current==='playing'&&!current.current.paused) {
         distance=Math.min(RAPIDS_DISTANCE,distance+RAPIDS_SPEED*dt);
         const direction=(held.current.has('d')||held.current.has('arrowright')?1:0)-(held.current.has('a')||held.current.has('arrowleft')?1:0);
@@ -180,9 +117,32 @@ export default function Rapids({ campaignNavigation, language, paused, reduceMot
       }
       camera.position.set(boat.position.x*.3,boat.position.y+11,boat.position.z+14);
       camera.lookAt(boat.position.x*.2,riverY(boat.position.z-18)+1,boat.position.z-18);
+      if (!current.current.paused && !current.current.reduceMotion && dt > 0) {
+        sceneryTime += dt;
+        scenery.update(sceneryTime);
+      }
       renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
-    return ()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', clear);
+      clear();
+      scenery.dispose();
+      const geometries = new Set(), materials = new Set();
+      scene.traverse(object => {
+        if (object.isInstancedMesh) object.dispose();
+        if (object.geometry) geometries.add(object.geometry);
+        if (Array.isArray(object.material)) object.material.forEach(material => materials.add(material));
+        else if (object.material) materials.add(object.material);
+      });
+      geometries.forEach(geometry => geometry.dispose());
+      materials.forEach(material => material.dispose());
+      renderer.dispose();
+      renderer.domElement.remove();
+    };
   },[run]); // Language and accessibility settings are read by the UI or refs.
   const start=()=>{phase.current='playing';setStatus('playing');mount.current?.querySelector('canvas')?.focus();};
   const retry=()=>{

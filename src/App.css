@@ -253,11 +253,12 @@
   .npc-dialogue, [role="dialog"], .chamber-subtitle, .corridor-notice,
   .village-actions, .lake-portal-action, .marina-talk, .ruins-pirate-talk, .felipe-talk,
   .rapids-overlay, .battle-result,
-  .dragon-chamber-status, .courtyard-status, .witch-battle-status, .corridor-status,
+  .cave-status, .dragon-chamber-status, .courtyard-status, .witch-battle-status, .corridor-status,
   .dungeon-status, .dungeon-actions, .dungeon-quest,
   .touch-controls, .lake-touch, .throne-touch, .dungeon-touch
 ),
 .game-ui-hidden :is(.intro, .quest:not(.dungeon-quest), .destinations:not(.dungeon-actions)),
+.game-ui-hidden .cave-status > :not(.cave-health),
 .game-ui-hidden .battle-dragon > .dragon-phase,
 .game-ui-hidden .courtyard-status > .witch-battle-status:not(.courtyard-progress) > :not(.witch-lives, .witch-health),
 .game-ui-hidden :is(.dragon-chamber-status > .chamber-heading, .corridor-status > .cursed-heading, .courtyard-status > .cursed-heading) {

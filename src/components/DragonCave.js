@@ -9,7 +9,8 @@ import caveDialogue from './caveDialogue.json';
 import { addFaceDetails, createAdventurer } from './VillageScene';
 import { cameraRelativeDirection } from './cameraRelativeDirection';
 import { sceneFrameDelta } from './sceneFrameDelta';
-import { CAVE_LENGTH, CAVE_SPAWN, CAVE_CHECKPOINT, CAVE_HAZARDS, CAVE_DIVIDERS, CAVE_LOST, CAVE_HEARTS, CAVE_LEVERS, CAVE_CHAMBER_ENTRANCE, CAVE_STAIRS_START, CAVE_ARROW_TRAPS, caveStairHeight, nearCaveChamberEntrance, CAVE_CHECKPOINT_RADIUS, nearCaveCheckpoint, caveBlocked, caveHazardAt, caveSpikeExtension, caveRespawn, caveSwordHits, caveMonsterIntent } from './caveWorld';
+import { CAVE_SPAWN, CAVE_CHECKPOINT, CAVE_HAZARDS, CAVE_LOST, CAVE_HEARTS, CAVE_LEVERS, CAVE_CHAMBER_ENTRANCE, CAVE_STAIRS_START, CAVE_ARROW_TRAPS, caveStairHeight, nearCaveChamberEntrance, CAVE_CHECKPOINT_RADIUS, nearCaveCheckpoint, caveBlocked, caveHazardAt, caveSpikeExtension, caveRespawn, caveSwordHits, caveMonsterIntent } from './caveWorld';
+import { createElderCaveScenery } from './elderCaveScenery';
 import './Lake.css';
 import './DragonCave.css';
 
@@ -28,8 +29,8 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
     const el=mount.current;let renderer;
     try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{setError(true);return;}
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Dragon cave / Caverna do dragao');el.appendChild(renderer.domElement);renderer.domElement.focus({preventScroll:true});
-    const scene=new THREE.Scene();scene.background=new THREE.Color('#101919');scene.fog=new THREE.Fog('#101919',16,53);
-    scene.add(new THREE.HemisphereLight('#687e75','#1a211d',1.2));const ambient=new THREE.DirectionalLight('#9fa99b',.55);ambient.position.set(3,13,5);scene.add(ambient);
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#111827');scene.fog=new THREE.Fog('#111827',19,58);
+    scene.add(new THREE.HemisphereLight('#bcc5dd','#574754',1.62));
     const camera=new THREE.PerspectiveCamera(52,1,.1,95);
     const materials=new Map();const material=color=>{if(!materials.has(color))materials.set(color,new THREE.MeshStandardMaterial({color,roughness:.95}));return materials.get(color);};
     const add=(p,g,c,x,y,z)=>{const m=new THREE.Mesh(g,material(c));m.position.set(x,y,z);p.add(m);return m;};
@@ -37,38 +38,16 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
     const sphere=(p,r,c,x,y,z)=>add(p,new THREE.IcosahedronGeometry(r,1),c,x,y,z);
     const cylinder=(p,r,h,c,x,y,z,n=8)=>add(p,new THREE.CylinderGeometry(r,r,h,n),c,x,y,z);
     const mesh=(p,g,c,x,y,z)=>add(p,g,c,x,y,z);
-    const floor=add(scene,new THREE.PlaneGeometry(100,CAVE_LENGTH+24),'#39443a',0,-.04,-CAVE_LENGTH/2+7);floor.rotation.x=-Math.PI/2;
-    // Interior-facing surfaces disappear from the outside while staying solid from within.
-    const ceiling=mesh(scene,new THREE.PlaneGeometry(100,CAVE_LENGTH+24),'#27342e',0,11.8,-CAVE_LENGTH/2+7);ceiling.rotation.x=Math.PI/2;
-    const boundaryMarks=[];
-    const wall=(x,z,width,nx,nz,inset=.2)=>{const angle=Math.atan2(nx,nz),panel=mesh(scene,new THREE.PlaneGeometry(width,13),'#344137',x,5.7,z);panel.rotation.y=angle;
-      const length=Math.hypot(nx,nz);boundaryMarks.push({x:x+nx/length*inset,z:z+nz/length*inset,width,angle});return panel;};
-    const wallRocks=[];
-    [-1,1].forEach(side=>{
-      for(let z=9;z>-CAVE_LENGTH-10;z-=4){const inDoor=side<0?((z<=-40&&z>=-56)||(z<=-159&&z>=-177)):(z<=-83&&z>=-99);if(!inDoor)wall(side*11.7,z,4.2,-side,0,.6);}
-      for(let i=0;i<Math.ceil((CAVE_LENGTH+20)/8);i++){const z=7-i*8;if((side<0&&((z<=-38&&z>=-58)||(z<=-157&&z>=-179)))||(side>0&&z<=-81&&z>=-101))continue;const rock=mesh(scene,new THREE.DodecahedronGeometry(2.7+(i%3)*.3,0),i%2?'#3b4940':'#435146',side*(12+i%2*.3),3+(i%3)*1.2,z);rock.scale.set(.8,1.6,1.45);rock.rotation.set(.12*(i%3),.37*i,.16*(i%4-1));wallRocks.push({rock,side});
-        for(let j=0;j<2;j++){const stal=mesh(scene,new THREE.ConeGeometry(.7+j*.2,2.7+j*.6,6),i%2?'#627063':'#4d5c50',side*(9+j*1.8),10.5-j*.5,z+j*2);stal.rotation.z=Math.PI;}
-      }});
-    // Stone islands divide two sections into distinct routes that rejoin; side chambers end in alcoves.
-    CAVE_DIVIDERS.forEach((r,i)=>{const w=r.maxX-r.minX,d=r.maxZ-r.minZ,z=(r.minZ+r.maxZ)/2;box(scene,w,6,d,'#354238',0,3,z);for(let j=0;j<4;j++){const crag=mesh(scene,new THREE.DodecahedronGeometry(1.45,0),'#56665a',(j%2?1:-1)*1.2,5,z-d/2+j*d/3);crag.scale.set(.9,1.3,1.2);crag.rotation.y=j*.5;}});
-    // Trace the walkable side passages to build walls around their turns and dead ends.
-    for(let x=-45;x<=45;x+=2)for(let z=-197;z<=-39;z+=2){
-      if(Math.abs(x)<11||caveBlocked(x,z))continue;
-      [[2,0],[-2,0],[0,2],[0,-2]].forEach(([dx,dz])=>{
-        if(!caveBlocked(x+dx,z+dz))return;
-        if(Math.abs(x+dx/2)<11.2)return;
-        wall(x+dx/2,z+dz/2,2.1,-dx,-dz);
-      });
-    }
-    // A low-contrast luminous stone seam stays visible even when the wall's back face is hidden.
-    const boundaryGeometry=new THREE.BoxGeometry(1,1,1),boundaryMaterial=new THREE.MeshBasicMaterial({color:'#b9c9a5',transparent:true,opacity:.72,depthWrite:false});
-    const boundaryMesh=new THREE.InstancedMesh(boundaryGeometry,boundaryMaterial,boundaryMarks.length),boundaryTransform=new THREE.Object3D();
-    boundaryMarks.forEach((mark,i)=>{boundaryTransform.position.set(mark.x,.035,mark.z);boundaryTransform.rotation.set(0,mark.angle,0);boundaryTransform.scale.set(mark.width,.045,.16);boundaryTransform.updateMatrix();boundaryMesh.setMatrixAt(i,boundaryTransform.matrix);});
-    boundaryMesh.instanceMatrix.needsUpdate=true;boundaryMesh.frustumCulled=false;scene.add(boundaryMesh);
+    const scenery=createElderCaveScenery(scene);
     // Ember pools and stone spikes correspond exactly to the collision zones.
     const glows=[],spikeTraps=[],flames=[];CAVE_HAZARDS.forEach((h,i)=>{if(h.type==='lava'){
-      const pool=mesh(scene,new THREE.CircleGeometry(h.radius,24),'#a34427',h.x,.025,h.z);pool.rotation.x=-Math.PI/2;pool.material=new THREE.MeshStandardMaterial({color:'#9f3a23',emissive:'#b8411b',emissiveIntensity:.9,roughness:.6});
-      const rim=mesh(scene,new THREE.TorusGeometry(h.radius,.16,6,24),'#6b5b4b',h.x,.08,h.z);rim.rotation.x=Math.PI/2;
+      const pool=mesh(scene,new THREE.CircleGeometry(h.radius,40),'#a34427',h.x,.025,h.z);pool.rotation.x=-Math.PI/2;pool.material=new THREE.MeshStandardMaterial({color:'#9f3a23',emissive:'#b8411b',emissiveIntensity:.9,roughness:.6});
+      const rim=mesh(scene,new THREE.TorusGeometry(h.radius,.16,6,40),'#423437',h.x,.08,h.z);rim.rotation.x=Math.PI/2;
+      for(let k=0;k<9;k++){
+        const angle=k*2.4, distance=h.radius*(.21+(k%4)*.17);
+        const crust=sphere(scene,.43,k%2?'#6c3935':'#61332f',h.x+Math.cos(angle)*distance,.063,h.z+Math.sin(angle)*distance);
+        crust.scale.set(1.05,.085,.69);crust.rotation.y=k;
+      }
       const light=new THREE.PointLight('#f36e30',8,13);light.position.set(h.x,1,h.z);scene.add(light);glows.push({light,phase:i});
       for(let j=0;j<3;j++){const a=j*Math.PI*2/3,flame=mesh(scene,new THREE.ConeGeometry(.18,.65,6),'#f49c41',h.x+Math.cos(a)*h.radius*.5,.4,h.z+Math.sin(a)*h.radius*.5);flame.material=new THREE.MeshStandardMaterial({color:'#f49c41',emissive:'#c34b20',emissiveIntensity:1});flames.push({flame,phase:i+j});}
     }else{const spikes=new THREE.Group();spikes.position.set(h.x,0,h.z);scene.add(spikes);for(let j=0;j<9;j++){const a=j*2.4,r=(j%3)*.6;mesh(spikes,new THREE.ConeGeometry(.38,.8+(j%3)*.3,6),'#a2aa94',Math.cos(a)*r,.42,Math.sin(a)*r);}spikeTraps.push({group:spikes,index:i});
@@ -80,9 +59,6 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
       const tip=mesh(group,new THREE.ConeGeometry(.13,.42,4),'#c7cbb7',.9,0,0);tip.rotation.z=-Math.PI/2;
       [-1,1].forEach(k=>{const feather=box(group,.35,.16,.03,'#c4b499',-.62,k*.1,0);feather.rotation.z=k*.35;});
       return {group,z,side,phase:i*2.9,lastCycle:-1};});
-    // Distant fires guide the route and make the dangers legible in the dark.
-    for(let i=0;i<18;i++){const z=3-i*13,side=i%2?1:-1;cylinder(scene,.1,2.3,'#71553a',side*9,1.15,z);const flame=mesh(scene,new THREE.ConeGeometry(.24,.7,7),'#f2a34c',side*9,2.6,z);flame.material=new THREE.MeshStandardMaterial({color:'#f2a34c',emissive:'#bd5420',emissiveIntensity:1});const lamp=new THREE.PointLight('#ff9a4b',8,13);lamp.position.set(side*9,2.5,z);scene.add(lamp);glows.push({light:lamp,phase:i*.9});flames.push({flame,phase:i*.9});}
-    [[-34,-57],[-41,-69],[34,-100],[41,-109]].forEach(([x,z],i)=>{cylinder(scene,.09,2,'#71553a',x,1,z);const flame=mesh(scene,new THREE.ConeGeometry(.2,.55,7),'#f2a34c',x,2.25,z);flame.material=new THREE.MeshStandardMaterial({color:'#f2a34c',emissive:'#bd5420',emissiveIntensity:1});const lamp=new THREE.PointLight('#ff9a4b',7,12);lamp.position.set(x,2.2,z);scene.add(lamp);glows.push({light:lamp,phase:i+5});flames.push({flame,phase:i+5});});
     const hearts=CAVE_HEARTS.map((p,i)=>{const group=new THREE.Group();group.position.set(p.x,1,p.z);scene.add(group);const color='#e66b79';const left=sphere(group,.28,color,-.16,.12,0),right=sphere(group,.28,color,.16,.12,0);left.scale.z=.6;right.scale.z=.6;const tip=mesh(group,new THREE.ConeGeometry(.35,.55,4),color,0,-.12,0);tip.rotation.z=Math.PI;tip.rotation.y=Math.PI/4;return {group,phase:i,collected:false};});
     // The cave's sentries patrol short loops and hurt the traveler on contact.
     const monsters=[[-7,-13],[7,-44],[-7,-87],[6,-123],[-17,-50],[17,-93],[-6,-158],[7,-195],[-34,-181]].map(([x,z],i)=>{const group=new THREE.Group();scene.add(group);group.position.set(x,.12,z);const body=sphere(group,.8,i%2?'#55554c':'#46574d',0,.75,0);body.scale.set(1,1.1,.8);const head=sphere(group,.5,'#344139',0,1.55,.2);head.scale.set(1,.7,1);[-1,1].forEach(side=>{const eye=sphere(group,.075,'#ec754c',side*.2,1.6,.63);eye.material=new THREE.MeshStandardMaterial({color:'#ec754c',emissive:'#b32f16',emissiveIntensity:1.4});const horn=mesh(group,new THREE.ConeGeometry(.12,.4,5),'#afa98e',side*.35,1.95,.05);horn.rotation.z=-side*.35;});const legs=[],arms=[];[-1,1].forEach(side=>{const leg=new THREE.Group();leg.position.set(side*.38,.52,0);group.add(leg);box(leg,.22,.65,.27,'#354339',0,-.28,0);legs.push(leg);const arm=new THREE.Group();arm.position.set(side*.75,1.25,.05);group.add(arm);box(arm,.25,.72,.28,'#46554a',0,-.3,0);for(let j=-1;j<=1;j++){const claw=mesh(arm,new THREE.ConeGeometry(.06,.22,5),'#b9b29a',j*.08,-.72,.06);claw.rotation.z=Math.PI;}arms.push(arm);});return {group,body,legs,arms,x,z,phase:i*1.8,hp:2,death:0,defeated:false,attackAt:0,nextAttack:0};});
@@ -97,14 +73,6 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
       else{box(torso,.47,.5,.23,'#6a5039',0,1.25,-.29);box(torso,.2,.09,.42,'#c4ad81',0,1.44,.08);box(torso,.5,.06,.08,'#c1b194',0,2.04,.02);}
       const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d');ctx.fillStyle='#1a2522';ctx.fillRect(4,4,504,152);ctx.strokeStyle='#c3a778';ctx.lineWidth=5;ctx.strokeRect(7,7,498,146);ctx.textAlign='center';ctx.fillStyle='#f6e9ca';ctx.font='bold 54px sans-serif';ctx.fillText(p.name,256,70);ctx.fillStyle='#d3c8a8';ctx.font='30px sans-serif';ctx.fillText('E / F',256,125);
       const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const sign=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false}));sign.position.set(0,2.9,0);sign.scale.set(2.1,.66,1);figure.add(sign);return {...p,figure,texture};
-    });
-    // Scattered remains and abandoned supplies suggest earlier expeditions.
-    [[-8,-8],[8,-20],[-8,-35],[8,-59],[-8,-82],[8,-105],[-8,-126],[8,-150],[-29,-50],[32,-95]].forEach(([x,z],i)=>{
-      const remains=new THREE.Group();remains.position.set(x,.1,z);remains.rotation.y=i*1.1;scene.add(remains);
-      const skull=sphere(remains,.32,'#c1bba4',0,.28,0);skull.scale.set(1,.83,.9);box(remains,.4,.12,.25,'#aaa58f',0,.08,.2);
-      [-1,1].forEach(side=>{sphere(remains,.09,'#202c27',side*.13,.32,.26);const bone=cylinder(remains,.045,.8,'#c1bba4',side*.5,.09,-.1,6);bone.rotation.z=side*1.2;});
-      for(let j=-1;j<=1;j++)box(remains,.055,.08,.06,'#e0d8bd',j*.09,.12,.34);
-      if(i%3===0){const pack=box(remains,.65,.38,.4,'#675743',.9,.2,.5);pack.rotation.y=.5;box(remains,.7,.06,.08,'#a9946d',.9,.4,.5);}
     });
     // A single concealed mechanism stands behind stone in the distant side branch.
     const lever=CAVE_LEVERS[0],leverBase=new THREE.Group();leverBase.position.set(lever.x,0,lever.z);scene.add(leverBase);
@@ -163,7 +131,8 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
     const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkRef.current!==null&&!settings.current.paused){e.preventDefault();actions.current.closeTalk();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||talkRef.current!==null)return;if((k==='j'||k===' ')&&!e.repeat){e.preventDefault();attackRef.current?.();return;}if((k==='e'||k==='f')&&!e.repeat){e.preventDefault();actions.current.openTalk();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
     const up=e=>keys.current.delete(e.key.toLowerCase()),clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
-    let frame,last=performance.now(),time=0,invulnerable=0,reached=false,lastNotice=0,previousEnd=false,previousExit=false,deathTimer=0,burnTimer=0,stepTimer=0,lastAttack=-10,attackUntil=0,previousNear=-1,previousLever=-1,hitVisual=0;
+    const cameraTarget=new THREE.Vector3(), cameraShift=new THREE.Vector3(), interactionFocus=new THREE.Vector3();
+    let frame,last=performance.now(),time=0,sceneryTime=0,invulnerable=0,reached=false,lastNotice=0,previousEnd=false,previousExit=false,deathTimer=0,burnTimer=0,stepTimer=0,lastAttack=-10,attackUntil=0,previousNear=-1,previousLever=-1,hitVisual=0;
     chamberNotice.current=()=>{setNotice('chamber');lastNotice=time;};
     leverAction.current=index=>{if(index!==0||settings.current.paused||talkRef.current!==null||deathTimer>0||unlockedRef.current)return;unlockedRef.current=true;setUnlocked(true);leverHandle.rotation.z=-.9;stairs.visible=true;setNotice('stairs');lastNotice=time;settings.current.onSound?.('lever');};
     attackRef.current=()=>{if(settings.current.paused||talkRef.current!==null||deathTimer>0||time-lastAttack<.6)return;lastAttack=time;attackUntil=time+.45;settings.current.onSound?.('attack');monsters.forEach(m=>{if(m.defeated||!caveSwordHits(player.position,player.rotation.y,m.group.position))return;m.hp--;if(m.hp<=0){m.defeated=true;m.death=settings.current.reduceMotion?.05:.65;settings.current.onSound?.('defeat');}else settings.current.onSound?.('monsterHit');});};
@@ -197,13 +166,40 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
         if(time-lastNotice>3.5)setNotice('');
       }else clear();
       if(!settings.current.reduceMotion&&!settings.current.paused&&talkRef.current===null){angel.position.y=.75+Math.sin(time*1.5)*.12;wings.forEach((wing,i)=>{wing.rotation.z=(i?1:-1)*(.08+Math.sin(time*1.7)*.09);});halo.rotation.z=Math.sin(time*.8)*.05;glows.forEach(g=>{g.light.intensity=8+Math.sin(time*5+g.phase)*1.1;});flames.forEach(f=>{f.flame.scale.y=.8+Math.abs(Math.sin(time*7+f.phase))*.55;f.flame.rotation.z=Math.sin(time*4+f.phase)*.12;});}
-      const target=new THREE.Vector3(player.position.x,player.position.y+1,player.position.z),shift=target.clone().sub(orbit.target);camera.position.add(shift);orbit.target.copy(target);orbit.enabled=!settings.current.paused&&talkRef.current===null;orbit.enableDamping=!settings.current.reduceMotion;orbit.update();wallRocks.forEach(({rock,side})=>{rock.visible=camera.position.x*side<11.7;});renderer.render(scene,camera);
+      const {paused,reduceMotion}=settings.current;
+      if(!paused&&talkRef.current===null&&!reduceMotion&&dt>0){
+        sceneryTime+=dt;
+        scenery.update(sceneryTime);
+      }
+      cameraTarget.set(player.position.x,player.position.y+1,player.position.z);
+      cameraShift.copy(cameraTarget).sub(orbit.target);
+      camera.position.add(cameraShift);
+      orbit.target.copy(cameraTarget);
+      orbit.enabled=!paused&&talkRef.current===null;
+      orbit.enableDamping=!reduceMotion;
+      orbit.update();
+      const interlocutor=lost[talkRef.current ?? nearRef.current];
+      let focus=null;
+      if(interlocutor)focus=interactionFocus.set(interlocutor.x,1.8,interlocutor.z);
+      else if(leverNearRef.current>=0)focus=interactionFocus.set(lever.x,.6,lever.z);
+      else if(exitNearRef.current)focus=interactionFocus.set(mouth.position.x,5.5,mouth.position.z+.9);
+      scenery.cutaway(camera,cameraTarget,focus);
+      mouth.visible=camera.position.z>mouth.position.z-.35;
+      renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();attackRef.current=null;leverAction.current=null;chamberNotice.current=null;orbit.dispose();lost.forEach(p=>p.texture.dispose());const shared=new Set(materials.values());scene.traverse(o=>{if(o.isInstancedMesh)o.dispose();o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(!shared.has(m))m.dispose();});});materials.forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();};
+    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();attackRef.current=null;leverAction.current=null;chamberNotice.current=null;orbit.dispose();lost.forEach(p=>p.texture.dispose());const geometries=new Set(),surfaces=new Set(materials.values());
+      scene.traverse(object=>{
+        if(object.isInstancedMesh)object.dispose();
+        if(object.geometry)geometries.add(object.geometry);
+        if(Array.isArray(object.material))object.material.forEach(surface=>surfaces.add(surface));
+        else if(object.material)surfaces.add(object.material);
+      });
+      geometries.forEach(geometry=>geometry.dispose());
+      surfaces.forEach(surface=>surface.dispose());renderer.dispose();renderer.domElement.remove();};
   },[]);
   const press=(key,down)=>{if(paused||talkRef.current!==null)return;if(down)keys.current.add(key);else keys.current.delete(key);};
   return <section className="lake dragon-cave"><div className="lake-viewport"><div ref={mount} className="lake-canvas"/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en?'Return to village':'Voltar para a aldeia'}</button>}{!campaignNavigation && <button className="cave-chamber-shortcut" disabled={paused} onClick={()=>{keys.current.clear();onStop?.();onEnterChamber?.();}}>{en?'Go to the dragon chamber':'Ir para a c\u00e2mara do drag\u00e3o'}</button>}
-    <div className="cave-status" aria-live="polite"><strong>{en?'THE ELDER\u2019S CAVE':'CAVERNA DO ANCI\u00c3O'}</strong><span>{en?'Health':'Vida'}: {'\u2665'.repeat(health)}{'\u2661'.repeat(3-health)}</span><small>{chamberFound?(en?'Mission complete: entrance to the dragon chamber found.':'Missão concluída: entrada da câmara do dragão encontrada.'):unlocked?(en?'Climb the wooden stairs to the dragon chamber entrance.':'Suba a escada de madeira até a entrada da câmara do dragão.'):(en?'Mission: find the hidden lever and reach the dragon chamber.':'Missão: encontre a alavanca escondida e alcance a câmara do dragão.')}</small><small>{checkpoint?(en?'Checkpoint reached':'Ponto de retorno ativado'):(en?'Find the green checkpoint':'Encontre o ponto de retorno verde')}</small></div>
+    <div className="cave-status" aria-live="polite"><strong>{en?'THE ELDER\u2019S CAVE':'CAVERNA DO ANCI\u00c3O'}</strong><span className="cave-health">{en?'Health':'Vida'}: {'\u2665'.repeat(health)}{'\u2661'.repeat(3-health)}</span><small>{chamberFound?(en?'Mission complete: entrance to the dragon chamber found.':'Missão concluída: entrada da câmara do dragão encontrada.'):unlocked?(en?'Climb the wooden stairs to the dragon chamber entrance.':'Suba a escada de madeira até a entrada da câmara do dragão.'):(en?'Mission: find the hidden lever and reach the dragon chamber.':'Missão: encontre a alavanca escondida e alcance a câmara do dragão.')}</small><small>{checkpoint?(en?'Checkpoint reached':'Ponto de retorno ativado'):(en?'Find the green checkpoint':'Encontre o ponto de retorno verde')}</small></div>
     {!notice&&endReached&&<p className="cave-notice" role="status">{en?'The passage deeper into the mountain is sealed.':'A passagem para as profundezas est\u00e1 selada.'}</p>}
     {notice&&<p className="cave-notice" role="status">{notice==='checkpoint'?(en?'Checkpoint reached.':'Ponto de retorno ativado.'):notice==='respawn'?(en?'You return to the last safe point.':'Voc\u00ea voltou ao \u00faltimo ponto seguro.'):notice==='death'?(en?'You have fallen.':'Voc\u00ea caiu.'):notice==='chamber'?(en?'The dragon chamber lies beyond. This area is not yet available.':'A câmara do dragão fica além desta porta. Esta área ainda não está disponível.'):notice==='stairs'?(en?'A wooden stair opens in the depths!':'Uma escada de madeira se abriu nas profundezas!'):notice==='heal'?(en?'Health restored.':'Vida recuperada.'):notice==='monster'?(en?'A cave creature attacks!':'Uma criatura da caverna atacou!'):notice==='lava'?(en?'The embers burn!':'As brasas queimam!'):notice==='arrow'?(en?'Watch out for arrows!':'Cuidado com as flechas!'):(en?'Watch out for the spikes!':'Cuidado com os espinhos!')}</p>}
     {nearExit&&near<0&&nearLever<0&&talk===null&&<div className="village-actions"><button onClick={openTalk}>{en?'Enter the dragon chamber':'Entrar na câmara do dragão'} <kbd>E</kbd></button></div>}

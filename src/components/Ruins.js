@@ -12,7 +12,9 @@ import './Ruins.css';
 import MapControlGuide from './MapControlGuide';
 import PirateDialogue from './PirateDialogue';
 import pirateLines from './ruinsPirate.json';
-import { SHRINES, SHIPWRECK, COLUMNS, SHORE_POINTS, shorePoint, ruinsObstacle, nearTempleEntrance } from './ruinsWorld';
+import { SHRINES, SHIPWRECK, COLUMNS, ruinsObstacle, nearTempleEntrance } from './ruinsWorld';
+import { addCoveHull, createCoveCoast, createCoveOcclusion } from './ruinsCoast';
+import { sceneFrameDelta } from './sceneFrameDelta';
 
 
 export default function Ruins({ campaignNavigation,language,paused,reduceMotion,onExit,onEnterTunnel,onSound,onSpeak,onStop,speaking,voiceEnabled,voiceNotice,active=true,startNearPassage=false}) {
@@ -42,26 +44,24 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
     try {renderer=new THREE.WebGLRenderer({antialias:true});} catch {setError(true);return;}
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5)); renderer.domElement.tabIndex=0;
     renderer.domElement.setAttribute('aria-label','Sunken ruins / Ruínas submersas'); el.appendChild(renderer.domElement); renderer.domElement.focus({preventScroll:true});
-    const scene=new THREE.Scene();scene.background=new THREE.Color('#b0d1c9');scene.fog=new THREE.Fog('#b0d1c9',38,85);
-    scene.add(new THREE.HemisphereLight('#e5f5df','#526a5b',2));const light=new THREE.DirectionalLight('#fff0cf',2);light.position.set(-12,22,10);scene.add(light);
-    const camera=new THREE.PerspectiveCamera(48,1,.1,120);
+    const scene=new THREE.Scene();scene.background=new THREE.Color('#b9cdca');scene.fog=new THREE.Fog('#b9cdca',48,144);
+    scene.add(new THREE.HemisphereLight('#e1f2ff','#74705e',1.72));const light=new THREE.DirectionalLight('#ffe0ad',2.05);light.position.set(-16,18,-19);scene.add(light);
+    const camera=new THREE.PerspectiveCamera(48,1,.1,165);
     const add=(parent,geometry,color,x,y,z)=>{const mesh=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color,roughness:.88}));mesh.position.set(x,y,z);parent.add(mesh);return mesh;};
     // A painted horizon surrounds the cove without becoming part of navigation.
     const horizonCanvas=document.createElement('canvas');horizonCanvas.width=1024;horizonCanvas.height=256;
     const horizonContext=horizonCanvas.getContext('2d'), sky=horizonContext.createLinearGradient(0,0,0,256);
-    sky.addColorStop(0,'#90bec0');sky.addColorStop(.62,'#c1ddd0');sky.addColorStop(1,'#d9dfc6');
+    sky.addColorStop(0,'#82aebb');sky.addColorStop(.52,'#bcceca');sky.addColorStop(.76,'#e4ccb0');sky.addColorStop(1,'#9fbdbb');
     horizonContext.fillStyle=sky;horizonContext.fillRect(0,0,1024,256);
     const horizonRidge=(baseline,height,color,phase)=>{horizonContext.fillStyle=color;horizonContext.beginPath();horizonContext.moveTo(0,256);
       for(let x=0;x<=1024;x+=4){const a=x/1024*Math.PI*2;horizonContext.lineTo(x,baseline-Math.sin(a*3+phase)*height-Math.sin(a*7-phase)*height*.3);}
       horizonContext.lineTo(1024,256);horizonContext.closePath();horizonContext.fill();};
-    horizonRidge(180,22,'#9bbcb0',.4);horizonRidge(214,20,'#7ea697',1.2);
+    horizonRidge(184,12,'#a9b7ae',.4);horizonRidge(213,10,'#8fa8a5',1.2);
     const horizonTexture=new THREE.CanvasTexture(horizonCanvas);horizonTexture.colorSpace=THREE.SRGBColorSpace;
-    const horizon=new THREE.Mesh(new THREE.CylinderGeometry(75,75,46,48,1,true),new THREE.MeshBasicMaterial({map:horizonTexture,side:THREE.BackSide,depthWrite:false,fog:false}));
+    const horizon=new THREE.Mesh(new THREE.CylinderGeometry(122,122,58,64,1,true),new THREE.MeshBasicMaterial({map:horizonTexture,side:THREE.BackSide,depthWrite:false,fog:false}));
     horizon.position.y=8;horizon.renderOrder=-10;horizon.frustumCulled=false;scene.add(horizon);
-    const water=add(scene,new THREE.PlaneGeometry(90,90,36,36),'#4e9a98',0,0,0);water.rotation.x=-Math.PI/2;
-    water.material.transparent=true;water.material.opacity=.84;water.material.roughness=.32;water.material.metalness=.08;
-    const waterBase=water.geometry.attributes.position.array.slice();
-    const bed=add(scene,new THREE.PlaneGeometry(90,90),'#6b9484',0,-.65,0);bed.rotation.x=-Math.PI/2;
+    const animateCoast=createCoveCoast(scene);
+    const occluders=[];
     // Soft light sprites are shared by all altars, but each keeps its own color and opacity.
     const haloCanvas=document.createElement('canvas');haloCanvas.width=128;haloCanvas.height=128;
     const haloContext=haloCanvas.getContext('2d'), haloGradient=haloContext.createRadialGradient(64,64,1,64,64,64);
@@ -69,34 +69,9 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
     haloContext.fillStyle=haloGradient;haloContext.fillRect(0,0,128,128);
     const haloTexture=new THREE.CanvasTexture(haloCanvas);haloTexture.colorSpace=THREE.SRGBColorSpace;
     const makeHalo=(parent,x,y,z)=>{const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:haloTexture,color:'#ffd595',transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending}));sprite.position.set(x,y,z);sprite.scale.set(3.4,3.4,1);parent.add(sprite);return sprite;};
-    // A continuous, faceted cliff surrounds the cove; its sections share edges.
-    const shoreGeometry=new THREE.BufferGeometry(), positions=[],colors=[];
-    const triangle=(a,b,c,color)=>{[a,b,c].forEach(point=>{positions.push(point[0],point[1],point[2]);colors.push(color.r,color.g,color.b);});};
-    for(let i=0;i<SHORE_POINTS;i++) {
-      const a=shorePoint(i),b=shorePoint(i+1),color=new THREE.Color(['#758a79','#819583','#6d8374','#899887'][i%4]);
-      const outerA=[a.x*1.28,a.height+.35,a.z*1.28],outerB=[b.x*1.28,b.height+.35,b.z*1.28];
-      triangle([a.x,-1,a.z],[b.x,-1,b.z],[a.x,a.height,a.z],color);
-      triangle([b.x,-1,b.z],[b.x,b.height,b.z],[a.x,a.height,a.z],color);
-      const topColor=color.clone().multiplyScalar(1.12);
-      triangle([a.x,a.height,a.z],[b.x,b.height,b.z],outerA,topColor);
-      triangle([b.x,b.height,b.z],outerB,outerA,topColor);
-      if(i%4===1){
-        const tx=a.x*1.08,tz=a.z*1.08,h=2.5+(i%3)*.35;
-        add(scene,new THREE.CylinderGeometry(.18,.28,1.8,7),'#705b44',tx,a.height+.65,tz);
-        add(scene,new THREE.ConeGeometry(1.35,h,7),i%8?'#426e53':'#557e5e',tx,a.height+1.9,tz);
-        add(scene,new THREE.ConeGeometry(.95,h*.8,7),'#5b8564',tx,a.height+2.8,tz);
-      }
-      if(i%5===2){
-        const ledge=add(scene,new THREE.BoxGeometry(2.5,.42,1.3),'#9baa96',a.x*1.005,a.height*.48,a.z*1.005);
-        ledge.rotation.y=-i*Math.PI*2/SHORE_POINTS;
-        const moss=add(scene,new THREE.IcosahedronGeometry(.46,0),'#6d8e69',a.x*.99,a.height*.48+.25,a.z*.99);moss.scale.set(1.3,.55,1);
-      }
-    }
-    shoreGeometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));shoreGeometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));shoreGeometry.computeVertexNormals();
-    scene.add(new THREE.Mesh(shoreGeometry,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide,flatShading:true})));
     // Each rune has a warm, visible idle glow and turns turquoise when activated.
     const beacons=SHRINES.map(({x,z},i)=>{
-      const shrine=new THREE.Group();shrine.position.set(x,0,z);scene.add(shrine);
+      const shrine=new THREE.Group();shrine.position.set(x,0,z);scene.add(shrine);occluders.push(shrine);
       const island=add(shrine,new THREE.CylinderGeometry(2.6,3,.5,9),'#a9aa91',0,.05,0);island.rotation.y=.3*i;
       add(shrine,new THREE.CylinderGeometry(2.12,2.25,.18,10),'#c0bda2',0,.34,0);
       const baseRing=add(shrine,new THREE.TorusGeometry(1.65,.07,6,32),'#c3a977',0,.46,0);baseRing.rotation.x=Math.PI/2;
@@ -112,26 +87,27 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
       for(let j=0;j<5;j++){const a=j*Math.PI*2/5+i;const shrub=add(shrine,new THREE.IcosahedronGeometry(.34,0),'#678867',Math.cos(a)*2.15,.45,Math.sin(a)*2.15);shrub.scale.set(1.1,.7,1);}
       return {rune,glow,halo,ring,beam};
     });
-    const ripples=[];
-    for(let i=0;i<22;i++) {
-      const x=Math.sin(i*4.71)*30,z=Math.cos(i*2.31)*28;
-      if(SHRINES.some(p=>Math.hypot(x-p.x,z-p.z)<4) || (Math.abs(x)<7 && z<-26))continue;
-      const ripple=new THREE.Mesh(new THREE.RingGeometry(.65,.71,24),new THREE.MeshBasicMaterial({color:'#d0eadd',transparent:true,opacity:.35,side:THREE.DoubleSide,depthWrite:false}));
-      ripple.rotation.x=-Math.PI/2;ripple.position.set(x,.06,z);ripple.scale.y=.55;scene.add(ripple);ripples.push({ripple,phase:i*.41});
-    }
     // Each capital is attached to its column and leans with the same structure.
     COLUMNS.forEach(([x,z],i)=>{
-      const ruin=new THREE.Group();ruin.position.set(x,-.2,z);ruin.rotation.z=(i%2?1:-1)*.1;scene.add(ruin);
-      const height=2.3+(i%3)*.7;
+      const ruin=new THREE.Group();ruin.position.set(x,-.2,z);ruin.rotation.z=(i%2?1:-1)*.16;scene.add(ruin);occluders.push(ruin);
+      const height=[2.8,1.2,3.1,.72,1.6,1.95][i];
       add(ruin,new THREE.CylinderGeometry(.7,.85,.28,8),'#b6b8a1',0,.14,0);
       add(ruin,new THREE.CylinderGeometry(.58,.7,height,8),'#929e8c',0,.28+height/2,0);
-      add(ruin,new THREE.CylinderGeometry(.75,.62,.22,8),'#aeb7a2',0,height+.39,0);
-      add(ruin,new THREE.BoxGeometry(1.55,.25,1.55),'#b7bba5',0,height+.62,0);
+      const cap=add(ruin,new THREE.CylinderGeometry(.75,.62,.22,8),'#aeb7a2',0,height+.39,0);
+      cap.rotation.z=i%2?.2:.04;
       const moss=add(ruin,new THREE.IcosahedronGeometry(.28,0),'#698869',.48,.55,0);moss.scale.set(1,.65,.8);
     });
-    const temple=new THREE.Group();temple.position.set(0,0,-31);scene.add(temple);
+    const temple=new THREE.Group();temple.position.set(0,0,-31);scene.add(temple);occluders.push(temple);
     [-1,1].forEach(side=>{add(temple,new THREE.BoxGeometry(2.1,7,4),'#8c9785',side*5.1,3.5,0);add(temple,new THREE.BoxGeometry(2.7,.6,4.5),'#b0b29b',side*5.1,7.2,0);});
-    add(temple,new THREE.BoxGeometry(12,1.1,4),'#9fa793',0,7.85,0);
+    const arch=new THREE.Shape();
+    arch.moveTo(-6,6.45);arch.lineTo(-6,8.92);arch.lineTo(6,8.92);arch.lineTo(6,6.45);
+    arch.lineTo(3.85,6.45);arch.quadraticCurveTo(0,9.3,-3.85,6.45);arch.closePath();
+    add(temple,new THREE.ExtrudeGeometry(arch,{depth:3.85,bevelEnabled:false}),'#9fa793',0,0,-1.92);
+    for(let i=0;i<13;i++){
+      const x=i*.86-5.16,y=7.15+1.08*(1-(x/5.59)**2);
+      const voussoir=add(temple,new THREE.BoxGeometry(.82,.43,.27),i%3?'#a7ab98':'#b9b5a0',x,y,2.06);
+      voussoir.rotation.z=-x*.064;
+    }
     add(temple,new THREE.BoxGeometry(13,.35,4.4),'#c1c2a9',0,8.5,0);
     add(temple,new THREE.BoxGeometry(10.5,.3,4.2),'#788d7d',0,9.1,0);
     [-1,1].forEach(side=>{
@@ -146,13 +122,15 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
     tunnelMouth.material.side=THREE.DoubleSide;
     // A damaged hull and broken mast form a small shipwreck for the stranded pirate.
     const wreck=new THREE.Group();wreck.position.set(SHIPWRECK.x,0,SHIPWRECK.z);wreck.rotation.y=.35;scene.add(wreck);
-    const hull=add(wreck,new THREE.CylinderGeometry(1.75,1.15,.8,7).scale(1,1,1.75),'#694a34',0,.05,0);hull.rotation.y=.2;
-    add(wreck,new THREE.BoxGeometry(2.7,.18,4.7),'#9a7650',0,.45,.25);
-    [-1,1].forEach(side=>{
-      for(let j=0;j<4;j++) {const plank=add(wreck,new THREE.BoxGeometry(.14,.42,1.05),'#745139',side*1.32,.7,-1.6+j*1.05);plank.rotation.z=side*(.1+j*.045);}
-      for(let j=0;j<3;j++) {const nail=add(wreck,new THREE.BoxGeometry(.035,.05,.55),'#4d3c2e',side*.82,.55,-1.4+j*1.3);nail.rotation.y=.1*j;}
-    });
-    const mast=new THREE.Group();mast.position.set(.75,.5,-.8);mast.rotation.z=-.38;wreck.add(mast);
+    const hullColors=['#594332','#78583d','#9b7954'];
+    addCoveHull(wreck,(parent,geometry,shade,x,y,z)=>add(parent,geometry,hullColors[shade],x,y,z),true);
+    const transom=add(wreck,new THREE.BoxGeometry(1.12,.62,.14),'#694c37',0,.23,2.4);
+    transom.rotation.x=.22;
+    for(let i=0;i<3;i++){
+      const rib=add(wreck,new THREE.BoxGeometry(.11,.51,.14),'#594638',1.07,.49,.47+i*.42);
+      rib.rotation.z=-.28;
+    }
+    const mast=new THREE.Group();mast.position.set(.75,.5,-.8);mast.rotation.z=-.38;wreck.add(mast);occluders.push(mast);
     add(mast,new THREE.CylinderGeometry(.09,.16,4.2,8),'#705039',0,2.05,0);
     const cross=add(mast,new THREE.CylinderGeometry(.06,.07,2,7),'#705039',0,3.2,0);cross.rotation.z=Math.PI/2;
     const torn=new THREE.Shape();torn.moveTo(-.85,3.12);torn.lineTo(.8,3.12);torn.lineTo(.57,1.8);torn.lineTo(.25,2.1);torn.lineTo(-.04,1.62);torn.lineTo(-.36,2.08);torn.lineTo(-.8,1.8);torn.closePath();
@@ -185,7 +163,10 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
     const sphere=(parent,r,color,x,y,z)=>add(parent,new THREE.IcosahedronGeometry(r,1),color,x,y,z);
     const cylinder=(parent,r,h,color,x,y,z,segments=8)=>add(parent,new THREE.CylinderGeometry(r,r,h,segments),color,x,y,z);
     const {player}=createAdventurer(boat,{box,sphere,mesh,cylinder});player.position.set(0,1,.55);player.rotation.y=Math.PI;
-    camera.position.set(10,14,42);
+    const boatSail=boat.children.find(object=>object.geometry?.type==='ShapeGeometry');
+    if(boatSail)occluders.push(boatSail);
+    const keepPlayerVisible=createCoveOcclusion(occluders);
+    camera.position.set(10,8.5,45);
     const orbit=allowRunAndRotate(new OrbitControls(camera,renderer.domElement)); orbit.target.set(0,1,25); orbit.enablePan=false; orbit.enableDamping=true; orbit.minDistance=5; orbit.maxDistance=24; orbit.maxPolarAngle=Math.PI/2-.08; orbit.update();
     returnToPassage.current=()=>{const target=new THREE.Vector3(0,1,-23),shift=target.clone().sub(orbit.target);boat.position.set(0,0,-23);boat.rotation.y=0;camera.position.add(shift);orbit.target.copy(target);orbit.update();};
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
@@ -199,9 +180,9 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
       if(raycaster.intersectObject(pirate,true).length)pirateActions.current.talkPirate({fromClick:true});};
     const pointerCancel=()=>{pointerStart=null;};renderer.domElement.addEventListener('pointerdown',pointerDown);renderer.domElement.addEventListener('pointerup',pointerUp);renderer.domElement.addEventListener('pointercancel',pointerCancel);
 
-    let frame,last=performance.now(),time=0,nextImpact=0;
+    let frame,last=performance.now(),time=0,coastTime=0,nextImpact=0;
     const animate=now=>{
-      frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;
+      frame=requestAnimationFrame(animate);const dt=sceneFrameDelta(now,last);last=now;
       if(!settings.current.paused && !talkingRef.current){
         time+=dt;const x=(keys.current.has('d')||keys.current.has('arrowright')?1:0)-(keys.current.has('a')||keys.current.has('arrowleft')?1:0);
         const z=(keys.current.has('s')||keys.current.has('arrowdown')?1:0)-(keys.current.has('w')||keys.current.has('arrowup')?1:0);
@@ -231,17 +212,23 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
         beam.material.opacity=active?.15:0;glow.color.set(active?'#71f6d4':'#ffc57c');glow.intensity=(active?13:4)*pulse;
         if(!reduced){rune.rotation.y=time*.6+i;ring.rotation.z=time*.28+i;}
       });
-      if(!reduced){
-        const vertices=water.geometry.attributes.position;
-        for(let i=0;i<vertices.count;i++){const x=waterBase[i*3],y=waterBase[i*3+1];vertices.array[i*3+2]=Math.sin(x*.3+time*.8)*.06+Math.sin(y*.25-time*.6)*.04;}
-        vertices.needsUpdate=true;water.geometry.computeVertexNormals();
-        ripples.forEach(({ripple,phase})=>{const scale=.8+(Math.sin(time*.8+phase)+1)*.2;ripple.scale.set(scale,scale*.55,1);});
+      if(!reduced && !settings.current.paused && !talkingRef.current && dt>0){
+        coastTime+=dt;
+        animateCoast(coastTime);
       }
       horizon.position.x=camera.position.x;horizon.position.z=camera.position.z;
       const target=new THREE.Vector3(boat.position.x,1,boat.position.z), shift=target.clone().sub(orbit.target);
-      camera.position.add(shift); orbit.target.copy(target); orbit.enabled=!settings.current.paused && !talkingRef.current; orbit.enableDamping=!settings.current.reduceMotion; orbit.update(); renderer.render(scene,camera);
+      camera.position.add(shift); orbit.target.copy(target); orbit.enabled=!settings.current.paused && !talkingRef.current; orbit.enableDamping=!settings.current.reduceMotion; orbit.update(); keepPlayerVisible(camera,player,settings.current.paused?0:dt,reduced,gate.position.y); renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
-    return()=>{returnToPassage.current=null;cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();stopVoice.current?.();pirateSignRef.current=null;orbit.dispose();horizonTexture.dispose();haloTexture.dispose();pirateSignTexture.dispose();scene.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
+    return()=>{returnToPassage.current=null;cancelAnimationFrame(frame);observer.disconnect();renderer.domElement.removeEventListener('pointerdown',pointerDown);renderer.domElement.removeEventListener('pointerup',pointerUp);renderer.domElement.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();stopVoice.current?.();pirateSignRef.current=null;orbit.dispose();horizonTexture.dispose();haloTexture.dispose();pirateSignTexture.dispose();const geometries=new Set(),materials=new Set();
+      scene.traverse(object=>{
+        if(object.isInstancedMesh)object.dispose();
+        if(object.geometry)geometries.add(object.geometry);
+        if(Array.isArray(object.material))object.material.forEach(surface=>materials.add(surface));
+        else if(object.material)materials.add(object.material);
+      });
+      geometries.forEach(geometry=>geometry.dispose());
+      materials.forEach(surface=>surface.dispose());renderer.dispose();renderer.domElement.remove();};
   },[]);
   const press=(key,down)=>{if(paused || talkingRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
   useEffect(()=>{if(active && startNearPassage)returnToPassage.current?.();},[active,startNearPassage]);

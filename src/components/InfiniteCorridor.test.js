@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import InfiniteCorridor from './InfiniteCorridor';
 
 jest.mock('three/examples/jsm/controls/OrbitControls.js', () => ({ OrbitControls: jest.fn() }));
+jest.mock('three/examples/jsm/utils/BufferGeometryUtils.js', () => ({ mergeGeometries: jest.fn() }));
 
 const originalGetContext = HTMLCanvasElement.prototype.getContext;
 let webglError;

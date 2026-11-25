@@ -461,7 +461,7 @@ export default function App() {
     setInCastleCourtyard(castleStage === 2);
     setInThroneEntrance(castleStage === 3);
     setInThrone(false);
-    setReturnFromCastleCourtyard(castleStage > 0 || destination === 'cursed-castle' && campaignMap === 'cursed-castle-corridor');
+    setReturnFromCastleCourtyard(castleStage > 0 || (destination === 'cursed-castle' && campaignMap === 'cursed-castle-corridor'));
 
     if (destination === 'village') {
       setNear(-1);

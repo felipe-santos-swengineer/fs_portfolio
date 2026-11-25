@@ -1,4 +1,4 @@
-﻿import './Lake.css';
+import './Lake.css';
 
 export default function CampaignNavigation({ language, onOpen, paused, hidden }) {
   const label = language === 'en-US' ? 'Open campaign portal' : 'Abrir portal da campanha';

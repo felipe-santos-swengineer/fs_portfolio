@@ -1,4 +1,4 @@
-﻿export default function TouchInteract({ language, scene, onInteract, disabled }) {
+export default function TouchInteract({ language, scene, onInteract, disabled }) {
   const interact = () => {
     if (onInteract) {
       onInteract();

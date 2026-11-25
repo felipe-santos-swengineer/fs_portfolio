@@ -1,5 +1,4 @@
 export const dungeonPortalLabel = language => language === 'en-US' ? 'RETURN TO VILLAGE' : 'RETORNO \u00c0 VILA';
-export const caveReturnPortalLabel = language => language === 'en-US' ? 'RETURN TO THE COVE' : 'RETORNO \u00c0 ENSEADA';
 
 export const ENGLISH_GAMES = [
   ['Lost crystals', 'Collect the crystals in two rounds before time runs out.'],

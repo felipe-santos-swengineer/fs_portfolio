@@ -412,7 +412,7 @@ export function addCoveHull(parent, add, damaged = false) {
   }
 }
 
-export function createCoveOcclusion(groups) {
+export function createCoveOcclusion(groups, { hiddenOpacity = .14, alwaysHidden = false } = {}) {
   const meshes = [], owners = new Map();
   const layers = groups.map(group => {
     const layer = { materials: new Set(), opacity: 1, blocked: false };
@@ -424,6 +424,19 @@ export function createCoveOcclusion(groups) {
     });
     return layer;
   });
+  const setOpacity = (layer, opacity) => {
+    if (opacity === layer.opacity) return;
+    layer.opacity = opacity;
+    layer.materials.forEach(surface => {
+      surface.opacity = opacity;
+      const transparent = opacity < 1;
+      if (surface.transparent !== transparent) {
+        surface.transparent = transparent;
+        surface.depthWrite = !transparent;
+        surface.needsUpdate = true;
+      }
+    });
+  };
   const ray = new THREE.Raycaster();
   const direction = new THREE.Vector3();
   const origin = new THREE.Vector3();
@@ -433,6 +446,10 @@ export function createCoveOcclusion(groups) {
   const hits = [];
   let previousGateHeight;
   return (camera, player, dt, immediate, gateHeight) => {
+    if (alwaysHidden) {
+      layers.forEach(layer => setOpacity(layer, hiddenOpacity));
+      return;
+    }
     camera.getWorldPosition(origin);
     player.getWorldPosition(focus);
     if (previousEye.distanceToSquared(origin) > .0004 || previousFocus.distanceToSquared(focus) > .0004 ||
@@ -453,20 +470,10 @@ export function createCoveOcclusion(groups) {
       }
     }
     layers.forEach(layer => {
-      const target = layer.blocked ? .14 : 1;
+      const target = layer.blocked ? hiddenOpacity : 1;
       // Clear newly obstructing silhouettes immediately, then ease the restoration.
       const opacity = immediate || target < layer.opacity ? target : Math.min(target, layer.opacity + dt * 4.6);
-      if (opacity === layer.opacity) return;
-      layer.opacity = opacity;
-      layer.materials.forEach(surface => {
-        surface.opacity = opacity;
-        const transparent = opacity < 1;
-        if (surface.transparent !== transparent) {
-          surface.transparent = transparent;
-          surface.depthWrite = !transparent;
-          surface.needsUpdate = true;
-        }
-      });
+      setOpacity(layer, opacity);
     });
   };
 }

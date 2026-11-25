@@ -18,7 +18,7 @@ jest.mock('./components/Rapids', () => ({ __esModule: true, default: ({ onExit, 
 jest.mock('./components/Ruins', () => ({ __esModule: true, default: ({ onExit, onEnterTunnel }) => <><button onClick={onExit}>Sair das ruínas de teste</button><button onClick={onEnterTunnel}>Entrar no túnel de teste</button></> }));
 jest.mock('./components/AncientTunnel', () => ({ __esModule: true, default: ({ onExit, onArrive, onReturnCove }) => <><button onClick={onExit}>Sair do túnel de teste</button><button onClick={onArrive}>Chegar à aldeia de teste</button><button onClick={onReturnCove}>Voltar à enseada de teste</button></> }));
 jest.mock('./components/TempleVillage', () => ({ __esModule: true, default: ({ onExit, onEnterCave }) => <><button onClick={onExit}>Sair da aldeia de teste</button><button onClick={onEnterCave}>Entrar na caverna de teste</button></> }));
-jest.mock('./components/DragonCave', () => ({ __esModule: true, default: ({ onExit, onEnterChamber, onReturnCove, startAtChamber }) => <><button onClick={onExit}>Sair da caverna de teste</button><button onClick={onEnterChamber}>Entrar na câmara de teste</button><button onClick={onReturnCove}>Voltar à enseada de teste</button><span data-testid="cave-arrival">{startAtChamber?'chamber':'entrance'}</span></> }));
+jest.mock('./components/DragonCave', () => ({ __esModule: true, default: ({ onExit, onEnterChamber, startAtChamber }) => <><button onClick={onExit}>Sair da caverna de teste</button><button onClick={onEnterChamber}>Entrar na câmara de teste</button><span data-testid="cave-arrival">{startAtChamber?'chamber':'entrance'}</span></> }));
 jest.mock('./components/DragonChamber', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair da câmara de teste</button> }));
 jest.mock('./components/Dungeon', () => ({ __esModule: true, default: ({ onExit }) => <button onClick={onExit}>Sair do calabouco de teste</button> }));
 jest.mock('./components/CursedCastle', () => ({ __esModule: true, default: ({ onExit,onEnterCastle,startNearGate }) => <><button onClick={onExit}>{'Sair do castelo amaldi\u00e7oado de teste'}</button><button onClick={onEnterCastle}>Entrar no interior de teste</button><span data-testid="castle-return">{String(startNearGate)}</span></> }));
@@ -477,12 +477,11 @@ test('the portal reaches the cave and chamber and returns to the chamber entranc
   expect(sessionStorage.getItem('portfolio-map')).toBe('cave');
 });
 
-test('a caverna permite voltar à enseada', async () => {
+test('a caverna não oferece retorno direto à enseada', async () => {
   sessionStorage.setItem('portfolio-map','cave');
   await start();
-  fireEvent.click(await screen.findByRole('button', {name:'Voltar à enseada de teste'}));
-  expect(await screen.findByRole('button', {name:'Sair das ruínas de teste'})).toBeTruthy();
-  expect(sessionStorage.getItem('portfolio-map')).toBe('ruins');
+  expect(await screen.findByRole('button', {name:'Sair da caverna de teste'})).toBeTruthy();
+  expect(screen.queryByRole('button', {name:/Voltar à enseada de teste/})).toBeNull();
 });
 
 test('the portal opens the dragon chamber directly', async () => {

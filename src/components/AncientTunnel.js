@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createAdventurer } from './VillageScene';
 import { createLakeBoat } from './lakeBoat';
+import { createCoveOcclusion } from './ruinsCoast';
 import MapControlGuide from './MapControlGuide';
 import { sceneFrameDelta } from './sceneFrameDelta';
 import { TUNNEL, createDragonTunnel, tunnelCenter, tunnelFloor, tunnelRegion } from './dragonTunnelWorld';
@@ -58,33 +59,6 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     };
     const boat = createLakeBoat(add);
     const sail = boat.getObjectByName('boat-sail');
-    if (sail) {
-      // Geometria e material exclusivos deste mapa: superfície sólida, sem
-      // blending e sem disputa de profundidade com o mastro.
-      const shape = sail.geometry.parameters?.shapes;
-      sail.material.dispose();
-      sail.material = new THREE.MeshBasicMaterial({
-        color: '#f1e4c7',
-        side: THREE.DoubleSide,
-        transparent: false,
-        opacity: 1,
-        depthWrite: true,
-        depthTest: true,
-        fog: false,
-        polygonOffset: true,
-        polygonOffsetFactor: -1,
-        polygonOffsetUnits: -1,
-      });
-      if (shape) {
-        sail.geometry.dispose();
-        sail.geometry = new THREE.ExtrudeGeometry(shape, {
-          depth: .08,
-          bevelEnabled: false,
-          curveSegments: 8,
-        });
-      }
-      sail.renderOrder = 1;
-    }
     const faceAlongPath = (z, direction) => {
       const tangentX = tunnelCenter(z - .6) - tunnelCenter(z + .6);
       const forwardAngle = Math.atan2(-tangentX, 1.2);
@@ -104,6 +78,9 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     const { player } = createAdventurer(boat, { box, sphere, mesh, cylinder });
     player.position.set(0, 1, .55);
     player.rotation.y = Math.PI;
+    // Mesma transparência da enseada, mas a vela fica oculta o tempo todo:
+    // na passagem ela tapeia a visão tanto na ida quanto na volta.
+    const hideSail = sail ? createCoveOcclusion([sail], { hiddenOpacity: 0, alwaysHidden: true }) : null;
 
     let sceneDt = 0;
     const updateCamera = instant => {
@@ -188,6 +165,7 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       } else clear();
       world.update(time, sceneDt, settings.current.reduceMotion, previousRegion);
       updateCamera();
+      hideSail?.(camera, player, sceneDt, true, 0);
       renderer.render(scene, camera);
     };
     frame = requestAnimationFrame(animate);

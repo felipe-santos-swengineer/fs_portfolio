@@ -1,3 +1,4 @@
+import { createCorridorGallery } from './infiniteCorridorGallery';
 import TouchInteract from './TouchInteract';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -82,11 +83,11 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
     renderer.domElement.focus({ preventScroll: true });
 
     const scene = new THREE.Scene();
-    const darkBackground = new THREE.Color('#08080d'), litBackground = new THREE.Color('#1d1d2b');
+    const darkBackground = new THREE.Color('#191720'), litBackground = new THREE.Color('#1d1d2b');
     scene.background = darkBackground.clone();
-    scene.fog = new THREE.Fog(darkBackground.clone(), 5.5, 24);
-    const hemi = new THREE.HemisphereLight('#7d7f93', '#15131a', .5);
-    const moon = new THREE.DirectionalLight('#9aa0b8', .35);
+    scene.fog = new THREE.Fog(darkBackground.clone(), 8, 33);
+    const hemi = new THREE.HemisphereLight('#c4c2d0', '#625252', 1.12);
+    const moon = new THREE.DirectionalLight('#d1cad3', .83);
     moon.position.set(-6, 12, -8);
     scene.add(hemi, moon);
 
@@ -96,7 +97,7 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
       return materials.get(color);
     };
     const mesh = (parent, geometry, color, x, y, z) => {
-      const item = new THREE.Mesh(geometry, material(color));
+      const item = new THREE.Mesh(geometry, color.isMaterial ? color : material(color));
       item.position.set(x, y, z); parent.add(item); return item;
     };
     const box = (p, w, h, d, c, x, y, z) => mesh(p, new THREE.BoxGeometry(w, h, d), c, x, y, z);
@@ -124,10 +125,12 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
     // stays upright, so each turn reads as walking on the wall, then the ceiling.
     const worldPivot = new THREE.Group(), world = new THREE.Group();
     worldPivot.add(world); scene.add(worldPivot);
+    const gallery = createCorridorGallery();
     const occluders = [];
     const registerWall = (object, normal, segmentIndex) => occluders.push({ object, normal: normal.clone(), segmentIndex });
 
     const disposeObjects = root => root.traverse(item => {
+      if (item.userData.galleryShared) return;
       item.geometry?.dispose();
       const list = item.material ? (Array.isArray(item.material) ? item.material : [item.material]) : [];
       list.forEach(value => { if (![...materials.values()].includes(value)) value.dispose(); });
@@ -222,6 +225,8 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
 
     const clearFloorDoor = () => {
       if (!floorDoor) return;
+      const texture = floorDoorLabel.texture;
+      textures.splice(textures.indexOf(texture), 1); texture.dispose();
       world.remove(floorDoor); disposeObjects(floorDoor);
       floorDoor = null; floorDoorIndex = null; floorDoorLabel = null;
       floorDoorNearRef.current = false; setNearFloorDoor(false);
@@ -275,7 +280,7 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
       if (segments.has(index)) return;
       const group = new THREE.Group(); group.position.z = segmentCenterZ(index); world.add(group);
       const plan = createSegmentPlan(index);
-      let light = null, flame = null;
+      let light = null, flame = null, dust = null;
       if (index === 0) {
         // Circular safe room. The front arc is open and funnels into the straight corridor.
         mesh(group, new THREE.CylinderGeometry(FOYER_WALL_RADIUS, FOYER_WALL_RADIUS, .14, 24), plan.palette, 0, 0, 0);
@@ -316,37 +321,24 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
         });
       } else {
         box(group, 9, .14, SEGMENT_LENGTH, plan.palette, 0, 0, 0);
-        for (let tile = -2; tile <= 2; tile++) box(group, 8.6, .02, .06, tile % 2 ? '#3e3d45' : '#5b5960', 0, .08, tile * 2.4);
-        [-1, 1].forEach(side => {
-          const wall = box(group, .7, 7, SEGMENT_LENGTH, '#3b3a43', side * 4.75, 3.45, 0);
-          registerWall(wall, new THREE.Vector3(side, 0, 0), index);
-          const trim = box(group, .18, .18, SEGMENT_LENGTH, '#5b5862', side * 4.35, 6.6, 0);
-          registerWall(trim, new THREE.Vector3(side, 0, 0), index);
-          for (let column = -1; column <= 1; column++) {
-            const pillar = cylinder(group, .38, 6.8, '#57545d', side * 4.25, 3.4, column * 4.6, 8);
-            registerWall(pillar, new THREE.Vector3(side, 0, 0), index);
-          }
+        dust = gallery.add(group, index, registerWall);
+        const side = plan.sconceSide;
+        const fireColor = index % 4 === 0 ? '#87ae9f' : '#efb476';
+        flame = mesh(group, new THREE.OctahedronGeometry(.095), fireColor, side * 3.99, 2.72, side * .1);
+        flame.material = material(fireColor);
+        flame.material.emissive.set(fireColor);
+        flame.material.emissiveIntensity = .55;
+        flame.userData.flicker = true;
+        light = new THREE.PointLight(fireColor, 5, 9);
+        light.position.set(side * 3.6, 2.8, side * .1); group.add(light);
+        plan.debris.forEach(piece => {
+          const rock = sphere(group, .14, '#57534e', Math.sign(piece.x) * (3.45 + Math.abs(piece.x) * .08), .13, piece.z);
+          rock.rotation.y = piece.rotation; rock.scale.set(1.4, .52, .84);
         });
-        if (plan.arch) {
-          box(group, 9.4, .45, .9, '#615d66', 0, 6.1, -SEGMENT_LENGTH / 2 + .4);
-          [-1, 1].forEach(side => box(group, .5, 6, .9, '#615d66', side * 4.4, 3, -SEGMENT_LENGTH / 2 + .4));
-        }
-        const sconceSide = plan.sconceSide;
-        cylinder(group, .12, .7, '#514d55', sconceSide * 4.2, 3.7, 2);
-        flame = mesh(group, new THREE.ConeGeometry(.16, .42, 7), '#e8a467', sconceSide * 4.2, 4.15, 2);
-        light = new THREE.PointLight('#d18d5f', 4, 9); light.position.set(sconceSide * 4, 4.2, 2); group.add(light);
-        if (!state.current.reduceMotion) flame.userData.flicker = true;
-        plan.debris.forEach(piece => { const rock = sphere(group, .16, '#5b595e', piece.x, .12, piece.z); rock.rotation.y = piece.rotation; rock.scale.y = .55; });
-        if (plan.crack) { const crack = box(group, .04, 4.2, .06, '#201f26', -4.34, 3.1, plan.deviceOffset + 2); crack.rotation.x = .22; }
-        if (plan.portrait) {
-          const frame = box(group, .1, 1.7, 1.25, '#6d5a55', plan.portraitSide * 4.3, 3.4, -2);
-          box(group, .12, 1.4, 1, '#26212a', plan.portraitSide * 4.23, 3.4, -2);
-          frame.userData.frame = true;
-        }
         spawnMonster(index, plan);
         if (floorDoorActive(index, spinsRef.current)) buildFloorDoor(index);
       }
-      segments.set(index, { group, plan, light, flame, baseIntensity: light ? light.intensity : 0 });
+      segments.set(index, { group, plan, light, flame, dust, baseIntensity: light ? light.intensity : 0 });
       signsRef.current?.(state.current.language);
     };
     buildSegment(0);
@@ -587,7 +579,10 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
           auraRing.scale.setScalar(1 + Math.sin(time * 3) * .06);
           cloakSway += dt;
           hangingCloak.rotation.z = Math.sin(cloakSway * .8) * .035;
-          segments.forEach(entry => { if (entry.flame.userData.flicker) entry.flame.scale.y = .8 + Math.abs(Math.sin(time * 7 + entry.group.position.z)) * .4; });
+          segments.forEach(entry => {
+            if (entry.flame.userData.flicker) entry.flame.scale.y = 1.1 + Math.sin(time * 5 + entry.group.position.z) * .16;
+            if (entry.dust) entry.dust.position.y = Math.sin(time * .35 + entry.group.position.z) * .14;
+          });
         }
 
         const playerAtCheckpoint = inCheckpointSafeZone(player.position);
@@ -645,11 +640,11 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
 
         if (corridorEndedRef.current && brighten < 1) {
           brighten = Math.min(1, brighten + dt / 1.6);
-          hemi.intensity = .5 + brighten * 1.1;
-          moon.intensity = .35 + brighten * 1.3;
+          hemi.intensity = 1.12 + brighten * 1.1;
+          moon.intensity = .83 + brighten * 1.3;
           scene.background.copy(darkBackground).lerp(litBackground, brighten);
           scene.fog.color.copy(scene.background);
-          scene.fog.far = 24 + brighten * 34;
+          scene.fog.far = 33 + brighten * 34;
           segments.forEach(entry => { if (entry.light) entry.light.intensity = entry.baseIntensity + brighten * 1.5; });
         }
       } else { clear(); backwardHeld = false; }
@@ -693,12 +688,13 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
       textures.forEach(texture => texture.dispose());
       const shared = new Set(materials.values());
       scene.traverse(item => {
+        if (item.userData.galleryShared) return;
         item.geometry?.dispose();
         const list = item.material ? (Array.isArray(item.material) ? item.material : [item.material]) : [];
         list.forEach(value => { if (!shared.has(value)) value.dispose(); });
       });
       shared.forEach(value => value.dispose());
-      orbit.dispose(); renderer.dispose(); renderer.domElement.remove();
+      gallery.dispose(); orbit.dispose(); renderer.dispose(); renderer.domElement.remove();
     };
   }, [advanceScene]);
 

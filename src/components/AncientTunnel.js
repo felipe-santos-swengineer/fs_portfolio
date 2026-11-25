@@ -20,7 +20,7 @@ const REGION_TEXT = {
 
 export default function AncientTunnel({ campaignNavigation, language, paused, reduceMotion, fromVillage = false, onExit, onArrive, onReturnCove, onSound }) {
   const spawnZ = fromVillage ? TUNNEL.endZ + 8 : TUNNEL.startZ - 2;
-  const mount = useRef(null), keys = useRef(new Set()), settings = useRef({}), nearRef = useRef(fromVillage), startRef = useRef(!fromVillage);
+  const mount = useRef(null), keys = useRef(new Set()), settings = useRef({}), nearRef = useRef(fromVillage), startRef = useRef(!fromVillage), headingRef = useRef(null);
   settings.current = { paused, reduceMotion, onSound, onArrive, onReturnCove };
   const [near, setNear] = useState(fromVillage), [atStart, setAtStart] = useState(!fromVillage), [region, setRegion] = useState(fromVillage ? 'arrival' : 'entrance'), [error, setError] = useState(false);
   const en = language === 'en-US';
@@ -67,13 +67,15 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       sail.material.emissiveIntensity = .28;
       sail.material.needsUpdate = true;
     }
-    const faceAlongPath = z => {
+    const faceAlongPath = (z, direction) => {
       const tangentX = tunnelCenter(z - .6) - tunnelCenter(z + .6);
-      boat.rotation.y = Math.atan2(-tangentX, 1.2);
+      const forwardAngle = Math.atan2(-tangentX, 1.2);
+      // S/↓ rows toward the cove (+z): snap to the reversed heading, no tween.
+      boat.rotation.y = direction > 0 ? forwardAngle + Math.PI : forwardAngle;
     };
     scene.add(boat);
     boat.position.set(tunnelCenter(spawnZ), tunnelFloor(spawnZ) + .12, spawnZ);
-    faceAlongPath(spawnZ);
+    faceAlongPath(spawnZ, fromVillage ? 1 : -1);
     const lamp = new THREE.PointLight('#ffc07a', 9, 14);
     lamp.position.set(0, 2.2, .2); boat.add(lamp);
 
@@ -105,6 +107,13 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
     };
     const observer = new ResizeObserver(resize); observer.observe(el); resize();
+    const rowDirection = () => (keys.current.has('s') || keys.current.has('arrowdown') ? 1 : 0)
+      - (keys.current.has('w') || keys.current.has('arrowup') ? 1 : 0);
+    const syncHeading = () => {
+      const direction = rowDirection();
+      if (direction) faceAlongPath(boat.position.z, direction);
+    };
+    headingRef.current = syncHeading;
     const down = e => {
       const k = e.key.toLowerCase();
       if (document.activeElement !== renderer.domElement || settings.current.paused) return;
@@ -112,9 +121,13 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       if (['w', 's', 'arrowup', 'arrowdown'].includes(k)) {
         e.preventDefault();
         keys.current.add(k);
+        syncHeading();
       }
     };
-    const up = e => keys.current.delete(e.key.toLowerCase()), clear = () => keys.current.clear();
+    const up = e => {
+      keys.current.delete(e.key.toLowerCase());
+      if (!settings.current.paused) syncHeading();
+    }, clear = () => keys.current.clear();
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
     renderer.domElement.addEventListener('blur', clear);
 
@@ -124,7 +137,7 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       sceneDt = sceneFrameDelta(now, last); last = now;
       if (!settings.current.paused) {
         time += sceneDt;
-        const row = (keys.current.has('s') || keys.current.has('arrowdown') ? 1 : 0) - (keys.current.has('w') || keys.current.has('arrowup') ? 1 : 0);
+        const row = rowDirection();
         if (row) {
           const wantedZ = boat.position.z + row * ROW_SPEED * sceneDt;
           const zNext = THREE.MathUtils.clamp(wantedZ, TUNNEL.endZ + 1, TUNNEL.startZ - 2);
@@ -133,7 +146,7 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
           }
           boat.position.z = zNext;
           boat.position.x = tunnelCenter(zNext);
-          faceAlongPath(zNext);
+          faceAlongPath(zNext, row);
           if (time >= nextEcho) { settings.current.onSound?.('echo'); nextEcho = time + 1.1; }
         }
         boat.position.y = tunnelFloor(boat.position.z) + .12 + (settings.current.reduceMotion ? 0 : Math.sin(time * 1.4) * .045);
@@ -165,7 +178,7 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear);
-      renderer.domElement.removeEventListener('blur', clear); clear();
+      renderer.domElement.removeEventListener('blur', clear); clear(); headingRef.current = null;
       const geometries = new Set(), materials = new Set();
       scene.traverse(object => {
         if (object.isInstancedMesh) object.dispose();
@@ -179,7 +192,11 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     };
   }, [fromVillage, spawnZ]);
 
-  const press = (key, down) => { if (paused) return; setTouchMovement(keys.current, key, down); };
+  const press = (key, down) => {
+    if (paused) return;
+    setTouchMovement(keys.current, key, down);
+    headingRef.current?.();
+  };
   const caption = REGION_TEXT[region];
   return <section className="lake ancient-tunnel">
     <div className="lake-viewport">

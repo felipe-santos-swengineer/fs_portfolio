@@ -59,7 +59,9 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     const boat = createLakeBoat(add);
     const sail = boat.getObjectByName('boat-sail');
     if (sail) {
-      // Material exclusivo deste mapa: sem blending, sempre totalmente opaco.
+      // Geometria e material exclusivos deste mapa: superfície sólida, sem
+      // blending e sem disputa de profundidade com o mastro.
+      const shape = sail.geometry.parameters?.shapes;
       sail.material.dispose();
       sail.material = new THREE.MeshBasicMaterial({
         color: '#f1e4c7',
@@ -67,8 +69,21 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
         transparent: false,
         opacity: 1,
         depthWrite: true,
+        depthTest: true,
         fog: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       });
+      if (shape) {
+        sail.geometry.dispose();
+        sail.geometry = new THREE.ExtrudeGeometry(shape, {
+          depth: .08,
+          bevelEnabled: false,
+          curveSegments: 8,
+        });
+      }
+      sail.renderOrder = 1;
     }
     const faceAlongPath = (z, direction) => {
       const tangentX = tunnelCenter(z - .6) - tunnelCenter(z + .6);

@@ -1,3 +1,4 @@
+import { isRunning, setTouchMovement } from './touchMovement';
 import { createCorridorGallery } from './infiniteCorridorGallery';
 import TouchInteract from './TouchInteract';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -20,7 +21,7 @@ import './Lake.css';
 import './CursedCastle.css';
 import './InfiniteCorridor.css';
 
-export default function InfiniteCorridor({ campaignNavigation, language, paused, reduceMotion, onExit, onAdvance, onStep, onSound }) {
+export default function InfiniteCorridor({ campaignNavigation, language, paused, reduceMotion, onExit, onAdvance, onSound }) {
   const mount = useRef(null), canvasRef = useRef(null), keys = useRef(new Set()), state = useRef({});
   const noticeOpenRef = useRef(false), signsRef = useRef(null), exitRequested = useRef(false);
   const cloakNearRef = useRef(false), floorDoorNearRef = useRef(false), doorNearRef = useRef(false);
@@ -31,7 +32,7 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
   const spinsRef = useRef(0), spinningRef = useRef(false), corridorEndedRef = useRef(false), checkpointZRef = useRef(null);
   const lastRemainingRef = useRef(CLOAK_SECONDS);
   const actions = useRef({});
-  state.current = { language, paused, reduceMotion, onExit, onAdvance, onStep, onSound };
+  state.current = { language, paused, reduceMotion, onExit, onAdvance, onSound };
 
   const [error, setError] = useState(false), [noticeOpen, setNoticeOpen] = useState(false);
   const [cloakTaken, setCloakTaken] = useState(false);
@@ -192,10 +193,26 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
     player.position.set(0, .2, START_Z + 1); player.rotation.order = 'ZYX'; player.rotation.y = Math.PI;
     const { cloak: ghost, drape: ghostDrape } = createCloak(player, 1.7);
     ghost.visible = false;
-    const aura = new THREE.Group(); player.add(aura); aura.visible = false;
-    const auraRing = mesh(aura, new THREE.TorusGeometry(.78, .035, 6, 32), glowMaterial('#9ad9ff', 1.5), 0, .06, 0);
-    auraRing.rotation.x = Math.PI / 2;
-    const auraLight = new THREE.PointLight('#9ad9ff', 5, 7); auraLight.position.set(0, 1.3, 0); aura.add(auraLight);
+    // The worn cloak is the player model after pickup. Isolate its materials
+    // from the matching cloak in the foyer and the corridor palette.
+    const wornMaterials = new Map();
+    ghost.traverse(part => {
+      if (!part.isMesh) return;
+      const original = part.material;
+      if (!wornMaterials.has(original)) wornMaterials.set(original, original.clone());
+      part.material = wornMaterials.get(original);
+    });
+    let faded = false;
+    function setCloakFaded(next) {
+      if (faded === next) return;
+      faded = next;
+      wornMaterials.forEach(mat => {
+        mat.transparent = next;
+        mat.opacity = next ? .35 : 1;
+        mat.depthWrite = !next;
+        mat.needsUpdate = true;
+      });
+    }
     ghost.userData.ghost = true;
 
     camera.position.set(0, 5.6, START_Z + 5);
@@ -219,7 +236,7 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
     let generatedIndex = 0, currentIndex = 0;
     let floorDoor = null, floorDoorIndex = null, floorDoorLabel = null;
     let door = null, doorLabel = null, finalIndex = null;
-    let phaseElapsed = 0, stepTimer = 0, cloakSway = 0, spinElapsed = 0, brighten = 0;
+    let phaseElapsed = 0, cloakSway = 0, spinElapsed = 0, brighten = 0;
     let worldRoll = 0, spinStartRoll = 0, spinTargetAngle = 0, spinDirection = Math.random() < .5 ? -1 : 1;
     const showToast = (text, warning = false) => { setToast({ text, warning }); toastVisibleRef.current = true; toastUntilRef.current = phaseElapsed + 3.2; };
 
@@ -372,13 +389,13 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
       takeCloak: () => {
         if (cloakTakenRef.current) return;
         cloakTakenRef.current = true; setCloakTaken(true);
-        cloakGroup.visible = false; traveler.body.visible = false; ghost.visible = true;
+        cloakGroup.visible = false; traveler.body.visible = false; ghost.visible = true; setCloakFaded(true);
         maxZRef.current = player.position.z;
         phaseElapsed = 0; phaseInvisibleRef.current = true;
         setPhase({ invisible: true, remaining: CLOAK_SECONDS, total: CLOAK_SECONDS });
         noticeOpenRef.current = false; setNoticeOpen(false);
         state.current.onSound?.('cloak');
-        showToast(state.current.language === 'en-US' ? 'The cloak answers. Move forward while the aura lasts.' : 'O manto responde. Avance enquanto a aura durar.');
+        showToast(state.current.language === 'en-US' ? 'Move forward while you are invisible.' : 'Avance enquanto estiver invisível.');
         requestAnimationFrame(() => canvasRef.current?.focus({ preventScroll: true }));
       },
       useFloorDoor: () => {
@@ -542,7 +559,7 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
           if (!cloakTakenRef.current && direction.z < -.25 && player.position.z <= BARRIER_Z + .25 && noticeCooldownRef.current === 0) {
             noticeCooldownRef.current = 2.5; noticeOpenRef.current = true; setNoticeOpen(true);
           }
-          const running = keys.current.has('shift');
+          const running = isRunning(keys.current);
           const speed = (running ? 6.5 : 4) * (stunRef.current > 0 ? .4 : 1);
           const target = {
             x: player.position.x + direction.x * speed * dt,
@@ -558,13 +575,6 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
         }
 
         if (!spinningRef.current && !cloakTakenRef.current && withinReach(player.position, cloakGroup.position, 1.15)) actions.current.takeCloak();
-        if (moving && !cloakTakenRef.current) {
-          stepTimer -= dt;
-          if (stepTimer <= 0) {
-            state.current.onStep?.();
-            stepTimer = keys.current.has('shift') ? .3 : .48;
-          }
-        } else stepTimer = 0;
 
         const currentPhase = cloakPhase(phaseElapsed);
         const rounded = Math.ceil(currentPhase.remaining);
@@ -573,10 +583,9 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
           lastRemainingRef.current = rounded;
           setPhase(currentPhase);
         }
-        aura.visible = cloakTakenRef.current && currentPhase.invisible;
+        setCloakFaded(cloakTakenRef.current && currentPhase.invisible);
         if (!state.current.reduceMotion) {
           player.position.y = .2 + (cloakTakenRef.current ? Math.sin(time * 2) * .07 : 0);
-          auraRing.scale.setScalar(1 + Math.sin(time * 3) * .06);
           cloakSway += dt;
           hangingCloak.rotation.z = Math.sin(cloakSway * .8) * .035;
           segments.forEach(entry => {
@@ -699,8 +708,8 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
   }, [advanceScene]);
 
   const press = (key, down) => {
-    if (paused || spinning) { keys.current.delete(key); return; }
-    if (down) keys.current.add(key); else keys.current.delete(key);
+    if (paused || spinning) { setTouchMovement(keys.current, key, false); return; }
+    setTouchMovement(keys.current, key, down);
   };
 
   return <section className="lake cursed-castle corridor">
@@ -720,7 +729,7 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
           <span className="corridor-spins">{en ? `Turns ${spinCount}/${SPINS_TO_ESCAPE}` : `Giros ${spinCount}/${SPINS_TO_ESCAPE}`}</span>
           {spinCount > 0 && <span className="corridor-checkpoint">{en ? 'Door checkpoint set' : 'Checkpoint da porta marcado'}</span>}
           {spinCount > 0 && !spinning && <span className="corridor-surface">{surface === 'floor' ? (en ? 'Back on the floor' : 'De volta ao chão') : surface === 'ceiling' ? (en ? 'On the ceiling' : 'No teto') : (en ? 'On the wall' : 'Na parede')}</span>}
-          {cloakTaken && <><div className={`corridor-phase ${phase.invisible ? 'invisible' : 'visible'}`} aria-live="polite"><strong>{phase.invisible ? (en ? 'Invisible · aura active' : 'Invisível · aura ativa') : (en ? 'Visible · no aura' : 'Visível · sem aura')}</strong><span>{Math.ceil(phase.remaining)}s</span></div><div className="corridor-sanity"><small>{en ? 'Sanity' : 'Sanidade'}</small><span>{Array.from({ length: 3 }, (_, index) => <i key={index} className={index < sanity ? 'alive' : ''} />)}</span></div></>}
+          {cloakTaken && <><div className={`corridor-phase ${phase.invisible ? 'invisible' : 'visible'}`} aria-live="polite"><strong>{phase.invisible ? (en ? 'Invisible' : 'Invisível') : (en ? 'Visible' : 'Visível')}</strong><span>{Math.ceil(phase.remaining)}s</span></div><div className="corridor-sanity"><small>{en ? 'Sanity' : 'Sanidade'}</small><span>{Array.from({ length: 3 }, (_, index) => <i key={index} className={index < sanity ? 'alive' : ''} />)}</span></div></>}
           {spinning && <span className="corridor-turning">{en ? 'The room is turning...' : 'A sala está girando...'}</span>}
           {corridorEnded && <span className="corridor-end">{en ? 'Corridor over · door ahead' : 'Corredor encerrado · porta adiante'}</span>}
         </div>
@@ -735,7 +744,7 @@ export default function InfiniteCorridor({ campaignNavigation, language, paused,
       </div>
       {error && <p className="lake-scene-error">{en ? '3D is unavailable in this browser.' : 'O 3D não está disponível neste navegador.'}</p>}
       <MapControlGuide language={language} scene="corridor" />
-      {noticeOpen && <div className="corridor-notice"><article className="corridor-notice-card" role="dialog" aria-modal="false" aria-labelledby="corridor-notice-title"><h2 id="corridor-notice-title">{en ? 'No mortal may pass' : 'Um mortal não pode avançar'}</h2><p>{en ? 'You can explore this entrance freely, but not go into the corridor: it rebuilds itself for anyone who does not belong here. Take the ghost\'s cloak hanging on the wall: it hides you for 10 seconds, then leaves you visible for 10. When the aura fades, nearby creatures can see and chase you. Every tenth stretch has a door on the floor: it is your checkpoint. The first three turns take you across both walls and the ceiling. The fourth puts you back on the floor and opens the way to the exit.' : 'Você pode explorar esta entrada à vontade, mas não avançar para o corredor: ele se reconstrói para quem não pertence aqui. Pegue o manto do fantasma pendurado na parede: ele esconde você por 10 segundos e depois deixa você visível por 10. Quando a aura se apaga, as criaturas próximas podem enxergar e perseguir você. A cada dez trechos há uma porta no chão: ela é seu checkpoint. Os primeiros três giros levam você pelas duas paredes e pelo teto. O quarto devolve você ao chão e abre o caminho para a saída.'}</p><div className="npc-dialogue-actions"><button onClick={closeNotice}>{en ? 'I understand' : 'Entendi'}</button></div></article></div>}
+      {noticeOpen && <div className="corridor-notice"><article className="corridor-notice-card" role="dialog" aria-modal="false" aria-labelledby="corridor-notice-title"><h2 id="corridor-notice-title">{en ? 'No mortal may pass' : 'Um mortal não pode avançar'}</h2><p>{en ? 'You can explore this entrance freely, but not go into the corridor: it rebuilds itself for anyone who does not belong here. Take the ghost\'s cloak hanging on the wall: it hides you for 10 seconds, then leaves you visible for 10. While you are visible, nearby creatures can see and chase you. Every tenth stretch has a door on the floor: it is your checkpoint. The first three turns take you across both walls and the ceiling. The fourth puts you back on the floor and opens the way to the exit.' : 'Você pode explorar esta entrada à vontade, mas não avançar para o corredor: ele se reconstrói para quem não pertence aqui. Pegue o manto do fantasma pendurado na parede: ele esconde você por 10 segundos e depois deixa você visível por 10. Enquanto você estiver visível, as criaturas próximas podem enxergar e perseguir você. A cada dez trechos há uma porta no chão: ela é seu checkpoint. Os primeiros três giros levam você pelas duas paredes e pelo teto. O quarto devolve você ao chão e abre o caminho para a saída.'}</p><div className="npc-dialogue-actions"><button onClick={closeNotice}>{en ? 'I understand' : 'Entendi'}</button></div></article></div>}
     </div>
     <div className="lake-touch" aria-label={en ? 'Walking controls' : 'Controles de caminhada'}>
       {[['arrowleft', en ? 'Left' : 'Esquerda', '←'], ['arrowup', en ? 'Forward' : 'Frente', '↑'], ['arrowdown', en ? 'Back' : 'Trás', '↓'], ['arrowright', en ? 'Right' : 'Direita', '→']].map(([key, label, symbol]) => <button key={key} type="button" aria-label={label} onPointerDown={e => { e.currentTarget.setPointerCapture(e.pointerId); press(key, true); }} onPointerUp={() => press(key, false)} onPointerCancel={() => press(key, false)} onLostPointerCapture={() => press(key, false)}>{symbol}</button>)}

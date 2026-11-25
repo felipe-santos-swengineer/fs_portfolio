@@ -250,7 +250,7 @@
 .game-ui-hidden :is(.viewport, .lake-viewport) > :not(
   .webgl-scene, .lake-canvas, .dungeon-canvas, .throne-canvas,
   .scene-loading, .scene-error, .lake-scene-error,
-  .npc-dialogue, [role="dialog"], .chamber-subtitle, .corridor-notice,
+  .npc-dialogue, [role="dialog"], .wizard-chess-overlay, .chamber-subtitle, .corridor-notice,
   .village-actions, .lake-portal-action, .marina-talk, .ruins-pirate-talk, .felipe-talk,
   .rapids-overlay, .battle-result,
   .cave-status, .dragon-chamber-status, .courtyard-status, .witch-battle-status, .corridor-status,

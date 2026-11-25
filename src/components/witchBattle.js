@@ -1,3 +1,4 @@
+import { attachCombatFlash, groundDangerGeometry } from './combatFeedback';
 import * as THREE from 'three';
 
 export const WITCH_LIVES = 3;
@@ -152,12 +153,7 @@ export function advanceWitchBattle(battle, dt, position) {
 export function createWitchPoison(scene) {
   const trail = new THREE.Group();
   trail.visible = false;
-  const geometry = new THREE.CircleGeometry(POISON_RADIUS, 24);
-  geometry.rotateX(-Math.PI / 2);
-  const pool = new THREE.MeshBasicMaterial({ color: '#e31524', transparent: true, opacity: .72, depthWrite: false });
-  const outlineGeometry = new THREE.RingGeometry(POISON_RADIUS - .07, POISON_RADIUS, 24);
-  outlineGeometry.rotateX(-Math.PI / 2);
-  const outline = new THREE.MeshBasicMaterial({ color: '#ff7062', transparent: true, opacity: .94, depthWrite: false });
+  const { geometry, pool, outlineGeometry, outline } = groundDangerGeometry(POISON_RADIUS);
   const splashGeometry = new THREE.SphereGeometry(.22, 8, 6);
   const splashMaterial = new THREE.MeshBasicMaterial({ color: '#7dff28' });
   const markers = Array.from({ length: POISON_COUNT }, () => {
@@ -366,34 +362,8 @@ export function createWitchShockFlash(player, witch) {
   const blue = new THREE.MeshBasicMaterial({ color: '#56aaff' });
   const duration = .8;
 
-  function attach(character) {
-    const meshes = [];
-    character.traverse(object => {
-      if (object.isMesh) meshes.push({ object, original: object.material });
-    });
-    let remaining = 0;
-    let applied = null;
-    function apply(material) {
-      if (applied === material) return;
-      applied = material;
-      for (const { object, original } of meshes) object.material = material ?? original;
-    }
-    return {
-      trigger() { remaining = duration; },
-      update(dt, reduced) {
-        if (remaining <= 0) return;
-        const whitePhase = Math.floor((duration - remaining) / .2) % 2 === 0;
-        apply(!reduced && whitePhase ? white : blue);
-        remaining = Math.max(0, remaining - dt);
-        if (remaining === 0) apply(null);
-      },
-      reset() {
-        remaining = 0;
-        apply(null);
-      },
-    };
-  }
-
+  const attach = character => attachCombatFlash(character, duration, (elapsed, reduced) =>
+    !reduced && Math.floor(elapsed / .2) % 2 === 0 ? white : blue);
   const playerFlash = attach(player);
   const witchFlash = attach(witch);
   function reset() {

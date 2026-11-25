@@ -2,7 +2,7 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import App from './App';
 import VillageAudio from './audio/VillageAudio';
 
-jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onStep, onTalk, onOpen, onNear, onNearNpc, zoom, missionRound, weatherMode, returnToPortal }) => <div data-testid="village-canvas" data-portal-return={String(returnToPortal)} data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onStep('stone')}>Simular passo</button><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button><button onClick={() => onNearNpc(0)}>Aproximar da Bia</button><button onClick={() => onNear(0)}>Aproximar da taverna</button></div> }));
+jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onTalk, onOpen, onNear, onNearNpc, zoom, missionRound, weatherMode, returnToPortal }) => <div data-testid="village-canvas" data-portal-return={String(returnToPortal)} data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button><button onClick={() => onNearNpc(0)}>Aproximar da Bia</button><button onClick={() => onNear(0)}>Aproximar da taverna</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
 jest.mock('./assets/audio/village-bards-tale.mp3', () => 'village-track.mp3');
 jest.mock('./assets/audio/castle-kings-feast.mp3', () => 'castle-track.mp3');
@@ -30,7 +30,7 @@ jest.mock('./components/InfiniteCorridor', () => ({ __esModule: true, default: (
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
-  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), interact: jest.fn(), ruins: jest.fn(), closeDoor: jest.fn(), step: jest.fn(), firework: jest.fn(), stopFireworks: jest.fn(), dispose: jest.fn() }));
+  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), interact: jest.fn(), ruins: jest.fn(), closeDoor: jest.fn(), firework: jest.fn(), stopFireworks: jest.fn(), dispose: jest.fn() }));
   jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
@@ -75,24 +75,22 @@ test('o modo leitura oferece todas as seções e quatro narrações sem caminhar
 test('as categorias são independentes e o controle geral preserva as escolhas', async () => {
   await start();
   await configure(p => fireEvent.click(p.getByRole('button', { name: 'Ativar tudo' })));
-  await configure(p => { fireEvent.click(p.getByRole('checkbox', { name: /^Música ambiente/ })); fireEvent.click(p.getByRole('checkbox', { name: /^Passos/ })); });
-  fireEvent.click(screen.getByRole('button', { name: 'Simular passo' })); expect(engine().step).not.toHaveBeenCalled();
+  await configure(p => { fireEvent.click(p.getByRole('checkbox', { name: /^Música ambiente/ })); });
   fireEvent.click(screen.getByRole('button', { name: 'Entrar: Projetos' })); expect(engine().interact).toHaveBeenCalledWith(2);
   fireEvent.keyDown(document, { key: 'Escape' });
   await configure(p => fireEvent.click(p.getByRole('checkbox', { name: /^Som geral/ })));
   await configure(p => {
     expect(p.getByRole('checkbox', { name: /^Música ambiente/ }).checked).toBe(false);
-    expect(p.getByRole('checkbox', { name: /^Passos/ }).checked).toBe(false);
+    expect(p.queryByRole('checkbox', { name: /^Passos/ })).toBeNull();
     expect(p.getByRole('checkbox', { name: /^Efeitos dos edifícios/ }).checked).toBe(true);
     fireEvent.click(p.getByRole('checkbox', { name: /^Som geral/ }));
   });
-  expect(JSON.parse(localStorage.getItem('village-audio')).steps).toBe(false);
+  expect(JSON.parse(localStorage.getItem('village-audio')).music).toBe(false);
 });
 
-test('desativar tudo bloqueia passos, interações e novas narrações', async () => {
+test('desativar tudo bloqueia interações e novas narrações', async () => {
   await start(); await configure(p => fireEvent.click(p.getByRole('button', { name: 'Ativar tudo' })));
   await configure(p => fireEvent.click(p.getByRole('button', { name: 'Desativar tudo' })));
-  fireEvent.click(screen.getByRole('button', { name: 'Simular passo' })); expect(engine().step).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Entrar: Minha história' })); expect(engine().interact).not.toHaveBeenCalled();
   const narration = document.querySelector('audio[data-narration]');
   expect(narration.muted).toBe(true);
@@ -122,7 +120,6 @@ test('desligar as vozes interrompe o NPC sem desligar os outros canais', async (
     await configure(p => fireEvent.click(p.getByRole('checkbox', { name: /^Vozes dos NPCs/ })));
     expect(clips[0].pause).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('button', { name: 'Ouvir mensagem' }).disabled).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Simular passo' })); expect(engine().step).toHaveBeenCalledWith('stone');
   } finally { window.Audio = previousAudio; }
 });
 

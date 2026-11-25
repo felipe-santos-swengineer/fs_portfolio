@@ -18,8 +18,7 @@ export default class VillageAudio {
     this.context = null;
     this.enabled = false;
     this.sources = new Set();
-    this.foot = 0;
-    this.channels = { steps: true, interactions: true };
+    this.channels = { interactions: true };
     this.channel = 'interactions';
     this.castleEffectRevision = 0;
     this.castleSamples = new Map();
@@ -114,15 +113,6 @@ export default class VillageAudio {
     if (!this.weatherSource) return;
     const source = this.weatherSource; this.weatherSource = null; this.weatherGain = null;
     try { source.stop(); } catch { /* Already stopped. */ }
-  }
-
-  step(surface) {
-    if (!this.ready() || !this.channels.steps) return;
-    this.channel = 'steps';
-    const stone = surface === 'stone';
-    this.foot = 1 - this.foot;
-    this.rustle(stone ? .1 : .16, stone ? 1850 : 650, stone ? .07 : .085, 0, this.foot ? .15 : -.15);
-    this.tone(stone ? 145 : 88, .09, .0375, 0, 'sine', stone ? 65 : 48);
   }
 
   interact(site) {

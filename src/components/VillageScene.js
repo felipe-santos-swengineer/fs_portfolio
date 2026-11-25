@@ -1,9 +1,11 @@
+import { isRunning } from './touchMovement';
+import { createVillageCraft, meadowTexture } from './villageCraft';
 import { createVillageWeather } from './VillageWeather';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { allowRunAndRotate } from './runAndRotate';
-import { ENGLISH_VILLAGE_SIGNS, SITES, PORTAL, PORTAL_ARRIVAL, isCastleThreshold, canWalk, nearbySite, walkingSurface, overlapsRoad, advanceFootsteps } from './villageNavigation';
+import { ENGLISH_VILLAGE_SIGNS, SITES, PORTAL, PORTAL_ARRIVAL, CASTLE_ENTRANCE, isCastleThreshold, canWalk, nearbySite, overlapsRoad } from './villageNavigation';
 import { VILLAGERS, createWalkingGraph, randomRoute, advanceVillager } from './villagers';
 import { createDragon, createDayNight } from './VillageAtmosphere';
 import { createMissionFireworks } from './MissionFireworks';
@@ -104,11 +106,12 @@ export function createVillage(scene) {
   // Rectangular island, shoreline and a dock south of the portal.
   box(scene, 38, 1.5, 48, '#17232c', 0, -.9, -9);
   box(scene, 37.6, .22, 47.6, '#253b36', 0, -.06, -9);
-  box(scene, 37, .12, 47, '#293b36', 0, .04, -9);
+  box(scene, 37, .12, 47, '#697e50', 0, .04, -9);
+  material('#697e50').map = meadowTexture();
   // A connected plaza extends the eastern road beyond the original shore.
   box(scene,14,1.5,18,'#17232c',24,-.9,0);
   box(scene,14,.22,18,'#253b36',24,-.06,0);
-  box(scene,14,.12,18,'#293b36',24,.04,0);
+  box(scene,14,.12,18,'#697e50',24,.04,0);
   const waterMaterial = new THREE.MeshStandardMaterial({ color:'#214c58', roughness:.55, metalness:.12 });
   const water = new THREE.Mesh(new THREE.PlaneGeometry(58, 42), waterMaterial);
   water.rotation.x = -Math.PI / 2; water.position.set(0, -.62, 10); water.name = 'Mar da doca'; scene.add(water);
@@ -151,7 +154,7 @@ export function createVillage(scene) {
   }
   for (let x = -17; x <= 17; x++) for (let z = -20; z <= 13; z++) {
     if ((Math.abs(x) <= 1 || Math.abs(z) <= 1 || (Math.abs(z - 9) < 1 && Math.abs(x) < 10)) && Math.hypot(x, z) > 1.8) {
-      addStone(.88, .1, .86, (x + z) % 3 ? '#455056' : '#535c5e', x, .16, z, Math.sin(x * 4 + z) * .08);
+      addStone(.95, .1, .92, (x + z) % 3 ? '#948b78' : '#a79b86', x, .16, z, Math.sin(x * 4 + z) * .08);
     }
   }
   stoneGroups.forEach(({w, h, d, color, transforms}) => {
@@ -167,6 +170,8 @@ export function createVillage(scene) {
   const wellLight = new THREE.PointLight('#73bfcf', 17, 8); wellLight.position.set(0, 2, 0); scene.add(wellLight);
 
   const buildings = [];
+  const craft = createVillageCraft();
+  craft.garden(scene);
   const flames = [];
   const portal = new THREE.Group(); portal.position.set(PORTAL.x, 0, PORTAL.z); portal.rotation.y = Math.PI / 2; portal.userData.site = 4; scene.add(portal);
   cylinder(portal, 2.1, .25, '#4a5268', 0, .3, 0, 24);
@@ -231,7 +236,7 @@ export function createVillage(scene) {
   SITES.forEach((site, index) => {
     const g = new THREE.Group(); g.position.set(site.x, 0, site.z); g.userData.site = index; scene.add(g); buildings.push(g);
     box(g, 5.6, .35, 4.7, '#3e4a51', 0, .25, 0);
-    box(g, 5, 3.6, 4, index === 1 ? '#485464' : '#4d4e4c', 0, 2.15, 0);
+    box(g, 5, 3.6, 4, ['#dfc7a3', '#d6d5bc', '#c7b193', '#dfcdb0'][index], 0, 2.15, 0);
     // Timber framing, sills, masonry and stair at the door.
     [-2.4, 0, 2.4].forEach(x => box(g, .19, 3.7, 4.1, '#252a30', x, 2.15, 0));
     [1, 3.5].forEach(y => box(g, 5.1, .18, 4.12, '#2a3033', 0, y, 0));
@@ -250,6 +255,9 @@ export function createVillage(scene) {
     for (let r = 0; r < 5; r++) [-1, 1].forEach(side => {
       const beam = box(g, 3.65, .06, .07, '#222e36', side * 1.43, 5.05, -2.35 + r * 1.17); beam.rotation.z = side * -.627;
     });
+    craft.house(g, index);
+
+
     lamp(g, -2.1, 2.8, 2.5, '#ffb66d', 12);
     label(g, site.title, site.detail, site.color, 0, 7.2, 3.1);
 
@@ -331,7 +339,14 @@ export function createVillage(scene) {
     if ((x > 14 && Math.abs(z) < 9) || overlapsRoad(x, z, 1.3) || Math.hypot(x - PORTAL.x, z - PORTAL.z) < 4.5 || (z < -15.5) || Math.abs(x)>17 || z < -21.5 || z > 13.5 || (z>10 && Math.abs(x)<4)) continue;
     const tree = new THREE.Group(); tree.position.set(x, 0, z); scene.add(tree); const h = 2.6 + i % 4 * .55;
     cylinder(tree, .16, h, '#493c36', 0, h / 2, 0);
-    for (let j = 0; j < 3; j++) mesh(tree, new THREE.ConeGeometry(1.2 - j * .23, 2.1, 7), ['#253f39', '#2d4a41', '#36574b'][j], 0, h * .6 + j * .75, 0);
+    if (i % 3) {
+      for (let j = 0; j < 5; j++) {
+        const angle = j * 2.4 + i;
+        const crown = sphere(tree, j === 4 ? 1.1 : .85, ['#5d7c4e','#778e54','#688455'][j % 3],
+          j === 4 ? 0 : .6 * Math.cos(angle), h - .4 + (j === 4 ? .68 : .17 * Math.sin(angle)), .54 * Math.sin(angle));
+        crown.scale.y = .87;
+      }
+    } else for (let j = 0; j < 3; j++) mesh(tree, new THREE.ConeGeometry(1.2 - j * .23, 2.1, 7), ['#253f39', '#2d4a41', '#36574b'][j], 0, h * .6 + j * .75, 0);
     if (i % 3 === 0 && !overlapsRoad(x * .88, z * .88, .8) && Math.hypot(x * .88 - PORTAL.x, z * .88 - PORTAL.z) >= 3.5 && z*.88 >= -15.5) { const rock = mesh(scene, new THREE.DodecahedronGeometry(.45 + i % 2 * .3), '#4a555c', x * .88, .35, z * .88); rock.scale.y = .65; }
   }
   [[-2.8, -9], [2.8, -9], [-2.8, 11.3], [2.8, 11.3], [-11, 2.8], [11, 2.8]].forEach(([x, z]) => { cylinder(scene, .08, 2.6, '#39434b', x, 1.3, z); lamp(scene, x, 2.8, z); });
@@ -405,13 +420,13 @@ export function createVillage(scene) {
   return { buildings, portal, castleDoor, backdrop, player, body, limbs, crystal, flames, fireflies, cape, npcs, performers, castleGuards, castleArchers, castleTowers, marketStall, marketVendors, marketFood: produce, marketPotions: goods };
 }
 
-export default function VillageScene({ language = 'pt-BR', keys, compassRef, paused, sceneHidden = false, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal = false, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, weatherEffects = true, weatherMode = 'auto', onWeather, cameraTurn = 0 }) {
+export default function VillageScene({ language = 'pt-BR', keys, compassRef, paused, sceneHidden = false, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival = null, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, weatherEffects = true, weatherMode = 'auto', onWeather, cameraTurn = 0 }) {
   const mount = useRef(null);
   const wake = useRef(null);
   const updateSigns = useRef(null);
   useEffect(() => { updateSigns.current?.(language); }, [language]);
-  const live = useRef({ paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn });
-  live.current = { paused, sceneHidden, onOpen, onNear, onStep, onTalk, onNearNpc, talkingNpc, zoom, resetKey, returnToPortal, onPortalReturnHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn };
+  const live = useRef({ paused, sceneHidden, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn });
+  live.current = { paused, sceneHidden, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn };
   const [error, setError] = useState(null);
   const [rendererAttempt, setRendererAttempt] = useState(0);
   const wasSceneHidden = useRef(sceneHidden);
@@ -488,16 +503,19 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     const up = e => keys.current.delete(e.key.toLowerCase()); const clear = () => keys.current.clear();
     renderer.domElement.addEventListener('keydown', down); renderer.domElement.addEventListener('blur', clear); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
     const forward = new THREE.Vector3(), right = new THREE.Vector3(), movement = new THREE.Vector3(); const target = new THREE.Vector3(); const delta = new THREE.Vector3();
-    let frame, previous = 0, clock = 0, environmentTime = 0, stepDistance = 0, portalContact = false, castleContact = false, oldNear = -2, oldNearNpc = -2, lastWeatherReport = -1, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
+    let frame, previous = 0, clock = 0, environmentTime = 0, portalContact = false, castleContact = false, oldNear = -2, oldNearNpc = -2, lastWeatherReport = -1, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
     const draw = time => {
       if (document.hidden || live.current.sceneHidden) { frame = 0; previous = 0; return; }
-      if (live.current.returnToPortal) {
-        world.player.position.set(PORTAL_ARRIVAL.x,.2,PORTAL_ARRIVAL.z);
-        world.player.rotation.y=Math.PI/2;
-        target.set(PORTAL_ARRIVAL.x,1.1,PORTAL_ARRIVAL.z);
+      if (live.current.villageArrival) {
+        const fromCastle = live.current.villageArrival === 'castle';
+        const x = fromCastle ? CASTLE_ENTRANCE.x : PORTAL_ARRIVAL.x;
+        const z = fromCastle ? CASTLE_ENTRANCE.z + 1.5 : PORTAL_ARRIVAL.z;
+        world.player.position.set(x, .2, z);
+        world.player.rotation.y = fromCastle ? 0 : Math.PI / 2;
+        target.set(x, 1.1, z);
         delta.subVectors(target,controls.target); controls.target.copy(target); camera.position.add(delta);
         keys.current.clear(); portalContact=false;
-        live.current.onPortalReturnHandled?.();
+        live.current.onVillageArrivalHandled?.();
       }
       const reducedMotion = live.current.reduceMotion, ambientPaused = live.current.ambientPaused;
       const dt = Math.min((time - previous) / 1000 || 0, .04); previous = time; clock += dt;
@@ -519,15 +537,12 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
       let walking = false;
       if (!live.current.paused && (movingX || movingZ)) {
         camera.getWorldDirection(forward); forward.y = 0; forward.normalize(); right.crossVectors(forward, camera.up).normalize();
-        movement.copy(forward).multiplyScalar(movingZ).addScaledVector(right, movingX).normalize().multiplyScalar(dt * 4.2 * (k.has('shift') ? 1.8 : 1));
+        movement.copy(forward).multiplyScalar(movingZ).addScaledVector(right, movingX).normalize().multiplyScalar(dt * 4.2 * (isRunning(k) ? 1.8 : 1));
         const p = world.player.position; const oldX = p.x, oldZ = p.z;
         if (canWalk(p.x + movement.x, p.z)) p.x += movement.x;
         if (canWalk(p.x, p.z + movement.z)) p.z += movement.z;
         const displacement = Math.hypot(p.x - oldX, p.z - oldZ);
         walking = displacement > .001;
-        const footsteps = advanceFootsteps(stepDistance, displacement);
-        stepDistance = footsteps.distance;
-        if (footsteps.steps) live.current.onStep?.(walkingSurface(p.x, p.z));
         if (walking) { const yaw = Math.atan2(movement.x, movement.z); world.player.rotation.y += Math.atan2(Math.sin(yaw - world.player.rotation.y), Math.cos(yaw - world.player.rotation.y)) * Math.min(1, dt * 14);
           target.set(p.x, 1.1, p.z); delta.subVectors(target, controls.target).multiplyScalar(Math.min(1, dt * 2)); controls.target.add(delta); camera.position.add(delta);
         }

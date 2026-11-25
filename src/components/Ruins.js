@@ -1,3 +1,4 @@
+import { isRunning, setTouchMovement } from './touchMovement';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -188,7 +189,7 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
         const z=(keys.current.has('s')||keys.current.has('arrowdown')?1:0)-(keys.current.has('w')||keys.current.has('arrowup')?1:0);
         if(x||z){
           const direction=cameraRelativeDirection(camera,x,z);
-          const speed=keys.current.has('shift')?9.75:6,nx=boat.position.x+direction.x*speed*dt,nz=boat.position.z+direction.z*speed*dt;
+          const speed=isRunning(keys.current)?9.75:6,nx=boat.position.x+direction.x*speed*dt,nz=boat.position.z+direction.z*speed*dt;
           const obstacle=ruinsObstacle(nx,nz);
           if(!obstacle){boat.position.x=nx;boat.position.z=nz;boat.rotation.y=Math.atan2(-direction.x,-direction.z);}
           else if(time>=nextImpact){settings.current.onSound?.(obstacle);nextImpact=time+.9;}
@@ -230,7 +231,7 @@ export default function Ruins({ campaignNavigation,language,paused,reduceMotion,
       geometries.forEach(geometry=>geometry.dispose());
       materials.forEach(surface=>surface.dispose());renderer.dispose();renderer.domElement.remove();};
   },[]);
-  const press=(key,down)=>{if(paused || talkingRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  const press=(key,down)=>{if(paused || talkingRef.current)return;setTouchMovement(keys.current, key, down);};
   useEffect(()=>{if(active && startNearPassage)returnToPassage.current?.();},[active,startNearPassage]);
   const count=activated.filter(Boolean).length;
   return <section className="lake ruins"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en?'Return to village':'Voltar para a vila'}</button>}

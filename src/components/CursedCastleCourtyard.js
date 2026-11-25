@@ -1,3 +1,5 @@
+import { isRunning, setTouchMovement } from './touchMovement';
+import { createCourtyardGarden } from './courtyardGarden';
 import TouchInteract from './TouchInteract';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -16,7 +18,7 @@ import './Lake.css';
 import './CursedCastle.css';
 import './DragonChamber.css';
 
-export default function CursedCastleCourtyard({ campaignNavigation,language,paused,reduceMotion,onExit,onAdvance,onStep,onSound,onWeather,onEncounterChange,onSpeak,onStopVoice,voiceEnabled,weatherEffects=true,interior=false,completed=false,throneUnlocked=false,onThroneUnlock,onChessPieceFocus,onChessAttack,onChessOpenChange}) {
+export default function CursedCastleCourtyard({ campaignNavigation,language,paused,reduceMotion,onExit,onAdvance,onSound,onWeather,onEncounterChange,onSpeak,onStopVoice,voiceEnabled,weatherEffects=true,interior=false,completed=false,throneUnlocked=false,onThroneUnlock,onChessPieceFocus,onChessAttack,onChessOpenChange}) {
   const mount=useRef(null),keys=useRef(new Set()),state=useRef({});
   const [chessOpen, setChessOpen] = useState(false);
   useEffect(() => {
@@ -86,7 +88,7 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
     closeChess();
     releaseSeal();
   };
-  state.current={onChessAttack,chessOpen,throneUnlocked,chessBoard,showChess,paused,reduceMotion,onStep,onSound,onWeather,onEncounterChange,onAdvance,weatherEffects};
+  state.current={onChessAttack,chessOpen,throneUnlocked,chessBoard,showChess,paused,reduceMotion,onSound,onWeather,onEncounterChange,onAdvance,weatherEffects};
   const sceneActive = useRef(false);
   const skipScene = useRef(null);
   const restartFight = useRef(null);
@@ -109,58 +111,18 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
     const el=mount.current;let renderer;try{renderer=new THREE.WebGLRenderer({antialias:true});}catch{setError(true);return;}
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.25));renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label',interior ? 'Câmara do Guardião Arcano / Arcane Guardian Chamber' : 'Pátio do Castelo / Castle Courtyard');el.appendChild(renderer.domElement);renderer.domElement.focus({preventScroll:true});
     const scene = new THREE.Scene();
-    const sky = interior ? '#282c39' : '#505b65';
+    const sky = interior ? '#282c39' : '#253043';
     scene.background = new THREE.Color(sky);
-    scene.fog = new THREE.FogExp2(sky, interior ? .057 : .047);
+    scene.fog = new THREE.FogExp2(sky, interior ? .057 : .023);
     scene.add(new THREE.HemisphereLight('#c6d6e3', '#303932', 1.65));
-    const daylight = new THREE.DirectionalLight(interior ? '#a8a8d2' : '#c4d3de', .65);
+    const daylight = new THREE.DirectionalLight(interior ? '#a8a8d2' : '#cbd5e1', .65);
     daylight.position.set(-10, 20, 12);
     scene.add(daylight);
     const camera=new THREE.PerspectiveCamera(interior ? 52 : 48,1,.1,120),materials=new Map();const material=c=>{if(!materials.has(c))materials.set(c,new THREE.MeshStandardMaterial({color:c,roughness:.94}));return materials.get(c);};
     const mesh=(p,g,c,x,y,z)=>{const m=new THREE.Mesh(g,material(c));m.position.set(x,y,z);p.add(m);return m;};const box=(p,w,h,d,c,x,y,z)=>mesh(p,new THREE.BoxGeometry(w,h,d),c,x,y,z),sphere=(p,r,c,x,y,z)=>mesh(p,new THREE.IcosahedronGeometry(r,1),c,x,y,z),cylinder=(p,r,h,c,x,y,z,n=8)=>mesh(p,new THREE.CylinderGeometry(r,r,h,n),c,x,y,z);
     const ground = mesh(scene, new THREE.PlaneGeometry(42, 52), '#252c2b', 0, -.08, 0);
     ground.rotation.x = -Math.PI / 2;
-    if (!interior) {
-      const stones = ['#454e50', '#50585a', '#3e4849', '#49534e'];
-      const pavers = new THREE.InstancedMesh(new THREE.BoxGeometry(2.06, .08, 2.4),
-        new THREE.MeshStandardMaterial({ roughness: .65 }), 20 * 17);
-      const paverTransform = new THREE.Matrix4(), paverColor = new THREE.Color();
-      let paverIndex = 0;
-      for (let row = 0; row < 20; row++) {
-        for (let col = -8; col <= 8; col++) {
-          const x = col * 2.15 + (row % 2) * 1.075;
-          const z = -23.75 + row * 2.5;
-          const color = stones[Math.abs(row * 7 + col * 13 + (row * col) % 5) % stones.length];
-          pavers.setMatrixAt(paverIndex, paverTransform.makeTranslation(x, -.035, z));
-          pavers.setColorAt(paverIndex, paverColor.set(color));
-          paverIndex++;
-        }
-      }
-      scene.add(pavers);
-
-      for (const side of [-1, 1]) {
-        box(scene, 1.4, 8, 50, '#424b55', side * 18.5, 4, 0);
-        box(scene, 1.75, .45, 50, '#677379', side * 18.5, 8, 0);
-        box(scene, 38, 8, 1.4, '#424b55', 0, 4, side * 24.5);
-        box(scene, 38, .45, 1.75, '#677379', 0, 8, side * 24.5);
-        for (let z = -20; z <= 20; z += 3.3) {
-          box(scene, 1.55, 1.6, 1.5, '#536068', side * 18.5, 8.9, z);
-          box(scene, .15, .85, 2.9, '#535e64', side * 17.74, 2, z);
-        }
-        for (let x = -15; x <= 15; x += 3) {
-          box(scene, 1.55, 1.6, 1.55, '#536068', x, 8.9, side * 24.5);
-        }
-        for (const z of [-24, 24]) {
-          cylinder(scene, 3.2, 12.5, '#4f5a62', side * 18.5, 6.25, z, 10);
-          cylinder(scene, 3.45, .55, '#66747b', side * 18.5, 12.6, z, 10);
-          for (let i = 0; i < 8; i++) {
-            const angle = i * Math.PI / 4;
-            box(scene, .85, 1.3, .85, '#56646d',
-              side * 18.5 + Math.cos(angle) * 2.9, 13.4, z + Math.sin(angle) * 2.9);
-          }
-        }
-      }
-    }
+    const garden = interior ? null : createCourtyardGarden(scene, completed);
 
     const puddleMaterial = new THREE.MeshStandardMaterial({ color: '#52636d', roughness: .18, metalness: .35 });
     const rainPuddles = new THREE.Group();
@@ -253,9 +215,10 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
     }
     if(document.activeElement!==renderer.domElement||state.current.paused||state.current.chessOpen||sceneActive.current)return;const k=e.key.toLowerCase();if(k==='e'&&!e.repeat) {
       if (throne && nearDoor && !state.current.throneUnlocked) state.current.showChess();
+      else if (throne && nearDoor && state.current.throneUnlocked) state.current.onAdvance?.();
       else rewardAction.current?.();
     }if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}},up=e=>keys.current.delete(e.key.toLowerCase());window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);renderer.domElement.addEventListener('blur',clear);
-    let frame, last = performance.now(), time = 0, stepTimer = 0;
+    let frame, last = performance.now(), time = 0;
     let flight, sceneTime = 0, spoken = -1, laughed = false;
     const incomingView = new THREE.Vector3(), closeView = new THREE.Vector3();
     const sceneView = new THREE.Vector3(), look = new THREE.Vector3(), destination = new THREE.Vector3();
@@ -371,6 +334,7 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
       const dt = sceneFrameDelta(now, last);
       last = now;
       const { paused: isPaused, reduceMotion: reduced, onSound } = state.current;
+      garden?.update(isPaused ? 0 : dt, battle?.phase, reduced, time);
       rain.visible = !interior && state.current.weatherEffects;
       rainPuddles.visible = rain.visible && !battle && !completed;
       state.current.onWeather?.(rain.visible && !isPaused ? 1 : 0);
@@ -436,7 +400,7 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
             - Number(keys.current.has('w') || keys.current.has('arrowup'));
           if ((x || z) && battle?.phase !== 'lost') {
             const direction = cameraRelativeDirection(camera, x, z);
-            const running = keys.current.has('shift');
+            const running = isRunning(keys.current);
             const speed = running ? 6.5 : 4;
             const nx = player.position.x + direction.x * speed * dt;
             const nz = player.position.z + direction.z * speed * dt;
@@ -447,11 +411,6 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
               player.position.set(nx, 0, nz);
               player.rotation.y = Math.atan2(direction.x, direction.z);
               moving = true;
-              stepTimer -= dt;
-              if (stepTimer <= 0) {
-                state.current.onStep?.();
-                stepTimer = running ? .3 : .48;
-              }
             }
           }
           if (throne) {
@@ -473,7 +432,6 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
               return;
             }
           }
-          if (!moving) stepTimer = 0;
           if (!interior && !completed && !flight && player.position.z < 7) startScene();
           if (rewardPhase === 'key' || rewardPhase === 'exit') {
             const object = rewardPhase === 'key' ? rewards.key : rewards.exit;
@@ -643,9 +601,9 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
       camera.lookAt(look);
       entranceDecor?.updateArchitectureView(camera.position);
       renderer.render(scene,camera);};frame=requestAnimationFrame(animate);
-    return()=>{chessControls.current=null;chessGesture.current=null;skipScene.current=null;restartFight.current=null;skipFight.current=null;rewardAction.current=null;state.current.onSound?.('witch-stop');state.current.onWeather?.(0);cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);renderer.domElement.removeEventListener('wheel',wheelChess);clear();orbit.dispose();throne?.dispose();shockFlash.dispose();scene.traverse(o=>{if(o.isInstancedMesh)o.dispose();o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(![...materials.values()].includes(m))m.dispose();});});materials.forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();};
+    return()=>{chessControls.current=null;chessGesture.current=null;skipScene.current=null;restartFight.current=null;skipFight.current=null;rewardAction.current=null;state.current.onSound?.('witch-stop');state.current.onWeather?.(0);cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);renderer.domElement.removeEventListener('wheel',wheelChess);clear();orbit.dispose();garden?.dispose();throne?.dispose();shockFlash.dispose();scene.traverse(o=>{if(o.isInstancedMesh)o.dispose();o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(![...materials.values()].includes(m))m.dispose();});});materials.forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();};
   },[completed, interior]);
-  const press=(key,down)=>{if(paused||chessOpen||sceneActive.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  const press=(key,down)=>{if(paused||chessOpen||sceneActive.current)return;setTouchMovement(keys.current, key, down);};
   const fightActive = fight && !['won', 'lost'].includes(fight.phase);
   const mapName = interior ? (en ? 'ARCANE GUARDIAN CHAMBER' : 'CÂMARA DO GUARDIÃO ARCANO') : (en ? 'CASTLE COURTYARD' : 'PÁTIO DO CASTELO');
   const rewardLabel = reward === 'key' ? (en ? 'Pick up the key' : 'Pegar a chave') : (en ? 'Enter the throne room entrance' : 'Ir à entrada da sala do trono');
@@ -686,7 +644,7 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
     </div>}
     {interior && (sealRevealed || throneUnlocked || error) && !chessOpen &&
       <div className="witch-battle-status courtyard-progress" role="status">{throneUnlocked
-        ? (en ? 'The seal is broken. The Dark King’s throne room is unavailable.' : 'O selo foi quebrado. A sala do trono do Rei das Trevas está indisponível.')
+        ? (en ? 'The seal is broken. Enter the throne room.' : 'O selo foi quebrado. Entre na sala do trono.')
         : (en ? 'An ancient seal blocks the door.' : 'Um selo antigo bloqueia a porta.')}</div>}
     </div>
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D n\u00e3o est\u00e1 dispon\u00edvel neste navegador.'}</p>}{intro && line !== -1 && <div className="chamber-subtitle" role="status" aria-live="polite"><strong>{en ? 'THE WITCH' : 'A BRUXA'}</strong><p>{line === -2 ? (en ? '[The witch cackles]' : '[A bruxa gargalha]') : witchDialogue[en ? 'en-US' : 'pt-BR'][line]}</p></div>}

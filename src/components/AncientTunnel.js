@@ -1,3 +1,4 @@
+import { isRunning, setTouchMovement } from './touchMovement';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -65,7 +66,7 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
       frame=requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.05);last=now;
       if(!settings.current.paused&&!messageRef.current){
         time+=dt;const x=(keys.current.has('d')||keys.current.has('arrowright')?1:0)-(keys.current.has('a')||keys.current.has('arrowleft')?1:0),z=(keys.current.has('s')||keys.current.has('arrowdown')?1:0)-(keys.current.has('w')||keys.current.has('arrowup')?1:0);
-        if(x||z){const direction=cameraRelativeDirection(camera,x,z),speed=keys.current.has('shift')?6.5:4,rawX=boat.position.x+direction.x*speed*dt,rawZ=boat.position.z+direction.z*speed*dt;
+        if(x||z){const direction=cameraRelativeDirection(camera,x,z),speed=isRunning(keys.current)?6.5:4,rawX=boat.position.x+direction.x*speed*dt,rawZ=boat.position.z+direction.z*speed*dt;
           const nx=THREE.MathUtils.clamp(rawX,-3.2,3.2),nz=THREE.MathUtils.clamp(rawZ,-26,6);
           if((nx!==rawX||nz!==rawZ)&&time>=nextImpact){settings.current.onSound?.('stone');nextImpact=time+.9;}
           boat.position.set(nx,boat.position.y,nz);boat.rotation.y=Math.atan2(-direction.x,-direction.z);
@@ -78,7 +79,7 @@ export default function AncientTunnel({language,paused,reduceMotion,onExit,onSou
     };frame=requestAnimationFrame(animate);
     return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);renderer.domElement.removeEventListener('blur',clear);clear();scene.traverse(object=>{object.geometry?.dispose();if(Array.isArray(object.material))object.material.forEach(m=>m.dispose());else object.material?.dispose();});renderer.dispose();renderer.domElement.remove();};
   },[inVillage]);
-  const press=(key,down)=>{if(paused||messageRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  const press=(key,down)=>{if(paused||messageRef.current)return;setTouchMovement(keys.current, key, down);};
   if(inVillage)return <TempleVillage language={language} paused={paused} reduceMotion={reduceMotion} onExit={()=>onVillageChange(false)}/>;
   return <section className="lake ancient-tunnel"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/><button className="lake-exit" onClick={onExit}>{en?'Return to ruins':'Voltar às ruínas'}</button><MapControlGuide language={language} scene="tunnel"/>
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'}</p>}

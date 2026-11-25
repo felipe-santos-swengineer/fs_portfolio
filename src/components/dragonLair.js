@@ -140,17 +140,15 @@ export function createDragonLair(scene) {
     batch(group,rock,stone,shelf);batch(group,tooth,stone,pendants);
   }
 
-  // Free-standing scenery gets its own cutaway bound, including the low gate ruins.
-  const landmarks=[];
-  function landmark(x,z,radius,height){
+  function landmark(x,z){
     const group=new THREE.Group();group.position.set(x,0,z);addToScene(group);
-    landmarks.push({group,x,z,radius,height});return group;
+    return group;
   }
   for(const side of [-1,1]){
-    const gate=landmark(side*7,38,4,5);
+    const gate=landmark(side*7,38);
     batch(gate,block,masonry,[[0,.45,0,3,.9,3],[0,1.6,0,2,1.4,2,0,.08],[.25,2.8,0,1.9,1,2,.09,0,side*.16]]);
     batch(gate,block,iron,[[side*.6,.42,-1.8,.17,.22,4,.1,side*.32],[side*1.3,.32,-2,.18,.2,3.6,.13,side*.32],[side*.9,.45,-2.4,1.8,.12,.18,0,side*.32]]);
-    const hoard=landmark(side*32,-30,9,4);
+    const hoard=landmark(side*32,-30);
     batch(hoard,rock,bronze,[[-2,.1,0,5,1.15,3,0,.4],[3,.1,-1,3,1,2.8,0,.7]]);
     const coins=[];
     for(const [cx,cz,w,h,d] of [[-2,0,5,1.15,3],[3,-1,3,1,2.8]]){
@@ -162,7 +160,7 @@ export function createDragonLair(scene) {
     batch(hoard,coin,gold,coins);
     batch(hoard,block,bronze,[[4,.55,2.5,2.2,1.1,1.3],[4,1.22,2.5,2.25,.32,1.34]]);
     batch(hoard,block,gold,[[3.35,.78,2.5,.14,1.38,1.38],[4.65,.78,2.5,.14,1.38,1.38]]);
-    const ruin=landmark(side*19,-45,10,19);
+    const ruin=landmark(side*19,-45);
     const courses=[];
     for(let j=0;j<(side<0?7:5);j++)
       courses.push([0,j*1.45+.72,0,2.1-j*.06,1.39,2,0,.07*j]);
@@ -182,18 +180,10 @@ export function createDragonLair(scene) {
   const sparks=new THREE.Points(ash,new THREE.PointsMaterial({size:.065,color:'#dc9d69',transparent:true,opacity:.62,depthWrite:false}));
   addToScene(sparks);
   let disposed=false;
-  function blocksView(item,camera,x,y,z,padding){
-    const dx=camera.x-x,dz=camera.z-z,len=dx*dx+dz*dz;
-    const t=THREE.MathUtils.clamp(((item.x-x)*dx+(item.z-z)*dz)/(len||1),0,1);
-    return y+(camera.y-y)*t<item.height+padding && Math.hypot(item.x-x-t*dx,item.z-z-t*dz)<item.radius+padding;
-  }
   return {
-    update(camera,player,time,reduced){
+    update(camera,time,reduced){
       for(const {group,nx,nz} of sectors)
         group.visible=camera.x*nx+camera.z*nz<46;
-      for(const item of landmarks) item.group.visible=
-        !blocksView(item,camera,player.x,1,player.z,2) &&
-        !blocksView(item,camera,0,6,-17,14);
       sparks.position.y=reduced?0:Math.sin(time*.43)*.65;
       sparks.position.x=reduced?0:Math.sin(time*.22)*.45;
     },

@@ -24,51 +24,47 @@ afterEach(() => { window.AudioContext = previousContext; });
 
 test('nenhum áudio é criado antes de ativar o som; silenciar interrompe os efeitos', async () => {
   const audio = new VillageAudio();
-  audio.step('stone'); audio.interact(2);
+  audio.interact(2);
   expect(audio.context).toBeNull();
   expect(await audio.enable()).toBe(true);
-  audio.step('stone');
-  expect(audio.context.created).toHaveLength(2);
+  audio.interact(0);
+  expect(audio.context.created).toHaveLength(5);
   const sources = [...audio.sources]; audio.mute();
   sources.forEach(s => expect(s.stop).toHaveBeenCalledTimes(2));
   audio.interact(1);
-  expect(audio.context.created).toHaveLength(2);
+  expect(audio.context.created).toHaveLength(5);
   audio.dispose();
 });
 
-test('cada edifício possui uma assinatura sonora e os passos diferenciam pedra e grama', async () => {
+test('cada edifício possui uma assinatura sonora', async () => {
   const audio = new VillageAudio(); await audio.enable();
   for (const [site, count] of [[0, 5], [1, 5], [2, 8], [3, 4]]) {
     const before = audio.context.created.length; audio.interact(site);
     expect(audio.context.created.length - before).toBe(count);
   }
-  const spy = jest.spyOn(audio, 'rustle');
-  audio.step('stone'); expect(spy).toHaveBeenLastCalledWith(.1, 1850, .07, 0, .15);
-  audio.step('grass'); expect(spy).toHaveBeenLastCalledWith(.16, 650, .085, 0, -.15);
   audio.dispose();
 });
 
 test('desligar uma categoria interrompe só seus efeitos em andamento', async () => {
   const audio = new VillageAudio(); await audio.enable();
-  audio.step('stone'); const steps = [...audio.sources];
-  audio.interact(0); const interaction = [...audio.sources].filter(s => !steps.includes(s));
-  audio.setChannels({ steps: false });
-  steps.forEach(s => expect(s.stop).toHaveBeenCalledTimes(2));
-  interaction.forEach(s => expect(s.stop).toHaveBeenCalledTimes(1));
-  const count = audio.context.created.length; audio.step('grass'); expect(audio.context.created).toHaveLength(count);
-  audio.setChannels({ interactions: false }); audio.closeDoor(); audio.interact(3);
+  audio.interact(0);
+  const sources = [...audio.sources];
+  const count = audio.context.created.length;
+  audio.setChannels({ interactions: false });
+  sources.forEach(source => expect(source.stop).toHaveBeenCalledTimes(2));
+  audio.closeDoor(); audio.interact(3);
   expect(audio.context.created).toHaveLength(count);
   audio.dispose();
 });
 
 test('os sons de fogos respeitam o canal de efeitos e podem ser cancelados sem interromper outros sons', async () => {
   const audio = new VillageAudio(); await audio.enable();
-  audio.step('stone'); const steps = [...audio.sources];
+  audio.interact(0); const buildingSounds = [...audio.sources];
   audio.firework('launch'); audio.firework('burst');
   const fireworks = [...audio.sources].filter(source => source.villageEffect === 'fireworks');
   expect(fireworks.length).toBeGreaterThan(0);
   audio.stopFireworks();
-  steps.forEach(source => expect(source.stop).toHaveBeenCalledTimes(1));
+  buildingSounds.forEach(source => expect(source.stop).toHaveBeenCalledTimes(1));
   fireworks.forEach(source => expect(source.stop).toHaveBeenCalledTimes(2));
   audio.setChannels({ interactions: false });
   const count = audio.context.created.length; audio.firework('burst'); expect(audio.context.created).toHaveLength(count);

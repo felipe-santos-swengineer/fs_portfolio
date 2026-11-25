@@ -1,3 +1,4 @@
+import { isRunning, setTouchMovement } from './touchMovement';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -115,7 +116,7 @@ export default function TempleVillage({ campaignNavigation,language, paused, red
     let frame,last=performance.now(),time=0,sceneryTime=0,previousNear=-1,previousExit=false,previousCave=false;
     const animate=now=>{frame=requestAnimationFrame(animate);const dt=sceneFrameDelta(now,last);last=now;
       if(!state.current.paused&&talkRef.current===null){time+=dt;const x=(keys.current.has('d')||keys.current.has('arrowright')?1:0)-(keys.current.has('a')||keys.current.has('arrowleft')?1:0),z=(keys.current.has('s')||keys.current.has('arrowdown')?1:0)-(keys.current.has('w')||keys.current.has('arrowup')?1:0);
-        if(x||z){const dir=cameraRelativeDirection(camera,x,z),speed=keys.current.has('shift')?6.5:4,nx=player.position.x+dir.x*speed*dt,nz=player.position.z+dir.z*speed*dt;if(!blocked(nx,player.position.z))player.position.x=nx;if(!blocked(player.position.x,nz))player.position.z=nz;player.rotation.y=Math.atan2(dir.x,dir.z);}
+        if(x||z){const dir=cameraRelativeDirection(camera,x,z),speed=isRunning(keys.current)?6.5:4,nx=player.position.x+dir.x*speed*dt,nz=player.position.z+dir.z*speed*dt;if(!blocked(nx,player.position.z))player.position.x=nx;if(!blocked(player.position.x,nz))player.position.z=nz;player.rotation.y=Math.atan2(dir.x,dir.z);}
         let closest=-1,distance=3;residents.forEach((p,i)=>{const d=Math.hypot(p.group.position.x-player.position.x,p.group.position.z-player.position.z);if(d<distance){distance=d;closest=i;}});state.current.near=closest;const byExit=Math.abs(player.position.x)<3.5&&player.position.z>27;state.current.nearExit=byExit;const byCave=Math.abs(player.position.x)<3&&player.position.z< -15;state.current.nearCave=byCave;if(byCave!==previousCave){previousCave=byCave;setNearCave(byCave);}if(byExit!==previousExit){previousExit=byExit;setNearExit(byExit);}if(closest!==previousNear){previousNear=closest;setNear(closest);}
       }else clear();
       if(!state.current.paused&&talkRef.current===null&&!state.current.reduceMotion){
@@ -171,7 +172,7 @@ export default function TempleVillage({ campaignNavigation,language, paused, red
       renderer.domElement.remove();
     };
   },[]);
-  const press=(key,down)=>{if(paused||talkRef.current!==null)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  const press=(key,down)=>{if(paused||talkRef.current!==null)return;setTouchMovement(keys.current, key, down);};
   return <section className="lake ancient-tunnel"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en?'Return to ruins':'Voltar às ruínas'}</button>}<MapControlGuide language={language} scene="temple"/>
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D não está disponível neste navegador.'}</p>}
     {nearExit&&talk===null&&<button className="lake-portal-action" onClick={interact}>{en?'Enter passage to ruins':'Entrar na passagem para as ruínas'} <kbd>E</kbd></button>}

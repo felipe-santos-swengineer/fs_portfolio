@@ -16,7 +16,7 @@ afterEach(() => {
 });
 
 function renderRoom(language = 'pt-BR', props = {}) {
-  return render(<InfiniteCorridor language={language} paused={false} reduceMotion={false} onExit={() => {}} onAdvance={() => {}} onStep={() => {}} onSound={() => {}} {...props} />);
+  return render(<InfiniteCorridor language={language} paused={false} reduceMotion={false} onExit={() => {}} onAdvance={() => {}} onSound={() => {}} {...props} />);
 }
 
 test.each([

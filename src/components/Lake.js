@@ -1,3 +1,4 @@
+import { isRunning, setTouchMovement } from './touchMovement';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -450,7 +451,7 @@ export default function Lake({ campaignNavigation, language, paused, reduceMotio
           const right=new THREE.Vector3(-forward.z,0,forward.x);
           const direction=forward.multiplyScalar(-z).addScaledVector(right,x).normalize();
           const target=aboardRef.current ? boat : player;
-          const speed=(aboardRef.current ? 4.5 : 3.3) * (k.has('shift') ? 1.8 : 1);
+          const speed=(aboardRef.current ? 4.5 : 3.3) * (isRunning(k) ? 1.8 : 1);
           const nx=target.position.x+direction.x*speed*dt, nz=target.position.z+direction.z*speed*dt;
           const boatHeading=Math.atan2(-direction.x,-direction.z);
           const landing=aboardRef.current && Math.abs(nx)<9.8 && nz>=-112 && nz<=20
@@ -523,6 +524,6 @@ export default function Lake({ campaignNavigation, language, paused, reduceMotio
       geometries.forEach(geometry => geometry.dispose());
       materials.forEach(material => material.dispose()); renderer.dispose(); renderer.domElement.remove(); };
   }, []);
-  const press = (key, down) => { if (paused || dialogueOpen.current) return; if(down) controls.current.add(key); else controls.current.delete(key); };
+  const press = (key, down) => { if (paused || dialogueOpen.current) return; setTouchMovement(controls.current, key, down); };
   return <section className="lake"><div className="lake-viewport"><div className="lake-canvas" ref={mount}/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en ? 'Return to village' : 'Voltar para a vila'}</button>}{nearCave && <button className="lake-portal-action" onClick={onEnterRapids}>{en ? 'Enter the rapids' : 'Entrar nas corredeiras'} <kbd>E</kbd></button>}{nearGuide && !talking && <button className="marina-talk" onClick={openGuide}>{en ? 'Talk to Marina' : 'Conversar com Marina'} <kbd>F</kbd></button>}{talking && <LakeGuideDialogue ref={guidePanel} language={language} line={guideLine} speaking={speaking} voiceEnabled={voiceEnabled} voiceNotice={voiceNotice} onSpeak={onSpeak} onStop={onStop} onNext={openGuide} onClose={closeGuide} />}{error ? <p className="lake-scene-error">{en ? '3D is unavailable in this browser.' : 'O 3D não está disponível neste navegador.'}</p> : <MapControlGuide language={language} scene="lake" aboard={aboard}/>}</div><div className="lake-touch" aria-label={en ? 'Boat controls' : 'Controles do barco'}>{[['arrowleft','←'],['arrowup','↑'],['arrowdown','↓'],['arrowright','→']].map(([key,label]) => <button key={key} type="button" aria-label={{arrowleft: en?'Left':'Esquerda',arrowup: en?'Forward':'Frente',arrowdown: en?'Back':'Trás',arrowright: en?'Right':'Direita'}[key]} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId); press(key,true);}} onPointerUp={()=>press(key,false)} onPointerCancel={()=>press(key,false)} onLostPointerCapture={()=>press(key,false)}>{label}</button>)}<TouchInteract language={language} scene={mount} disabled={paused || talking || !(nearGuide || nearCave || nearPortal)} /></div></section>;
 }

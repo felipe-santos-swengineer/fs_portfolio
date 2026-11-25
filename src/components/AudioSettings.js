@@ -4,20 +4,19 @@ import { X, Volume2 } from 'lucide-react';
 
 export const AUDIO_CHANNELS = [
   ['music', 'Música ambiente', 'A trilha que acompanha a exploração.'],
-  ['steps', 'Passos', 'Passos na pedra e na grama.'],
   ['interactions', 'Efeitos dos edifícios e fogos', 'Portas, páginas, forja, sino e fogos da missão.'],
   ['voices', 'Vozes dos NPCs', 'As conversas faladas com os moradores.'],
   ['narration', 'Narrações das seções', 'As gravações da história e dos projetos.'],
 ];
 
-export const DEFAULT_AUDIO = { master: true, music: true, steps: true, interactions: true, voices: true, narration: true };
+export const DEFAULT_AUDIO = { master: true, music: true, interactions: true, voices: true, narration: true };
 export function loadAudioSettings() {
   return { ...DEFAULT_AUDIO };
 }
 
 export default function AudioSettings({ settings, onChange, onClose, notice, language = 'pt-BR' }) {
   const en = language === 'en-US';
-  const channels = en ? [['music','Background music','The soundtrack during exploration.'],['steps','Footsteps','Footsteps on stone and grass.'],['interactions','Building and fireworks effects','Doors, pages, forge, bells and fireworks.'],['voices','NPC voices','Spoken conversations with villagers.'],['narration','Section narrations','Recordings of the story and projects.']] : AUDIO_CHANNELS;
+  const channels = en ? [['music','Background music','The soundtrack during exploration.'],['interactions','Building and fireworks effects','Doors, pages, forge, bells and fireworks.'],['voices','NPC voices','Spoken conversations with villagers.'],['narration','Section narrations','Recordings of the story and projects.']] : AUDIO_CHANNELS;
   const panel = useRef(null);
   useModalFocus(panel, onClose);
   return <div className="modal-backdrop audio-panel-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>

@@ -1,3 +1,5 @@
+import { poseAdventurerStride, poseAdventurerSword } from './adventurerAnimation';
+import { isRunning, setTouchMovement } from './touchMovement';
 import { createDragonLair } from './dragonLair';
 import TouchAttack from './TouchAttack';
 import TouchInteract from './TouchInteract';
@@ -19,12 +21,12 @@ import './DragonChamber.css';
 
 const DRAGON_HEALTH = 12;
 
-export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speaking,onVictoryChange,onDialogueChange,onBattleChange,language,paused,reduceMotion,onExit,onReturnVillage,onSpeak,onStop,onSound,onStep,voiceEnabled,voiceNotice}){
+export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speaking,onVictoryChange,onDialogueChange,onBattleChange,language,paused,reduceMotion,onExit,onReturnVillage,onSpeak,onStop,onSound,voiceEnabled,voiceNotice}){
   const mount=useRef(null),keys=useRef(new Set()),state=useRef({}),modeRef=useRef('sleep'),skipRef=useRef(null),stopVoice=useRef(onStop);stopVoice.current=onStop;
   const [mode,setMode]=useState('sleep'),[line,setLine]=useState(-1),[error,setError]=useState(false),[hud,setHud]=useState({lives:3,hits:0,phase:'fire'}),[princessLine,setPrincessLine]=useState(0),[princessNear,setPrincessNear]=useState(false),[princessTalking,setPrincessTalking]=useState(false);
   const attackRef=useRef(null),restartRef=useRef(null),skipBattleRef=useRef(null),skipDeathRef=useRef(null),voiceRef=useRef(voiceEnabled),laughRef=useRef(null),princessNearRef=useRef(false),princessTalkingRef=useRef(false),princessActionRef=useRef(null);voiceRef.current=voiceEnabled;
   useEffect(()=>{if((paused||!voiceEnabled)&&laughRef.current){laughRef.current.pause();}},[paused,voiceEnabled]);
-  state.current={paused,reduceMotion,onSound,onStep,language};const en=language==='en-US';
+  state.current={paused,reduceMotion,onSound,language};const en=language==='en-US';
   const dialogueActive=mode==='scene'&&line>=0&&voiceEnabled;
   useEffect(()=>{onDialogueChange?.(dialogueActive);return ()=>onDialogueChange?.(false);},[dialogueActive,onDialogueChange]);
   useEffect(()=>{if(paused){if(mode==='scene')stopVoice.current?.();return;}if(mode==='scene'&&line>=0)onSpeak?.(line);},[mode,line,onSpeak,paused]);
@@ -63,7 +65,7 @@ export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speak
     camera.position.set(0,11,53);const orbit=allowRunAndRotate(new OrbitControls(camera,renderer.domElement));orbit.target.set(0,1.2,39);orbit.enablePan=false;orbit.enableDamping=true;orbit.minDistance=7;orbit.maxDistance=32;orbit.maxPolarAngle=Math.PI/2-.07;orbit.update();
     const resize=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();};const observer=new ResizeObserver(resize);observer.observe(el);resize();
     const clear=()=>keys.current.clear(),down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&princessTalkingRef.current&&!state.current.paused){e.preventDefault();princessActionRef.current?.(false);return;}if(document.activeElement!==renderer.domElement||state.current.paused||modeRef.current==='scene'||princessTalkingRef.current)return;if(k==='f'&&!e.repeat&&modeRef.current==='won'&&princessNearRef.current){e.preventDefault();princessActionRef.current?.(true);return;}if((k===' '||k==='e'||k==='j')&&!e.repeat){e.preventDefault();attackRef.current?.();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}},up=e=>keys.current.delete(e.key.toLowerCase());window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
-    let frame,last=performance.now(),time=0,sceneTime=0,spoken=-1,stepTimer=0;
+    let frame,last=performance.now(),time=0,sceneTime=0,spoken=-1;
     let battle, laughAudio=null;
     const hazards=[], pickups=[];
     const talkPrincess=open=>{if(open&&(modeRef.current!=='won'||!princessNearRef.current||state.current.paused))return;princessTalkingRef.current=open;setPrincessTalking(open);keys.current.clear();if(!open)renderer.domElement.focus({preventScroll:true});};princessActionRef.current=talkPrincess;
@@ -102,10 +104,9 @@ export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speak
     const animate=now=>{frame=requestAnimationFrame(animate);const dt=sceneFrameDelta(now,last);last=now;
       if(!state.current.paused){time+=dt;updateBattle(dt);if(modeRef.current==='dying'&&time-deathStarted>=2.5)completeDeath();
         if(modeRef.current!=='scene'){const x=Number(keys.current.has('d')||keys.current.has('arrowright'))-Number(keys.current.has('a')||keys.current.has('arrowleft')),z=Number(keys.current.has('s')||keys.current.has('arrowdown'))-Number(keys.current.has('w')||keys.current.has('arrowup'));
-          if((x||z)&&modeRef.current!=='lost'&&modeRef.current!=='dying'&&!princessTalkingRef.current){const dir=cameraRelativeDirection(camera,x,z),speed=keys.current.has('shift')?6.5:4,nx=player.position.x+dir.x*speed*dt,nz=player.position.z+dir.z*speed*dt;if(Math.hypot(nx,nz)<52&&Math.hypot(nx,nz+17)>10){player.position.x=nx;player.position.z=nz;player.rotation.y=Math.atan2(dir.x,dir.z);stepTimer-=dt;if(stepTimer<=0){state.current.onStep?.();stepTimer=.45;}}}
-          else stepTimer=0;
+          if((x||z)&&modeRef.current!=='lost'&&modeRef.current!=='dying'&&!princessTalkingRef.current){const dir=cameraRelativeDirection(camera,x,z),speed=isRunning(keys.current)?6.5:4,nx=player.position.x+dir.x*speed*dt,nz=player.position.z+dir.z*speed*dt;if(Math.hypot(nx,nz)<52&&Math.hypot(nx,nz+17)>10){player.position.x=nx;player.position.z=nz;player.rotation.y=Math.atan2(dir.x,dir.z);}}
           const near=modeRef.current==='won'&&Math.hypot(player.position.x-princess.position.x,player.position.z-princess.position.z)<4;if(near!==princessNearRef.current){princessNearRef.current=near;setPrincessNear(near);}
-          traveler.limbs.forEach((limb,i)=>{limb.rotation.x=(x||z)&&!state.current.reduceMotion?Math.sin(time*9)*(i%2===0?.5:-.45)*(i<2?1:-1):0;});
+          poseAdventurerStride(traveler.limbs,time,x||z,state.current.reduceMotion);
           if(modeRef.current==='sleep'&&player.position.z<32){modeRef.current='scene';setMode('scene');keys.current.clear();sceneTime=0;spoken=-1;}
         }else{sceneTime+=dt;const next=dragonSceneLineAt(sceneTime);if(next!==spoken){spoken=next;setLine(next);if(next===0)state.current.onSound?.('anger');}if(sceneTime>=DRAGON_SCENE_DURATION)finish();}
       }else clear();
@@ -117,7 +118,7 @@ export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speak
       const threat=angry&&!state.current.reduceMotion?Math.sin(Math.min(1,(sceneTime-6)/1.5)*Math.PI/2):0;
       dragonBody.position.y=state.current.reduceMotion?0:Math.sin(time*1.2)*.008;dragonBody.position.z=threat*.15;dragonBody.rotation.x=-threat*.1;
       dragon.eyes.emissiveIntensity=eyesOpen*(angry?2.4:1.3);dragon.eyeParts.forEach(({mesh,height})=>{mesh.scale.y=height*(.04+eyesOpen*.96);});
-      traveler.sword.rotation.x=battle?.swing>0&&!state.current.reduceMotion?.15+1.45*Math.sin((1-battle.swing/.45)*Math.PI):.15;
+      poseAdventurerSword(traveler.sword,battle?.swing || 0,state.current.reduceMotion);
       const downed=battle?.phase==='stun'||battle?.phase==='won';
       if(!state.current.paused)headLowered=state.current.reduceMotion?Number(downed):THREE.MathUtils.damp(headLowered,downed?1:0,4,dt);
       if(battle?.phase==='won'){const fall=state.current.reduceMotion?1:THREE.MathUtils.smoothstep(time-deathStarted,0,2.2);dragonBody.rotation.z=fall*.85;dragonBody.position.y-=fall*.3;dragonBody.rotation.x=fall*.18;}else dragonBody.rotation.z=0;
@@ -132,11 +133,11 @@ export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speak
         const sceneCamera=sceneTime<7?new THREE.Vector3(19,15,10):new THREE.Vector3(12,13,5);const look=new THREE.Vector3(0,10,-7);
         if(state.current.reduceMotion){camera.position.copy(sceneCamera);orbit.target.copy(look);}else{camera.position.lerp(sceneCamera,Math.min(1,dt*.8));orbit.target.lerp(look,Math.min(1,dt));}
       }else{const target=new THREE.Vector3(player.position.x,1.2,player.position.z),shift=target.clone().sub(orbit.target);camera.position.add(shift);orbit.target.copy(target);}
-      orbit.enabled=!state.current.paused&&!princessTalkingRef.current&&!['scene','dying'].includes(modeRef.current);orbit.enableDamping=!state.current.reduceMotion;orbit.update();lair.update(camera.position,player.position,time,state.current.reduceMotion);renderer.render(scene,camera);
+      orbit.enabled=!state.current.paused&&!princessTalkingRef.current&&!['scene','dying'].includes(modeRef.current);orbit.enableDamping=!state.current.reduceMotion;orbit.update();lair.update(camera.position,time,state.current.reduceMotion);renderer.render(scene,camera);
     };frame=requestAnimationFrame(animate);
     return()=>{cancelAnimationFrame(frame);if(laughAudio){laughAudio.pause();laughAudio=null;laughRef.current=null;}attackRef.current=null;restartRef.current=null;skipBattleRef.current=null;skipDeathRef.current=null;princessActionRef.current=null;skipRef.current=null;observer.disconnect();window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);clear();orbit.dispose();lair.dispose();scene.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(![...mats.values()].includes(m)){m.map?.dispose();m.dispose();}});});mats.forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();};
   },[]);
-  const press=(key,down)=>{if(paused||modeRef.current==='scene'||princessTalkingRef.current)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  const press=(key,down)=>{if(paused||modeRef.current==='scene'||princessTalkingRef.current)return;setTouchMovement(keys.current, key, down);};
   return <section className="lake dragon-chamber"><div className="lake-viewport"><div ref={mount} className="lake-canvas"/><div className="encounter-controls">
       {campaignNavigation ?? <button className="lake-exit" onClick={mode==='dying'||mode==='won'?onReturnVillage:onExit}>{mode==='dying'||mode==='won'?(en?'Return to the starting village':'Voltar \u00e0 vila inicial'):(en?'Return to cave':'Voltar para a caverna')}</button>}
       {mode==='scene'&&<button className="chamber-skip" onClick={skip}>{en?'Skip scene':'Pular cena'}</button>}

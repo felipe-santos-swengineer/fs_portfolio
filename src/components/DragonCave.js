@@ -1,3 +1,4 @@
+import { isRunning, setTouchMovement } from './touchMovement';
 import TouchAttack from './TouchAttack';
 import TouchInteract from './TouchInteract';
 import { useEffect, useRef, useState } from 'react';
@@ -14,9 +15,9 @@ import { createElderCaveScenery } from './elderCaveScenery';
 import './Lake.css';
 import './DragonCave.css';
 
-export default function DragonCave({ campaignNavigation,language,paused,reduceMotion,onExit,onEnterChamber,startAtChamber=false,onSound,onStep,onSpeak,onStop,speaking,voiceEnabled,voiceNotice}) {
+export default function DragonCave({ campaignNavigation,language,paused,reduceMotion,onExit,onEnterChamber,startAtChamber=false,onSound,onSpeak,onStop,speaking,voiceEnabled,voiceNotice}) {
   const mount=useRef(null),keys=useRef(new Set()),settings=useRef({}),healthRef=useRef(3),attackRef=useRef(null),nearRef=useRef(-1),leverNearRef=useRef(-1),leverAction=useRef(null),chamberNotice=useRef(null),exitNearRef=useRef(false),talkRef=useRef(null),panel=useRef(null),initialAtChamber=useRef(startAtChamber);
-  settings.current={paused,reduceMotion,onSound,onStep,onSpeak,onStop,onExit,onEnterChamber};
+  settings.current={paused,reduceMotion,onSound,onSpeak,onStop,onExit,onEnterChamber};
   const [unlocked,setUnlocked]=useState(false),unlockedRef=useRef(unlocked);unlockedRef.current=unlocked;
   const [nearExit,setNearExit]=useState(false),[chamberFound,setChamberFound]=useState(false);
   const [health,setHealth]=useState(3),[checkpoint,setCheckpoint]=useState(false),[endReached,setEndReached]=useState(false),[notice,setNotice]=useState(''),[near,setNear]=useState(-1),[nearLever,setNearLever]=useState(-1),[talk,setTalk]=useState(null),[error,setError]=useState(false);
@@ -132,7 +133,7 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
     const down=e=>{const k=e.key.toLowerCase();if(k==='escape'&&talkRef.current!==null&&!settings.current.paused){e.preventDefault();actions.current.closeTalk();return;}if(document.activeElement!==renderer.domElement||settings.current.paused||talkRef.current!==null)return;if((k==='j'||k===' ')&&!e.repeat){e.preventDefault();attackRef.current?.();return;}if((k==='e'||k==='f')&&!e.repeat){e.preventDefault();actions.current.openTalk();return;}if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift'].includes(k)){if(k!=='shift')e.preventDefault();keys.current.add(k);}};
     const up=e=>keys.current.delete(e.key.toLowerCase()),clear=()=>keys.current.clear();window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);
     const cameraTarget=new THREE.Vector3(), cameraShift=new THREE.Vector3(), interactionFocus=new THREE.Vector3();
-    let frame,last=performance.now(),time=0,sceneryTime=0,invulnerable=0,reached=false,lastNotice=0,previousEnd=false,previousExit=false,deathTimer=0,burnTimer=0,stepTimer=0,lastAttack=-10,attackUntil=0,previousNear=-1,previousLever=-1,hitVisual=0;
+    let frame,last=performance.now(),time=0,sceneryTime=0,invulnerable=0,reached=false,lastNotice=0,previousEnd=false,previousExit=false,deathTimer=0,burnTimer=0,lastAttack=-10,attackUntil=0,previousNear=-1,previousLever=-1,hitVisual=0;
     chamberNotice.current=()=>{setNotice('chamber');lastNotice=time;};
     leverAction.current=index=>{if(index!==0||settings.current.paused||talkRef.current!==null||deathTimer>0||unlockedRef.current)return;unlockedRef.current=true;setUnlocked(true);leverHandle.rotation.z=-.9;stairs.visible=true;setNotice('stairs');lastNotice=time;settings.current.onSound?.('lever');};
     attackRef.current=()=>{if(settings.current.paused||talkRef.current!==null||deathTimer>0||time-lastAttack<.6)return;lastAttack=time;attackUntil=time+.45;settings.current.onSound?.('attack');monsters.forEach(m=>{if(m.defeated||!caveSwordHits(player.position,player.rotation.y,m.group.position))return;m.hp--;if(m.hp<=0){m.defeated=true;m.death=settings.current.reduceMotion?.05:.65;settings.current.onSound?.('defeat');}else settings.current.onSound?.('monsterHit');});};
@@ -140,10 +141,9 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
       if(!settings.current.paused&&talkRef.current===null){time+=dt;invulnerable=Math.max(0,invulnerable-dt);hitVisual=Math.max(0,hitVisual-dt);const red=hitVisual>0&&(settings.current.reduceMotion||Math.floor(hitVisual*8)%2===0);playerMaterials.forEach(m=>{m.copy.color.copy(red?redTint:m.color);m.copy.emissive.copy(red?redGlow:m.emissive);m.copy.emissiveIntensity=red?.55:m.intensity;});burnTimer=Math.max(0,burnTimer-dt);burning.visible=burnTimer>0;if(burning.visible&&!settings.current.reduceMotion)burning.children.forEach((flame,i)=>{flame.scale.y=.8+Math.abs(Math.sin(time*11+i))* .55;flame.rotation.z=Math.sin(time*7+i)*.2;});
         if(deathTimer>0){deathTimer-=dt;traveler.body.rotation.z=settings.current.reduceMotion?0:Math.min(1.5,(1.2-deathTimer)*1.6);if(deathTimer<=0){const p=caveRespawn(reached?CAVE_CHECKPOINT.z:CAVE_SPAWN.z);player.position.set(p.x,0,p.z);traveler.body.rotation.z=0;traveler.body.position.y=0;burning.visible=false;burnTimer=0;hitVisual=0;healthRef.current=3;setHealth(3);invulnerable=2;setNotice('respawn');lastNotice=time;}}
         const x=Number(keys.current.has('d')||keys.current.has('arrowright'))-Number(keys.current.has('a')||keys.current.has('arrowleft')),z=Number(keys.current.has('s')||keys.current.has('arrowdown'))-Number(keys.current.has('w')||keys.current.has('arrowup'));
-        let moving=false;if(deathTimer<=0&&(x||z)){const dir=cameraRelativeDirection(camera,x,z),speed=keys.current.has('shift')?6.8:4,nx=player.position.x+dir.x*speed*dt,nz=player.position.z+dir.z*speed*dt;if(!caveBlocked(nx,player.position.z,unlockedRef.current)){player.position.x=nx;moving=true;}if(!caveBlocked(player.position.x,nz,unlockedRef.current)){player.position.z=nz;moving=true;}player.rotation.y=Math.atan2(dir.x,dir.z);}
+        let moving=false;if(deathTimer<=0&&(x||z)){const dir=cameraRelativeDirection(camera,x,z),speed=isRunning(keys.current)?6.8:4,nx=player.position.x+dir.x*speed*dt,nz=player.position.z+dir.z*speed*dt;if(!caveBlocked(nx,player.position.z,unlockedRef.current)){player.position.x=nx;moving=true;}if(!caveBlocked(player.position.x,nz,unlockedRef.current)){player.position.z=nz;moving=true;}player.rotation.y=Math.atan2(dir.x,dir.z);}
         player.position.y=caveStairHeight(player.position.x,player.position.z,unlockedRef.current);
         traveler.limbs.forEach((limb,i)=>{limb.rotation.x=moving&&!settings.current.reduceMotion?Math.sin(time*9)*(i%2===0?.5:-.45)*(i<2?1:-1):0;});
-        if(moving){stepTimer-=dt;if(stepTimer<=0){settings.current.onStep?.();stepTimer=keys.current.has('shift')?.3:.48;}}else stepTimer=0;
         if(!settings.current.reduceMotion)hearts.forEach(h=>{if(!h.collected){h.group.rotation.y=time*1.2+h.phase;h.group.position.y=1+Math.sin(time*2+h.phase)*.18;}});
         let monsterHit=false;
         monsters.forEach(m=>{if(m.defeated)return;const p=m.group.position,dx=player.position.x-p.x,dz=player.position.z-p.z,d=Math.hypot(dx,dz),intent=caveMonsterIntent({x:p.x,z:p.z,attackAt:m.attackAt,nextAttack:m.nextAttack},player.position,time);let walking=false;
@@ -197,7 +197,7 @@ export default function DragonCave({ campaignNavigation,language,paused,reduceMo
       geometries.forEach(geometry=>geometry.dispose());
       surfaces.forEach(surface=>surface.dispose());renderer.dispose();renderer.domElement.remove();};
   },[]);
-  const press=(key,down)=>{if(paused||talkRef.current!==null)return;if(down)keys.current.add(key);else keys.current.delete(key);};
+  const press=(key,down)=>{if(paused||talkRef.current!==null)return;setTouchMovement(keys.current, key, down);};
   return <section className="lake dragon-cave"><div className="lake-viewport"><div ref={mount} className="lake-canvas"/>{campaignNavigation ?? <button className="lake-exit" onClick={onExit}>{en?'Return to village':'Voltar para a aldeia'}</button>}{!campaignNavigation && <button className="cave-chamber-shortcut" disabled={paused} onClick={()=>{keys.current.clear();onStop?.();onEnterChamber?.();}}>{en?'Go to the dragon chamber':'Ir para a c\u00e2mara do drag\u00e3o'}</button>}
     <div className="cave-status" aria-live="polite"><strong>{en?'THE ELDER\u2019S CAVE':'CAVERNA DO ANCI\u00c3O'}</strong><span className="cave-health">{en?'Health':'Vida'}: {'\u2665'.repeat(health)}{'\u2661'.repeat(3-health)}</span><small>{chamberFound?(en?'Mission complete: entrance to the dragon chamber found.':'Missão concluída: entrada da câmara do dragão encontrada.'):unlocked?(en?'Climb the wooden stairs to the dragon chamber entrance.':'Suba a escada de madeira até a entrada da câmara do dragão.'):(en?'Mission: find the hidden lever and reach the dragon chamber.':'Missão: encontre a alavanca escondida e alcance a câmara do dragão.')}</small><small>{checkpoint?(en?'Checkpoint reached':'Ponto de retorno ativado'):(en?'Find the green checkpoint':'Encontre o ponto de retorno verde')}</small></div>
     {!notice&&endReached&&<p className="cave-notice" role="status">{en?'The passage deeper into the mountain is sealed.':'A passagem para as profundezas est\u00e1 selada.'}</p>}

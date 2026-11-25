@@ -2,6 +2,14 @@
 
 .cursed-entry-notice{position:absolute;z-index:4;top:18px;left:50%;transform:translateX(-50%);max-width:80%;padding:10px 14px;border:1px solid #a69c83;border-radius:6px;background:#191f23ee;color:#f2e7d1;text-align:center}@media(max-width:600px){.cursed-entry-notice{top:110px;width:max-content}}
 .castle-courtyard .lake-viewport > .lake-exit{z-index:3}
+.castle-courtyard .encounter-controls{position:absolute;z-index:5;top:22px;right:5%;display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:44%}
+.castle-courtyard .encounter-controls>.campaign-navigation{position:static;top:auto;right:auto;max-width:100%}
+.castle-courtyard .battle-skip{position:static;padding:9px 12px;border:1px solid #b6a16f;border-radius:5px;background:#252b22ed;color:#f4e8d3}
+.castle-courtyard .sword-controls[hidden]{display:none}
+.castle-intro-subtitle{position:absolute;z-index:4;bottom:45px;left:50%;transform:translateX(-50%);width:min(680px,90%);padding:18px 22px;border:1px solid #b6a16f;border-radius:9px;background:#161d1bee;box-shadow:0 10px 40px #000a;color:#f6e8c9}
+.castle-intro-subtitle strong{font-size:11px;letter-spacing:1px;color:#e5bc79}
+.castle-intro-subtitle p{font:20px Georgia,serif;line-height:1.5;margin:8px 0}
+.castle-intro-subtitle small{display:block;color:#c8d3c1;line-height:1.5}
 .witch-battle-status{position:absolute;z-index:4;top:67px;left:5%;display:grid;gap:5px;max-width:44%;padding:9px 13px;border:1px solid #828d84;border-radius:7px;background:#161d1bee;color:#f4efe5;pointer-events:none}
 .witch-battle-status .witch-lives{color:#ff7885;letter-spacing:.14em;font-size:21px;line-height:1}
 .witch-battle-status .witch-refuge{color:#afffbd}
@@ -9,7 +17,10 @@
 .witch-battle-status .courtyard-action{justify-self:start;pointer-events:auto;padding:7px 11px;color:#f9ead1;background:#352b22;border:1px solid #b89a64;border-radius:5px;touch-action:manipulation}
 .courtyard-progress{color:#ffe4aa}
 @media(max-width:600px){
+  .castle-courtyard .encounter-controls{top:12px}
   .castle-courtyard .cursed-heading{max-width:43%}
   .castle-courtyard .lake-viewport > .lake-exit{top:12px;max-width:45%}
+  .castle-intro-subtitle{bottom:14px;padding:12px 15px}
+  .castle-intro-subtitle p{font-size:16px}
   .witch-battle-status{top:79px;font-size:12px}
 }

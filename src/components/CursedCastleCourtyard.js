@@ -606,7 +606,7 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
   const press=(key,down)=>{if(paused||chessOpen||sceneActive.current)return;setTouchMovement(keys.current, key, down);};
   const fightActive = fight && !['won', 'lost'].includes(fight.phase);
   const mapName = interior ? (en ? 'ARCANE GUARDIAN CHAMBER' : 'CÂMARA DO GUARDIÃO ARCANO') : (en ? 'CASTLE COURTYARD' : 'PÁTIO DO CASTELO');
-  const rewardLabel = reward === 'key' ? (en ? 'Pick up the key' : 'Pegar a chave') : (en ? 'Enter the throne room entrance' : 'Ir à entrada da sala do trono');
+  const rewardLabel = reward === 'key' ? (en ? 'Pick up the key' : 'Pegar a chave') : (en ? 'Enter the evil throne room entrance' : 'Ir à entrada da sala do trono maligno');
   const fightMessages = {
     warning: en ? 'Get to a dry, green safe zone.' : 'Corra para uma área seca marcada em verde.',
     groundCast: en ? 'The witch is casting lightning into the water!' : 'A bruxa vai lançar um raio na água!',
@@ -639,12 +639,12 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
     {(reward === 'key' || reward === 'exit') && <div className="witch-battle-status courtyard-progress">
       <strong role="status">{reward === 'key'
         ? (en ? 'The witch dropped a key. Pick it up.' : 'A bruxa deixou cair uma chave. Pegue-a.')
-        : (en ? 'The exit to the throne room entrance is open.' : 'A saída para a entrada da sala do trono está aberta.')}</strong>
+        : (en ? 'The exit to the evil throne room entrance is open.' : 'A saída para a entrada da sala do trono maligno está aberta.')}</strong>
       {nearReward && <button type="button" className="courtyard-action" disabled={paused} onClick={() => rewardAction.current?.()}>{rewardLabel} <kbd className="keyboard-guide">E</kbd></button>}
     </div>}
     {interior && (sealRevealed || throneUnlocked || error) && !chessOpen &&
       <div className="witch-battle-status courtyard-progress" role="status">{throneUnlocked
-        ? (en ? 'The seal is broken. Enter the throne room.' : 'O selo foi quebrado. Entre na sala do trono.')
+        ? (en ? 'The seal is broken. Enter the evil throne room.' : 'O selo foi quebrado. Entre na sala do trono maligno.')
         : (en ? 'An ancient seal blocks the door.' : 'Um selo antigo bloqueia a porta.')}</div>}
     </div>
     {error&&<p className="lake-scene-error">{en?'3D is unavailable in this browser.':'O 3D n\u00e3o est\u00e1 dispon\u00edvel neste navegador.'}</p>}{intro && line !== -1 && <div className="chamber-subtitle" role="status" aria-live="polite"><strong>{en ? 'THE WITCH' : 'A BRUXA'}</strong><p>{line === -2 ? (en ? '[The witch cackles]' : '[A bruxa gargalha]') : witchDialogue[en ? 'en-US' : 'pt-BR'][line]}</p></div>}
@@ -656,7 +656,7 @@ export default function CursedCastleCourtyard({ campaignNavigation,language,paus
     {interior && !chessOpen && (throneUnlocked ? onAdvance : nearSeal || error) && <div className="village-actions">
       <button type="button" aria-keyshortcuts={throneUnlocked ? undefined : 'E'} disabled={paused}
         onClick={throneUnlocked ? onAdvance : showChess}>{throneUnlocked
-          ? (en ? 'Enter the throne room' : 'Entrar na sala do trono')
+          ? (en ? 'Enter the evil throne room' : 'Entrar na sala do trono maligno')
           : <>{en ? 'Play Wizard’s Chess' : 'Jogar Xadrez de Bruxo'} <kbd aria-hidden="true">E</kbd></>}</button>
     </div>}
     {interior && <WizardChess interaction={chessInteraction} has3D={!error} onPieceFocus={onChessPieceFocus} onResetView={() => chessControls.current?.reset()} onZoom={factor => chessControls.current?.zoom(factor)} en={en} open={chessOpen} paused={paused} onClose={closeChess} onBoard={updateChessBoard} capturePending={!error && capturePending} onWin={releaseSeal} onSkip={skipChess}/>}

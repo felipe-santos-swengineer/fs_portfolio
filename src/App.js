@@ -19,6 +19,7 @@ import { TEMPLE_VOICES } from './audio/templeVoices';
 import { CAVE_VOICES } from './audio/caveVoices';
 import { DRAGON_VOICES } from './audio/dragonVoices';
 import { PRINCESS_VOICES } from './audio/princessVoices';
+import { KING_VOICES } from './audio/kingVoices';
 import { CURSED_CASTLE_VOICES } from './audio/cursedCastleVoices';
 import cursedCastleDialogue from './components/cursedCastleDialogue.json';
 import princessDialogue from './components/princessDialogue.json';
@@ -143,6 +144,7 @@ export default function App() {
   const [inCorridor, setInCorridor] = useState(() => initialMap.current === 'cursed-castle-corridor');
   const [inCastleCourtyard, setInCastleCourtyard] = useState(() => initialMap.current === 'cursed-castle-courtyard');
   const [inRoyalArena, setInRoyalArena] = useState(() => initialMap.current === 'cursed-castle-royal-arena');
+  const [kingBattle, setKingBattle] = useState(false);
   const [inThroneEntrance, setInThroneEntrance] = useState(() => initialMap.current === 'cursed-castle-throne-entrance');
   const [wizardChessOpen, setWizardChessOpen] = useState(false);
   const [throneUnlocked, setThroneUnlocked] = useState(false);
@@ -326,6 +328,33 @@ export default function App() {
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe o di\u00e1logo em texto.');
     });
   }, [en]);
+  const speakKing = useCallback((line, onDone) => {
+    if (!soundRequested.current || !preferences.current.voices) {
+      onDone?.(false);
+      return;
+    }
+    speech.current.stop();
+    document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
+    if (bg.current) bg.current.volume = .025;
+    setSpeaking(true); setVoiceNotice('');
+    const locale = en ? 'en-US' : 'pt-BR';
+    const profile = KING_VOICES[locale];
+    const clip = profile.clips[line];
+    if (!clip) {
+      setSpeaking(false);
+      if (bg.current) bg.current.volume = .09;
+      setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'Não foi possível reproduzir a fala. Acompanhe o diálogo em texto.');
+      onDone?.(false);
+      return;
+    }
+    speech.current.speak(clip.text, profile, success => {
+      setSpeaking(false);
+      if (bg.current) bg.current.volume = .09;
+      if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'Não foi possível reproduzir a fala. Acompanhe o diálogo em texto.');
+      onDone?.(success);
+    });
+  }, [en]);
+  const stopKingVoice = useCallback(() => speech.current.stop(), []);
   const speakCastleArchivist = useCallback(line => {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
@@ -408,8 +437,8 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const musicTracks = { village: villageMusic, templeVillage: templeVillageMusic, dungeon: dungeonMusic, castle: castleMusic, rapids: rapidsMusic, temple: templeMusic, lake: lakeMusic, cave: caveMusic, boss: bossMusic, victory: victoryMusic, cursedCastle: cursedCastleMusic, corridor: corridorMusic, witchBattle: witchBattleMusic, wizardChess: wizardChessMusic };
-  const musicTrack = musicTracks[musicScene({ reading, wizardChessOpen: inThroneEntrance && wizardChessOpen, inCorridor, inCursedCastle, inCastleCourtyard, witchEncounter, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel, templeReached, inLake, inRuins })];
+  const musicTracks = { village: villageMusic, templeVillage: templeVillageMusic, dungeon: dungeonMusic, castle: castleMusic, rapids: rapidsMusic, temple: templeMusic, lake: lakeMusic, cave: caveMusic, boss: bossMusic, kingBattle: bossMusic, victory: victoryMusic, cursedCastle: cursedCastleMusic, corridor: corridorMusic, witchBattle: witchBattleMusic, wizardChess: wizardChessMusic };
+  const musicTrack = musicTracks[musicScene({ reading, wizardChessOpen: inThroneEntrance && wizardChessOpen, inCorridor, inCursedCastle, inRoyalArena, kingBattle, inCastleCourtyard, witchEncounter, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel, templeReached, inLake, inRuins })];
 
   useEffect(() => {
     const audio = bg.current;
@@ -437,6 +466,7 @@ export default function App() {
   const travelCampaign = destination => {
     if (selected !== null || audioPanelOpen || accessibilityOpen || reading || wizardChessOpen) return;
     setCampaignMenuOpen(false);
+    setKingBattle(false);
     speech.current.stop();
     setSpeaking(false);
     setVoiceNotice('');
@@ -520,12 +550,15 @@ export default function App() {
       {inCursedCastle && !inCorridor && !inCastleCourtyard && !inThroneEntrance && !inRoyalArena && !reading && <Suspense fallback={<div className="scene-loading">{en?'Approaching the cursed castle...':'Chegando ao castelo amaldi\u00e7oado...'}</div>}><CursedCastle campaignNavigation={campaignNavigation('cursed-castle')} startNearGate={returnFromCastleCourtyard} onEnterCastle={()=>{keys.current.clear();setReturnFromCastleCourtyard(true);setInCorridor(true);setInCastleCourtyard(false);}} onSound={event=>effects.current.cursedCastle?.(event)} weatherEffects={accessibility.weatherEffects} onWeather={strength=>effects.current.setWeather?.(strength)} onSpeak={speakCastleArchivist} onStop={()=>{speech.current.stop();setSpeaking(false);setVoiceNotice('');}} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={()=>{keys.current.clear();setInCursedCastle(false);setReturnFromCastleCourtyard(false);setVillageArrival('portal');}} /></Suspense>}
       {inCorridor && !reading && <Suspense fallback={<div className="scene-loading">{en?'Entering the hall of infinity...':'Entrando no corredor do infinito...'}</div>}><InfiniteCorridor campaignNavigation={campaignNavigation('cursed-castle-corridor')} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onSound={event=>{if(event==='monster')effects.current.dungeon?.('monsterAttack');else if(event==='cloak')effects.current.ruins?.('rune');else effects.current.cursedCastle?.(event);}} onExit={()=>{keys.current.clear();setReturnFromCastleCourtyard(true);setInCorridor(false);}} onAdvance={()=>{keys.current.clear();setInCorridor(false);setInCastleCourtyard(true);}} /></Suspense>}
       {inCastleCourtyard && !reading && <Suspense fallback={<div className="scene-loading">{en?'Entering the courtyard...':'Entrando no pátio...'}</div>}><CursedCastleCourtyard campaignNavigation={campaignNavigation('cursed-castle-courtyard')} onAdvance={()=>{keys.current.clear();setInCastleCourtyard(false);setInThroneEntrance(true);}} onEncounterChange={setWitchEncounter} language={language} onSpeak={speakWitch} onStopVoice={stopWitchVoice} voiceEnabled={sound && audioSettings.voices} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onSound={(event,onDone)=>effects.current.cursedCastle?.(event,onDone)} weatherEffects={accessibility.weatherEffects} onWeather={strength=>effects.current.setWeather?.(strength)} onExit={()=>{keys.current.clear();setReturnFromCastleCourtyard(true);setInCastleCourtyard(false);}} /></Suspense>}
-      {inRoyalArena && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the throne room…' : 'Entrando na sala do trono…'}</div>}>
+      {inRoyalArena && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the evil throne room…' : 'Entrando na sala do trono maligno…'}</div>}>
         <CastleThrone en={en} keys={keys} paused={anyPanelOpen || reading} reduceMotion={reduceMotion}
+          voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice}
+          onSpeak={speakKing} onStop={stopKingVoice}
           campaignNavigation={campaignNavigation(campaignMap)}
-          onSound={event => effects.current.dungeon(event)} onRestart={() => travelCampaign(campaignMap)}
+          onSound={event => effects.current.dungeon(event)} onBattleStart={() => setKingBattle(true)}
+          onRestart={() => travelCampaign(campaignMap)}
           onReturn={() => travelCampaign('cursed-castle-throne-entrance')} /></Suspense>}
-      {inThroneEntrance && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Approaching the throne room...' : 'Chegando à sala do trono...'}</div>}><CursedCastleCourtyard campaignNavigation={campaignNavigation('cursed-castle-throne-entrance')} interior onAdvance={() => travelCampaign('cursed-castle-royal-arena')} weatherEffects={accessibility.weatherEffects} onChessOpenChange={setWizardChessOpen} onSound={event => effects.current.ruins?.(event)} onChessPieceFocus={piece => effects.current.chessPiece?.(piece)} onChessAttack={kind => effects.current.chessAttack?.(kind)} throneUnlocked={throneUnlocked} onThroneUnlock={() => setThroneUnlocked(true)}
+      {inThroneEntrance && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Approaching the evil throne room...' : 'Chegando à sala do trono maligno...'}</div>}><CursedCastleCourtyard campaignNavigation={campaignNavigation('cursed-castle-throne-entrance')} interior onAdvance={() => travelCampaign('cursed-castle-royal-arena')} weatherEffects={accessibility.weatherEffects} onChessOpenChange={setWizardChessOpen} onSound={event => effects.current.ruins?.(event)} onChessPieceFocus={piece => effects.current.chessPiece?.(piece)} onChessAttack={kind => effects.current.chessAttack?.(kind)} throneUnlocked={throneUnlocked} onThroneUnlock={() => setThroneUnlocked(true)}
         language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear();setInThroneEntrance(false);setInCastleCourtyard(true); }} /></Suspense>}
       {inDungeon && <Suspense fallback={<div className="scene-loading">{en ? 'Opening the portal...' : 'Abrindo o portal...'}</div>}><Dungeon language={language} keys={keys} onSound={event => effects.current.dungeon(event)} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setInDungeon(false); }} /></Suspense>}
       </div>
@@ -596,7 +629,7 @@ export default function App() {
           <path d="M240 161h120v-12H240zm12-12h96v-10h-96z" fill="#92704a"/>
           <path d="M268 139V80l10 8V44l22 17 22-17v44l10-8v59Z" fill="#a68a56"/>
           <path d="M281 129V67l19 13 19-13v62Z" fill="#562539"/><path d="m300 75 8 15-8 13-8-13Z" fill="#ac83db"/>
-        </svg><span className="portal-card-copy"><strong>5. {en ? 'Throne Room' : 'Sala do Trono'}</strong>
+        </svg><span className="portal-card-copy"><strong>5. {en ? 'Evil Throne Room' : 'Sala do Trono Maligno'}</strong>
           <span>{en ? 'Face the Castle Lord' : 'Enfrente o Senhor do Castelo'}</span></span><ArrowUpRight size={20} aria-hidden="true" />
       </button></div></details></div> : <Content language={language} index={selected} narrationEnabled={sound && audioSettings.narration} />}</article></div>}
     {accessibilityOpen && <AccessibilitySettings language={language} settings={accessibility} onChange={updateAccessibility} onClose={closeAccessibility} />}

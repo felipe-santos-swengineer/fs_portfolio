@@ -48,7 +48,7 @@ Depois da vitória, converse com a princesa Elara para voltar à vila inicial ou
 1. **Arredores do Castelo:** caminhe pela passarela sob chuva e neblina, converse com o arquivista Alden e observe os soldados diante da fortaleza. Ao se aproximar, o portão se abre e os soldados fogem. O portal no início da passarela leva de volta à vila.
 2. **Corredor do Infinito:** arcos ogivais e retratos do mesmo monarca se repetem ao longo de um tapete carmesim. Use o manto do fantasma para passar pelas criaturas durante os períodos de invisibilidade. A cada dez trechos, uma porta marca um ponto de retorno e permite girar a sala para continuar pelas paredes e pelo teto.
 3. **Pátio do Castelo:** sobreviva às investidas da bruxa, busque abrigo durante as descargas elétricas e recolha a chave para abrir a saída.
-4. **Câmara do Guardião Arcano:** dispute o Xadrez de Bruxo no tabuleiro 3D ou na versão acessível por teclado. A vitória rompe o selo. Esta é a última etapa disponível da campanha. A sala do trono do Rei das Trevas ainda não está disponível.
+4. **Câmara do Guardião Arcano:** dispute o Xadrez de Bruxo no tabuleiro 3D ou na versão acessível por teclado. A vitória rompe o selo e dá acesso à **Sala do Trono Maligno**, onde ocorre o boss fight contra o Senhor do Castelo.
 
 Marina, Duarte, Abaré, Elara e Alden acompanham o jogador com o olhar. Os personagens com balões de fala nos cenários comentam os acontecimentos sem abrir uma conversa.
 

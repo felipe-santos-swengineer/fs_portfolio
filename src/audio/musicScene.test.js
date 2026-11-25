@@ -5,6 +5,8 @@ test('selects village, cave, and boss music with nested scene priority', () => {
   expect(musicScene({ inCursedCastle: true })).toBe('cursedCastle');
   expect(musicScene({ inCursedCastle: true, inCastleCourtyard: true })).toBe('cursedCastle');
   expect(musicScene({ inCursedCastle: true, inCastleCourtyard: true, witchEncounter: true })).toBe('witchBattle');
+  expect(musicScene({ inCursedCastle: true, inRoyalArena: true })).toBe('cursedCastle');
+  expect(musicScene({ inCursedCastle: true, inRoyalArena: true, kingBattle: true })).toBe('kingBattle');
   expect(musicScene({ inCursedCastle: true, witchEncounter: true })).toBe('cursedCastle');
   expect(musicScene({ inCorridor: true, inCursedCastle: true })).toBe('corridor');
   expect(musicScene({ inCorridor: true, inCursedCastle: true, reading: true })).toBe('village');

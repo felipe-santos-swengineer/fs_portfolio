@@ -1,6 +1,6 @@
 export default function MapControlGuide({language, scene, aboard}) {
   const en=language==='en-US';
-  const titles={castleThrone:en?'THRONE ROOM':'SALA DO TRONO',lake:en?'LAKE OF INTERFACES':'LAGO DAS INTERFACES',rapids:en?'CANYON RAPIDS':'CORREDEIRAS DO DESFILADEIRO',ruins:en?'SUNKEN RUINS COVE':'ENSEADA DAS RUÍNAS SUBMERSAS',tunnel:en?'ANCIENT TUNNEL':'TÚNEL ANTIGO',temple:en?'ANCIENT TEMPLE VILLAGE':'ALDEIA DO TEMPLO ANTIGO',corridor:en?'HALL OF INFINITY':'CORREDOR DO INFINITO'};
+  const titles={castleThrone:en?'EVIL THRONE ROOM':'SALA DO TRONO MALIGNO',lake:en?'LAKE OF INTERFACES':'LAGO DAS INTERFACES',rapids:en?'CANYON RAPIDS':'CORREDEIRAS DO DESFILADEIRO',ruins:en?'SUNKEN RUINS COVE':'ENSEADA DAS RUÍNAS SUBMERSAS',tunnel:en?'ANCIENT TUNNEL':'TÚNEL ANTIGO',temple:en?'ANCIENT TEMPLE VILLAGE':'ALDEIA DO TEMPLO ANTIGO',corridor:en?'HALL OF INFINITY':'CORREDOR DO INFINITO'};
   return <div className="scene-guide map-control-guide" aria-label={en?'Game controls':'Controles do jogo'}>
     <div className="scene-caption"><span className="live-dot"/> {titles[scene]}</div>
     <div className="walk-hint">

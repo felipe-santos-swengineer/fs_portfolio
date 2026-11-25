@@ -200,10 +200,26 @@ export function buildRoyalArena(scene) {
 export function createCastleLord(scene,{box,mesh,cylinder,sphere}) {
   const king=new THREE.Group(); scene.add(king);
   const gold='#a68a56', armor='#383648';
+  const legs=[];
+  let castingArm;
   for(const s of [-1,1]) {
-    box(king,.64,1.4,.83,armor,s*.45,.72,0);
+    const leg=new THREE.Group();
+    leg.position.set(s*.45,1.4,0);
+    king.add(leg);
+    box(leg,.64,1.36,.83,armor,0,-.68,0);
+    box(leg,.68,.22,.98,'#27272f',0,-1.36,.12);
+    legs.push(leg);
     sphere(king,.64,gold,s*1.05,2.91,0);
-    box(king,.48,1,.56,armor,s*1.1,2.3,0);
+    if(s<0){
+      castingArm=new THREE.Group();
+      castingArm.position.set(-.83,2.78,.6);
+      king.add(castingArm);
+      box(castingArm,.48,.78,.56,armor,-.12,-.36,0);
+      box(castingArm,.38,.68,.46,'#4b4855',-.25,-.9,.06);
+      sphere(castingArm,.22,'#746a74',-.31,-1.22,.13);
+    }else{
+      box(king,.48,1,.56,armor,s*1.1,2.3,0);
+    }
     sphere(king,.095,'#cd9aff',s*.18,3.84,.49,true);
   }
   box(king,1.65,1.65,1,armor,0,2.18,0);
@@ -233,5 +249,5 @@ export function createCastleLord(scene,{box,mesh,cylinder,sphere}) {
   blade.scale.set(.29,1.45,.12);
   weapon.rotation.z=-.46;
   king.position.z=-10;
-  return {king,weapon};
+  return {king,weapon,legs,castingArm};
 }

@@ -30,6 +30,7 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
+    "postinstall": "node scripts/fix-chess-source-maps.cjs",
     "start": "node scripts/run-with-version.cjs start",
     "build": "node scripts/run-with-version.cjs build",
     "test": "react-scripts test",
@@ -42,6 +43,19 @@
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "**/*.test.js"
+        ],
+        "rules": {
+          "jest/no-conditional-expect": "off",
+          "testing-library/no-node-access": "off",
+          "testing-library/no-unnecessary-act": "off",
+          "testing-library/prefer-screen-queries": "off"
+        }
+      }
     ]
   },
   "browserslist": {

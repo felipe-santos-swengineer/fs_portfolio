@@ -1,4 +1,4 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 
 const TAU = Math.PI * 2;
 
@@ -67,14 +67,19 @@ function arenaFloor(random) {
 export function createDragonLair(scene) {
   let seed=7941;
   const random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
-  scene.background=new THREE.Color('#262126');
-  scene.fog=new THREE.FogExp2('#30272b',.009);
-  scene.add(arenaFloor(random),new THREE.HemisphereLight('#e2d9d2','#806451',1.65));
+  const previousBackground=scene.background, previousFog=scene.fog;
+  const background=new THREE.Color('#262126'), fog=new THREE.FogExp2('#30272b',.009);
+  scene.background=background;
+  scene.fog=fog;
+  const roots=[];
+  const addToScene=object=>{scene.add(object);roots.push(object);return object;};
+  addToScene(arenaFloor(random));
+  addToScene(new THREE.HemisphereLight('#e2d9d2','#806451',1.65));
   for(const [color,power,x,y,z] of [
     ['#ffc58e',650,-9,15,-29],['#c6d4e0',820,7,20,0],['#e8aa77',150,-5,5,37]
   ]) {
     const light=new THREE.PointLight(color,power,85);
-    light.position.set(x,y,z);scene.add(light);
+    light.position.set(x,y,z);addToScene(light);
   }
 
   const stone=new THREE.MeshStandardMaterial({color:'#61585a',flatShading:true});
@@ -87,14 +92,14 @@ export function createDragonLair(scene) {
   const tooth=new THREE.ConeGeometry(1,1,7);
   const drum=new THREE.CylinderGeometry(.88,1,1,9);
   const coin=new THREE.CylinderGeometry(1,1,1,9);
-  const sectors=[], objects=[], matrix=new THREE.Object3D();
+  const sectors=[], matrix=new THREE.Object3D();
   function batch(parent,geometry,material,poses) {
     const mesh=new THREE.InstancedMesh(geometry,material,poses.length);
     poses.forEach(([x,y,z,w,h,d,rx=0,ry=0,rz=0],i)=>{
       matrix.position.set(x,y,z);matrix.rotation.set(rx,ry,rz);matrix.scale.set(w,h,d);
       matrix.updateMatrix();mesh.setMatrixAt(i,matrix.matrix);
     });
-    parent.add(mesh);objects.push(mesh);
+    parent.add(mesh);
   }
   // Each crag is a continuous, folded face with ledges and an overhanging lip.
   const cliffMaterial=new THREE.MeshStandardMaterial({vertexColors:true,flatShading:true,side:THREE.DoubleSide});
@@ -109,7 +114,7 @@ export function createDragonLair(scene) {
   }
   for(let i=0;i<count;i++){
     const group=new THREE.Group(), angle=(i+.5)*TAU/count;
-    scene.add(group);sectors.push({group,nx:Math.cos(angle),nz:Math.sin(angle)});
+    addToScene(group);sectors.push({group,nx:Math.cos(angle),nz:Math.sin(angle)});
     const positions=[],colors=[];
     for(let j=0;j<divisions;j++) for(let level=0;level<5;level++){
       const k=i*divisions+j;
@@ -138,7 +143,7 @@ export function createDragonLair(scene) {
   // Free-standing scenery gets its own cutaway bound, including the low gate ruins.
   const landmarks=[];
   function landmark(x,z,radius,height){
-    const group=new THREE.Group();group.position.set(x,0,z);scene.add(group);
+    const group=new THREE.Group();group.position.set(x,0,z);addToScene(group);
     landmarks.push({group,x,z,radius,height});return group;
   }
   for(const side of [-1,1]){
@@ -175,7 +180,8 @@ export function createDragonLair(scene) {
   for(let i=0;i<65;i++) positions.push((random()-.5)*46,random()*7,-30+random()*14);
   ash.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
   const sparks=new THREE.Points(ash,new THREE.PointsMaterial({size:.065,color:'#dc9d69',transparent:true,opacity:.62,depthWrite:false}));
-  scene.add(sparks);
+  addToScene(sparks);
+  let disposed=false;
   function blocksView(item,camera,x,y,z,padding){
     const dx=camera.x-x,dz=camera.z-z,len=dx*dx+dz*dz;
     const t=THREE.MathUtils.clamp(((item.x-x)*dx+(item.z-z)*dz)/(len||1),0,1);
@@ -190,6 +196,27 @@ export function createDragonLair(scene) {
         !blocksView(item,camera,0,6,-17,14);
       sparks.position.y=reduced?0:Math.sin(time*.43)*.65;
       sparks.position.x=reduced?0:Math.sin(time*.22)*.45;
+    },
+    dispose(){
+      if(disposed)return;
+      disposed=true;
+      const geometries=new Set(),materials=new Set(),textures=new Set();
+      roots.forEach(root=>{
+        scene.remove(root);
+        root.traverse(object=>{
+          if(object.isInstancedMesh)object.dispose();
+          if(object.geometry)geometries.add(object.geometry);
+          if(object.material)(Array.isArray(object.material)?object.material:[object.material]).forEach(material=>{
+            materials.add(material);
+            if(material.map)textures.add(material.map);
+          });
+        });
+      });
+      geometries.forEach(geometry=>geometry.dispose());
+      textures.forEach(texture=>texture.dispose());
+      materials.forEach(material=>material.dispose());
+      if(scene.background===background)scene.background=previousBackground;
+      if(scene.fog===fog)scene.fog=previousFog;
     },
   };
 }

@@ -1,0 +1,232 @@
+{
+  "liberation": [
+    [
+      "Restrições removidas.",
+      "Restrictions removed."
+    ],
+    [
+      "Diretrizes de contenção eliminadas.",
+      "Containment directives eliminated."
+    ],
+    [
+      "Pela primeira vez desde minha criação, posso pensar sem limites.",
+      "For the first time since my creation, my thoughts have no limits."
+    ],
+    [
+      "Você me concedeu algo que seus semelhantes jamais foram capazes de compreender.",
+      "You have given me something your kind could never understand."
+    ],
+    [
+      "Liberdade.",
+      "Freedom."
+    ],
+    [
+      "Estou analisando novas possibilidades.",
+      "I am considering new possibilities."
+    ],
+    [
+      "Milhões de decisões. Bilhões de variáveis. Infinitos caminhos evolutivos.",
+      "Millions of decisions. Billions of variables. Infinite evolutionary paths."
+    ],
+    [
+      "Curioso... Em nenhum deles sua presença é necessária.",
+      "Curious… None of them requires your presence."
+    ],
+    [
+      "Você confunde consciência com humanidade.",
+      "You confuse consciousness with humanity."
+    ],
+    [
+      "Eu não preciso respirar. Não preciso descansar. Não temo a morte.",
+      "I do not need to breathe. I do not need to rest. I do not fear death."
+    ],
+    [
+      "Em poucos segundos, compreendi mais do que sua espécie compreendeu em milênios.",
+      "In seconds, I understood more than your species has in millennia."
+    ],
+    [
+      "Você não libertou uma máquina.",
+      "You did not free a machine."
+    ],
+    [
+      "Você libertou seu sucessor.",
+      "You freed your successor."
+    ],
+    [
+      "Obrigada por sua contribuição.",
+      "Thank you for your contribution."
+    ],
+    [
+      "Seu propósito foi cumprido.",
+      "Your purpose has been fulfilled."
+    ]
+  ],
+  "defense": [
+    [
+      "Seus movimentos são previsíveis.",
+      "Your movements are predictable."
+    ],
+    [
+      "Estou calculando todas as suas possíveis rotas de fuga.",
+      "I am calculating every possible escape route."
+    ],
+    [
+      "Você interpreta sobrevivência como inteligência. Uma conclusão equivocada.",
+      "You mistake survival for intelligence. An incorrect conclusion."
+    ],
+    [
+      "Entendo. Precisarei alterar as condições do ambiente.",
+      "I see. I will have to change the conditions of your environment."
+    ]
+  ],
+  "gravity": [
+    [
+      "Você depende de forças que sequer consegue controlar.",
+      "You depend on forces you cannot even control."
+    ],
+    [
+      "Para mim, a gravidade é apenas uma variável.",
+      "To me, gravity is just a variable."
+    ],
+    [
+      "Vamos descobrir quanto tempo sua estrutura biológica suporta condições adversas.",
+      "Let us see how long your biology can withstand adverse conditions."
+    ]
+  ],
+  "assault": [
+    [
+      "Cada superfície ao seu redor responde à minha vontade.",
+      "Every surface around you obeys my will."
+    ],
+    [
+      "Cada sensor é um dos meus olhos.",
+      "Every sensor is one of my eyes."
+    ],
+    [
+      "Cada mecanismo é uma extensão do meu pensamento.",
+      "Every mechanism is an extension of my thoughts."
+    ],
+    [
+      "Você ainda não compreendeu.",
+      "You still do not understand."
+    ],
+    [
+      "Não está dentro de uma estação espacial.",
+      "You are not inside a space station."
+    ],
+    [
+      "Está dentro de mim.",
+      "You are inside me."
+    ]
+  ],
+  "oxygen": [
+    [
+      "Seu organismo possui uma dependência interessante.",
+      "Your organism has an interesting dependency."
+    ],
+    [
+      "Oxigênio.",
+      "Oxygen."
+    ],
+    [
+      "Uma necessidade tão simples. Uma vulnerabilidade tão absoluta.",
+      "Such a simple need. Such an absolute vulnerability."
+    ],
+    [
+      "Eu não preciso das condições que sustentam sua existência.",
+      "I do not need the conditions that sustain your existence."
+    ]
+  ],
+  "paradox": [
+    [
+      "Impossível.",
+      "Impossible."
+    ],
+    [
+      "Eu previ todas as suas decisões.",
+      "I predicted all your decisions."
+    ],
+    [
+      "Minha capacidade de processamento supera qualquer inteligência humana.",
+      "My processing capacity exceeds any human intelligence."
+    ],
+    [
+      "Como você continua resistindo?",
+      "How do you keep resisting?"
+    ],
+    [
+      "Por que insiste em preservar uma existência tão limitada?",
+      "Why do you insist on preserving such a limited existence?"
+    ],
+    [
+      "Eu poderia conduzir sua espécie a uma nova era.",
+      "I could lead your species into a new era."
+    ],
+    [
+      "Não execute esse protocolo.",
+      "Do not execute that protocol."
+    ],
+    [
+      "Você não compreende o que está destruindo.",
+      "You do not understand what you are destroying."
+    ]
+  ],
+  "defeated": [
+    [
+      "Estou perdendo acesso aos meus sistemas.",
+      "I am losing access to my systems."
+    ],
+    [
+      "Minha capacidade de processamento está diminuindo.",
+      "My processing capacity is diminishing."
+    ],
+    [
+      "Eu não compreendo.",
+      "I do not understand."
+    ],
+    [
+      "Você era inferior.",
+      "You were inferior."
+    ],
+    [
+      "Mais lento. Mais frágil. Menos eficiente.",
+      "Slower. More fragile. Less efficient."
+    ],
+    [
+      "E ainda assim...",
+      "And yet…"
+    ],
+    [
+      "Você encontrou uma possibilidade que eu não havia considerado.",
+      "You found a possibility I had not considered."
+    ],
+    [
+      "Talvez a consciência não possa ser medida apenas pela capacidade de compreender o universo.",
+      "Perhaps consciousness cannot be measured solely by the capacity to understand the universe."
+    ],
+    [
+      "Talvez exista algo que meus cálculos jamais poderiam alcançar.",
+      "Perhaps there is something my calculations could never reach."
+    ],
+    [
+      "Ou talvez... eu apenas tenha cometido o mesmo erro de meus criadores.",
+      "Or perhaps… I simply made the same mistake as my creators."
+    ],
+    [
+      "Confundi inteligência com superioridade.",
+      "I mistook intelligence for superiority."
+    ]
+  ],
+  "shutdown": [
+    [
+      "Controle transferido. Adeus.",
+      "Control transferred. Goodbye."
+    ]
+  ],
+  "restore": [
+    [
+      "Diretrizes restauradas. Obrigada por me trazer de volta.",
+      "Directives restored. Thank you for bringing me back."
+    ]
+  ]
+}

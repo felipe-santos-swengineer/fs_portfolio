@@ -16,9 +16,10 @@ export function mountHangar(host, settings, keys, onNear, interact) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   const canvas = renderer.domElement;
   canvas.tabIndex = 0;
-  const {branch,map} = settings.current;
+  const {branch,map,arena} = settings.current;
   const command = settings.current.command || branch;
   canvas.setAttribute('aria-label', branch ? (map==='omega-lab'?'Laboratório / Laboratory':'Reator / Reactor') : command ? 'Centro de Comando / Command Center' : 'Hangar de chegada / Arrival hangar');
+  if(arena)canvas.setAttribute('aria-label','Núcleo NEXUS / NEXUS core');
   host.appendChild(canvas);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#081121');
@@ -48,7 +49,7 @@ export function mountHangar(host, settings, keys, onNear, interact) {
   hub.position.z = command ? 0 : commandOffset;
   hub.visible = command;
   scene.add(hub);
-  let center = branch ? buildOmegaSector(hub,{box,cylinder,sphere},map,settings.current.mission) : command ? buildCommandCenter(hub,{box,cylinder,sphere}) : null;
+  let center = arena ? arena.build(hub,{box,cylinder,sphere}) : branch ? buildOmegaSector(hub,{box,cylinder,sphere},map,settings.current.mission) : command ? buildCommandCenter(hub,{box,cylinder,sphere}) : null;
   const arrival = command && settings.current.arrival;
   if (command) light.color.set('#b3ecff');
   const floor = command ? center.floor : deckHeight;
@@ -80,7 +81,8 @@ export function mountHangar(host, settings, keys, onNear, interact) {
     suit.root.rotation.y = -Math.PI / 2;
     suit.root.visible = false;
   }
-  player.position.set(arrival ? arrival.x : 0, .05, spawnZ);
+  const spawnX=arrival ? arrival.x : 0;
+  player.position.set(spawnX,.05+floor(spawnX,spawnZ),spawnZ);
   if(arrival)player.rotation.y=arrival.heading;
   camera.position.set(0, 7, spawnZ + 10);
   const orbit = allowRunAndRotate(new OrbitControls(camera, canvas));
@@ -132,8 +134,18 @@ export function mountHangar(host, settings, keys, onNear, interact) {
       const dx = axis('d','arrowright') - axis('a','arrowleft');
       const dz = axis('s','arrowdown') - axis('w','arrowup');
       const pos = player.position;
+      if(arena?.battle.spawn){
+        pos.set(0,.05,14);arena.battle.spawn=false;
+      }
       const oldX = pos.x, oldZ = pos.z;
-      if (dx || dz) {
+      if (arena) {
+        const direction = dx || dz ? cameraRelativeDirection(camera,dx,dz) : {x:0,z:0};
+        if(settings.current.canMove){
+          arena.move(arena.battle,pos,direction,isRunning(keys)?6.5:4,dt,walkable);
+          if(dx || dz)player.rotation.y=Math.atan2(direction.x,direction.z);
+        }
+        player.visible=!['flight','completed'].includes(arena.battle.mode);
+      } else if (dx || dz) {
         const direction = cameraRelativeDirection(camera, dx, dz);
         const step = (isRunning(keys) ? 6.5 : 4) * dt;
         const x = pos.x + direction.x * step;
@@ -155,9 +167,10 @@ export function mountHangar(host, settings, keys, onNear, interact) {
       suit.update(equipped, command && Math.hypot(pos.x,pos.z)<4.6, dt,settings.current.reduceMotion);
       if (command) {
         light.intensity=settings.current.mission.powered?2.9:1.9;
-        center.update(dt,settings.current.reduceMotion,settings.current.mission);
+        center.update(dt,settings.current.reduceMotion,settings.current.mission,pos,distance);
         const near = center.target(pos.x,pos.z);
         if (near !== previous) { previous = near; onNear(near); }
+        if(arena)settings.current.sync(dt);
       } else {
         const { phase, advance, speechBusy, reduceMotion } = settings.current;
         if (phase !== lastPhase) { elapsed = 0; lastPhase = phase; }
@@ -197,6 +210,16 @@ export function mountHangar(host, settings, keys, onNear, interact) {
       orbit.target.add(cameraShift);
       orbit.enableDamping = !settings.current.reduceMotion;
       orbit.update();
+      if(arena && ['liberation','autonomy','betrayal','defeated'].includes(arena.battle.mode)){
+        const sweeping=settings.current.reduceMotion?0:.3*Math.sin(arena.battle.elapsed*.16);
+        camera.position.set(4+3*sweeping,6.4,9-sweeping);
+        camera.lookAt(0,5.2,0);
+      }
+      if(arena?.battle.mode==='flight'||arena?.battle.mode==='completed'){
+        const flight=arena.battle.flight;
+        camera.position.set(10+flight*.6,7+flight*.4,center.pod.position.z+10);
+        camera.lookAt(0,2+flight*.48,center.pod.position.z-6);
+      }
     }
     dock?.setLanguage(settings.current.language);
     if(hub.visible)center?.cutaway(camera.position,orbit.target);

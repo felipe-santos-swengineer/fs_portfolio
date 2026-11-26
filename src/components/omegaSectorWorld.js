@@ -52,14 +52,14 @@ export function buildOmegaSector(root,{box,cylinder,sphere},map,initial){
     label(code,0,2.36,0,terminal);
     const indicator=new T.Mesh(new T.BoxGeometry(1.3,.07,.09),emit('#efab4b'));
     indicator.position.set(0,1.1,.58);terminal.add(indicator);
-    indicators.push({id,mesh:indicator});
+    let cableMaterial;
     if(!lab){
       // Follow the deck, the sloped platform and the top surface to the core base.
       const points=[9.4,9,6,3.2].map(radius=>{
         const px=x*radius/10,pz=z*radius/10;
         return new T.Vector3(px,floor(px,pz)+.08,pz);
       });
-      const cableMaterial=emit('#ffda26');
+      cableMaterial=emit('#ffda26');
       for(let j=1;j<points.length;j++){
         const start=points[j-1],end=points[j],direction=end.clone().sub(start);
         const cable=new T.Mesh(new T.CylinderGeometry(.085,.085,direction.length(),10),cableMaterial);
@@ -68,6 +68,7 @@ export function buildOmegaSector(root,{box,cylinder,sphere},map,initial){
         root.add(cable);
       }
     }
+    indicators.push({id,mesh:indicator,cableMaterial});
   });
   let shutter;
   const neural=new T.Group();root.add(neural);
@@ -112,6 +113,7 @@ export function buildOmegaSector(root,{box,cylinder,sphere},map,initial){
     }
   }
   const ray=new T.Ray(),hit=new T.Vector3();
+  let pulseTime=0;
   let archiveOpen=initial.records.length===4?1:0, ignition=initial.powered?1:0;
   return {
     floor,
@@ -135,9 +137,15 @@ export function buildOmegaSector(root,{box,cylinder,sphere},map,initial){
       if(!reduced)neural.rotation.y+=dt*(m.scientific ? .05 : .22);
       segments.forEach((mesh,i)=>{mesh.material.emissiveIntensity=.08+T.MathUtils.clamp(ignition*8-i,0,1)*1.4;});
       rings.forEach((r,i)=>{if(!reduced)r.rotation.z+=dt*(.12+ignition*.8)*(i%2?1:-1);r.material.emissiveIntensity=.2+.12*m.subsystems.length+ignition;});
-      indicators.forEach(({id,mesh})=>{
+      if(!reduced) pulseTime+=dt;
+      indicators.forEach(({id,mesh,cableMaterial})=>{
         const done=id==='archive'?m.scientific:id==='activate'?m.powered:id.startsWith('record')?m.records.includes(Number(id.slice(-1))):m.subsystems.includes(id);
         mesh.material.emissive.set(done?'#39db87':'#d58d33');
+        if(cableMaterial){
+          cableMaterial.color.set(done?'#39db87':'#ffda26');
+          cableMaterial.emissive.copy(cableMaterial.color);
+          cableMaterial.emissiveIntensity=done ? 1.2+(reduced?0:.35*Math.sin(pulseTime*2)) : .55;
+        }
       });
       lamps.forEach(lamp=>{lamp.material.emissive.set(lab?'#85dfe9':'#fdb562');lamp.material.emissiveIntensity=.08+ignition*.5;});
     },

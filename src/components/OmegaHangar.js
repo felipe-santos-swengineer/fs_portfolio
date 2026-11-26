@@ -48,7 +48,7 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
   const frozen = paused || terminal || error;
   const available = !frozen && near && (!hangar || phase >= 4);
   const collectingSuit = hangar && phase === SUIT_READY;
-  const actionLabel = near==='return'?(en?'Return to Command':'Voltar ao Comando'):branchMaps.includes(near)?(near==='omega-lab'?(en?'Enter laboratory':'Entrar no laboratório'):(en?'Enter reactor room':'Entrar na sala do reator')):collectingSuit ? (en?'Equip EX-07':'Vestir EX-07') : (en?'Read terminal':'Consultar terminal');
+  const actionLabel = near==='coreAccess'?(en?'Enter the NEXUS core':'Entrar no núcleo NEXUS'):near==='return'?(en?'Return to Command':'Voltar ao Comando'):branchMaps.includes(near)?(near==='omega-lab'?(en?'Enter laboratory':'Entrar no laboratório'):(en?'Enter reactor room':'Entrar na sala do reator')):collectingSuit ? (en?'Equip EX-07':'Vestir EX-07') : (en?'Read terminal':'Consultar terminal');
 
   const latestLine = mission.authorized ? 6 : mission.fragments.length ? 1 + mission.fragments.length : Number(mission.table);
   const commandLine = command && nextLine <= latestLine ? nextLine : null;
@@ -65,7 +65,7 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
   },[map,branch,command,mission,paused,terminal,sectorLine,setMission]);
   const transmission = sectorLine ? lines[sectorLine][locale] : command ? commandAnnouncements[commandLine]?.[locale] : hangar && skippedPhase !== phase && announcements[phase]?.[locale];
   const canSkipMinigames = (command && mission.fragments.length < stations.length)
-    || (map==='omega-reactor' && mission.subsystems.length < systems.length)
+    || (map==='omega-reactor' && !mission.powered)
     || (map==='omega-lab' && !mission.scientific);
   const skipMinigames = () => {
     if (frozen || !canSkipMinigames) return;
@@ -73,26 +73,29 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
     if (map==='omega-lab') {
       setMission(current=>({...current, records:records.map((_,i)=>i), timeline:events.map((_,i)=>i), scientific:true}));
     } else if (map==='omega-reactor') {
-      setMission(current=>({...current,subsystems:[...systems]}));
+      setMission(current=>({...current,subsystems:[...systems],powered:true}));
     } else {
       setMission(current=>({...current,table:true,briefed:true,fragments:stations.map(station=>station.id)}));
       setNextLine(stations.length + 1);
     }
     host.current?.querySelector('canvas')?.focus({preventScroll:true});
   };
+  const finishTransmission = () => {
+    if (!transmission) return;
+    if (voice.current) {
+      voice.current.onended = null;
+      voice.current.pause();
+    }
+    if (sectorLine) setSectorLine(null);
+    else if (command) setNextLine(line => Math.max(line,commandLine+1));
+    else setSkippedPhase(phase);
+  };
   const skipDialogue = () => {
     if (frozen || !transmission) return;
     keys.current.clear();
-    voice.current?.pause();
-    if(sectorLine){setSectorLine(null);return;}
-    if (command) {
-      setNextLine(line=>line+1);
-      host.current?.querySelector('canvas')?.focus({ preventScroll: true });
-      return;
-    }
-    setSkippedPhase(phase);
-    if (phase < 4) setPhase(4);
-    else if (phase === 6) setPhase(SUIT_READY);
+    finishTransmission();
+    if (hangar && phase < 4) setPhase(4);
+    else if (hangar && phase === 6) setPhase(SUIT_READY);
     host.current?.querySelector('canvas')?.focus({ preventScroll: true });
   };
   const close = () => {
@@ -100,9 +103,16 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
     requestAnimationFrame(() => host.current?.querySelector('canvas')?.focus({ preventScroll: true }));
   };
   useModalFocus(panel, close, Boolean(terminal) && !paused);
+  const unlockLift = () => {
+    if (!command || frozen || coreUnlocked(mission)) return;
+    keys.current.clear();
+    change('liftOverride',true);
+    host.current?.querySelector('canvas')?.focus({preventScroll:true});
+  };
   const act = () => {
     if (!available) return;
     keys.current.clear();
+    if(near==='coreAccess'){onTravel('omega-core');return;}
     if(near==='return'){onTravel('omega-command',{x:map==='omega-lab'?-11:11,z:14,heading:Math.PI,offset:[0,6,10]});return;}
     if(branchMaps.includes(near)){onTravel(near);return;}
     if (collectingSuit) {
@@ -110,10 +120,14 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
       setNear(false);
       host.current?.querySelector('canvas')?.focus({ preventScroll: true });
     } else {
+      finishTransmission();
       setTerminal(hangar ? true : near);
       if(branch)setMission(m=>m.started.includes(near)?m:{...m,started:[...m.started,near]});
       if(command && near==='table' && !mission.table)setMission(m=>({...m,table:true}));
-      if(command && near==='bridge' && mission.table && !mission.briefed)setMission(m=>({...m,briefed:true}));
+      if(command && near==='bridge' && mission.table && !mission.briefed){
+        // Reading the commander's terminal also satisfies the queued instruction to visit it.
+        setMission(m=>({...m,briefed:true,nextLine:Math.max(m.nextLine,2)}));
+      }
     }
   };
   settings.current = {
@@ -170,6 +184,9 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
       <div className="lake-canvas" ref={host}/>
       <div className="encounter-controls">
         {campaignNavigation}
+        {command && !terminal && !coreUnlocked(mission) && <button type="button" className="battle-skip" disabled={paused||error} onClick={unlockLift}>
+          {en?'Unlock NEXUS elevator':'Liberar elevador para NEXUS'}
+        </button>}
         {!terminal && hangar && <button type="button" className="battle-skip" disabled={paused} onClick={() => { keys.current.clear(); onEnterCommand(); }}>
           {en ? 'Skip to Command Center' : 'Ir direto ao Centro de Comando'}
         </button>}
@@ -180,7 +197,7 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
           {en ? 'Skip dialogue' : 'Pular diálogos'}
         </button>}
       </div>
-      <div className="cursed-heading omega-status"><strong>{title}</strong><div aria-live="polite">{branch || (command && mission.authorized) ? sectorObjective(map,mission,en) : command ? commandObjective(mission,en) : objectives[phase][locale]}</div>
+      <div className="cursed-heading omega-status"><strong>{title}</strong><div aria-live="polite">{branch || (command && (mission.authorized || coreUnlocked(mission))) ? sectorObjective(map,mission,en) : command ? commandObjective(mission,en) : objectives[phase][locale]}</div>
         <small>{en?'Administration':'Administração'} {mission.authorized?'✓':'—'} · {en?'Records':'Registros'} {mission.records.length}/4 · {en?'Subsystems':'Subsistemas'} {mission.subsystems.length}/3 · NEXUS {coreUnlocked(mission)?'✓':'—'}</small></div>
       {error ? <p className="lake-scene-error">{en ? '3D is unavailable in this browser.' : 'O 3D não está disponível neste navegador.'}</p> :
         <MapControlGuide language={language} scene={!hangar ? "omegaCommand" : "omegaHangar"}/>}
@@ -188,7 +205,7 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
       {available && <div className="village-actions"><button onClick={act}>{actionLabel} <kbd>E</kbd></button></div>}
       {terminal && <section className="npc-dialogue omega-terminal" role="dialog" aria-modal="true" aria-labelledby="omega-title" ref={panel} tabIndex={-1}>
         <div className="npc-dialogue-heading"><div><small>OMEGA-03</small><h2 id="omega-title">{!hangar ? title : (en?'Hangar control':'Controle do hangar')}</h2></div><button onClick={close} aria-label={en?'Close':'Fechar'}>×</button></div>
-        {branch ? <OmegaSectorTerminal onClose={close} id={terminal} map={map} m={mission} setMission={setMission} en={en} effectsEnabled={effectsEnabled} paused={paused}/> : terminal==='coreAccess' ? <p>{en?'NEXUS core access granted.':'Acesso ao Núcleo NEXUS autorizado.'}</p> : command ? <CommandTerminal effectsEnabled={effectsEnabled} paused={paused} id={terminal} en={en} mission={mission} setMission={setMission}/> : <><p>{en?'Station critical. Main power offline. Command is running on auxiliary power. External communications failed. Crew detected: 0.':'Estação em estado crítico. Energia principal indisponível. Centro de comando em energia auxiliar. Comunicação externa indisponível. Tripulantes detectados: 0.'}</p>
+        {branch ? <OmegaSectorTerminal onClose={close} id={terminal} map={map} m={mission} setMission={setMission} en={en} effectsEnabled={effectsEnabled} paused={paused}/> : command ? <CommandTerminal effectsEnabled={effectsEnabled} paused={paused} id={terminal} en={en} mission={mission} setMission={setMission}/> : <><p>{en?'Station critical. Main power offline. Command is running on auxiliary power. External communications failed. Crew detected: 0.':'Estação em estado crítico. Energia principal indisponível. Centro de comando em energia auxiliar. Comunicação externa indisponível. Tripulantes detectados: 0.'}</p>
         <p>{en?'04:16 · Last shuttle departed empty. The distress call originated aboard the station.':'04:16 · A última nave saiu vazia. O pedido de socorro partiu da própria estação.'}</p>
         <p>{phase===4?(en?'NEXUS active. Exit sealed by containment.':'NEXUS ativo. Saída bloqueada pela contenção.'):(en?'Emergency release granted.':'Desbloqueio emergencial autorizado.')}</p>
         {phase===4 && <div className="npc-dialogue-actions"><button onClick={() => { setPhase(5); close(); }}>{en?'Authorize emergency release':'Autorizar desbloqueio emergencial'}</button></div>}

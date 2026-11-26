@@ -1,3 +1,4 @@
+import SkipMinigame from './SkipMinigame';
 import { sectorObjective } from './omegaProgress';
 import { useEffect, useRef, useState } from 'react';
 import { stations } from './omegaCommandCenter';
@@ -59,8 +60,8 @@ function Puzzle({id,en,onSolve,mission,setMission}) {
       <p>{en?'Remaining':'Restante'} · {100-spent}</p></>}
     {hint>0&&<p>{hints[id][hint-1][l]}</p>}
     {error&&<p role="alert">{en?'Configuration rejected. Check the reference and adjust the controls.':'Configuração recusada. Confira a referência e ajuste os controles.'}</p>}
-    <div className="npc-dialogue-actions"><button onClick={validate}>{en?'Validate':'Validar'}</button><button onClick={()=>{setError(false);setSequence([]);setSignal([1,2,0]);setPower([0,0,0,0]);}}>{en?'Reset':'Reiniciar'}</button><button disabled={hint===2} onClick={()=>setHint(hint+1)}>{en?'Hint':'Dica'}</button></div>
-    <div className="npc-dialogue-actions"><button type="button" onClick={onSolve}>{en?'Skip minigame':'Pular minigame'}</button></div>
+    <div className="npc-dialogue-actions omega-validation-actions"><button onClick={validate}>{en?'Validate':'Validar'}</button><button onClick={()=>{setError(false);setSequence([]);setSignal([1,2,0]);setPower([0,0,0,0]);}}>{en?'Reset':'Reiniciar'}</button><button disabled={hint===2} onClick={()=>setHint(hint+1)}>{en?'Hint':'Dica'}</button></div>
+    <SkipMinigame en={en} onSkip={onSolve}/>
   </div>;
 }
 export default function CommandTerminal({id,en,mission,setMission,paused,effectsEnabled}){

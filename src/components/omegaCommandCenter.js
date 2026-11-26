@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {coreUnlocked} from './omegaProgress';
 
 // Command coordinates are local to the hub. Its airlock threshold coincides with z=-36 in the hangar.
 export const commandOffset = -60;
@@ -42,7 +43,8 @@ export function buildCommandCenter(root, { box, cylinder, sphere }, preview=fals
     wall(4,6,.4,side*15,3,17);
     for(let z=-15;z<=15;z+=5){
       box(root,.3,.08,3,trim,side*15,.04,z);
-      box(root,.38,6,.46,dark,side*16.5,3,z);
+      // Leave the center of the east wall clear for the NEXUS elevator.
+      if(side<0 || z!==0)box(root,.38,6,.46,dark,side*16.5,3,z);
     }
   }
   // Circular ramp to the strategy table and a straight ramp to the commander's bridge.
@@ -132,11 +134,35 @@ export function buildCommandCenter(root, { box, cylinder, sphere }, preview=fals
     const lamp=box(root,4,.16,.22,'#ee5959',x,4,z-.46);
     return {x,leaves,lamp};
   });
-  const coreLeaves=[-1,1].map(side=>box(root,.45,4,2,steel,17,2,side));
+  const liftIndicator=new THREE.MeshBasicMaterial({color:'#f3a746'});
+  const coreLeaves=[-1,1].map(side=>{
+    const leaf=new THREE.Group();root.add(leaf);leaf.position.set(17,0,side);
+    box(leaf,.4,4,1.98,dark,0,2,0);
+    box(leaf,.13,2.8,1.54,steel,-.23,1.95,0);
+    box(leaf,.08,2.85,.08,white,-.33,1.95,-side*.68);
+    for(const y of [.52,3.46])box(leaf,.08,.12,1.72,trim,-.32,y,0);
+    const seam=box(leaf,.07,.12,1.14,white,-.34,2.04,0);
+    seam.rotation.x=side*.23;seam.material=liftIndicator;
+    return leaf;
+  });
   box(root,5,.4,4.6,steel,19,-.2,0);
   for(const z of [-2.3,2.3])wall(5,4,.35,19,2,z);
   wall(.4,4,4.6,21.5,2,0);
-  label('NEXUS',16,4.4,0);
+  // Recessed cabin, guide rails and illuminated landing threshold.
+  box(root,.92,.65,5.5,dark,16.85,4.38,0);
+  for(const side of [-1,1]){
+    box(root,.88,4.46,.43,steel,16.78,2.23,side*2.43);
+    box(root,.09,3.6,.09,white,16.28,2.16,side*2.42).material=liftIndicator;
+    box(root,3.9,.09,.1,trim,19.3,1.15,side*2.02);
+    for(const x of [18,20.5])box(root,.13,3.8,.16,white,x,1.92,side*2.02);
+    box(root,.24,4,.18,dark,21.22,2,side*1.72);
+  }
+  label('NEXUS',16.35,4.4,0,-Math.PI/2);
+  for(const x of [16.05,16.36,16.67])box(root,.08,.035,3.9,'#edb559',x,.025,0);
+  cylinder(root,1.86,.07,dark,19.43,.02,0,32);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(1.65,.038,6,48),liftIndicator);
+  rim.rotation.x=Math.PI/2;rim.position.set(19.43,.075,0);root.add(rim);
+  label('Ω / 03',21.23,2.72,0,-Math.PI/2);
   let coreDoor=0;
   const ray=new THREE.Ray(),point=new THREE.Vector3(),targetLocal=new THREE.Vector3();
   let opening=0;
@@ -168,7 +194,8 @@ export function buildCommandCenter(root, { box, cylinder, sphere }, preview=fals
         lamp.material.color.set(restored?'#58d48a':'#ee5959');
       });
       panels.forEach((p,i)=>{p.material=mission?.fragments.includes(stations[i].id)?panelOn:p.material;});
-      const unlocked=restored&&mission.scientific&&mission.powered;
+      const unlocked=coreUnlocked(mission);
+      liftIndicator.color.set(unlocked?'#70f6ca':'#f3a746');
       coreDoor=Math.min(1,coreDoor+(unlocked?dt:0));
       coreLeaves.forEach((leaf,i)=>{leaf.position.z=(i?1:-1)*(1+coreDoor*1.9);});
       sectorMeshes[4].material.color.set(unlocked?'#58d48a':'#b080ff');

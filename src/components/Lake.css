@@ -97,9 +97,34 @@
 .omega-caption p { margin: .3rem 0 0; }
 .app .lake-viewport .omega-terminal {
   bottom: 8%; width: min(90%, 34rem); max-height: 82%; overflow-y: auto; z-index: 8;
+  color-scheme: dark;
+  background-color: #202b33;
+  color: #edf3f5;
+}
+.omega-puzzle > .omega-validation-actions {
+  padding-block-start: 1rem;
+}
+.omega-puzzle > .npc-dialogue-actions + .npc-dialogue-actions {
+  margin-block-start: 1rem;
+}
+.omega-terminal .omega-puzzle button {
+  background-color: #32414a;
+  color: #edf3f5;
+  border: 1px solid #81939d;
 }
 
 .omega-star-map { position:relative; height:9rem; background:#0a1726; border:1px solid #355566; }
+.omega-terminal .omega-skip-actions {
+  margin-block-start: 1rem;
+  padding-block-start: .8rem;
+  border-block-start: 1px solid #586371;
+}
+.omega-terminal .omega-skip-actions button {
+  background: #382e43;
+  color: #f0dafd;
+  border: 1px dashed #c3a1d3;
+}
+.omega-terminal .omega-skip-actions button:hover:enabled { background: #493851; }
 .omega-star-map svg { position:absolute; inset:0; width:100%; height:100%; }
 .omega-star-map button { position:absolute; transform:translate(-50%,-50%); font-size:.76rem; }
 .omega-wave { width:100%; height:5rem; background:#0a1726; }

@@ -1,3 +1,4 @@
+import SkipMinigame from './SkipMinigame';
 import { useEffect, useRef, useState } from 'react';
 import {coolantFlow,coolingPorts,events,freshProgress,lanesAtGates,records,sectorObjective,systems} from './omegaProgress';
 
@@ -49,7 +50,7 @@ export default function SectorTerminal({id,map,m,setMission,en,effectsEnabled,pa
       <svg viewBox="0 0 220 78" className="omega-route-view" aria-hidden="true">{[0,1,2].map(n=><g key={n}><text x="1" y={17+n*24} fill={colors[n]}>{n+1}</text><polyline fill="none" stroke={colors[n]} strokeWidth="3" points={frames.map((f,i)=>(18+i*60)+','+(13+24*f.indexOf(n))).join(' ')}/><text x="205" y={17+n*24} fill={colors[[1,2,0][n]]}>{[2,3,1][n]}</text></g>)}</svg>
       <p>{en?'Output':'Saída'} · {frames[3].map(n=>n+1).join(' / ')}</p><div className="npc-dialogue-actions">{m.routing.map((v,i)=><button key={i} onClick={()=>rotate('routing',i,2)}>{i+1} · {v?'×':'⇉'}</button>)}</div></>}
     {hint&&<p>{hints[id][l]}</p>}{notice&&<p role="alert">{notice}</p>}
-    <div className="npc-dialogue-actions"><button onClick={validate}>{en?'Validate':'Validar'}</button><button onClick={()=>{const key=archive?'timeline':id;mutate(key,freshProgress()[key]);}}>{en?'Reset puzzle':'Reiniciar desafio'}</button><button onClick={()=>setHint(!hint)}>{en?'Hint':'Dica'}</button></div>
-    <div className="npc-dialogue-actions"><button type="button" disabled={paused} onClick={completePuzzle}>{en?'Skip minigame':'Pular minigame'}</button></div>
+    <div className="npc-dialogue-actions omega-validation-actions"><button onClick={validate}>{en?'Validate':'Validar'}</button><button onClick={()=>{const key=archive?'timeline':id;mutate(key,freshProgress()[key]);}}>{en?'Reset puzzle':'Reiniciar desafio'}</button><button onClick={()=>setHint(!hint)}>{en?'Hint':'Dica'}</button></div>
+    <SkipMinigame en={en} disabled={paused} onSkip={completePuzzle}/>
   </div>;
 }

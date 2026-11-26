@@ -37,3 +37,7 @@
 ## Protocolo Ômega — laboratório e reator
 
 Os setores reaproveitam as trilhas do hangar e do Centro de Comando. As sete transmissões locais de NEXUS usam ElevenLabs (Elisangela) em português e Microsoft Zira em inglês. Os arquivos ficam em `public/audio/omega`.
+
+## Núcleo de NEXUS
+
+As falas do núcleo usam Microsoft Maria em português e Microsoft Zira em inglês. A despedida do Final C em português usa a voz Angel — Warm & Soothing, gerada com ElevenLabs. As gravações locais e os efeitos sintetizados de pressão e gravidade estão em `public/audio/omega/nexus`. A arena reutiliza as músicas já creditadas da estação, do castelo e das batalhas.

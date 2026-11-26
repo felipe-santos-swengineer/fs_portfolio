@@ -12,11 +12,11 @@ export const events=[
  ['NEXUS descobre a ordem','NEXUS discovers the order'],['Contenção ativada','Containment activated'],
 ];
 export function freshProgress(){
-  return {table:false,briefed:false,fragments:[],authorized:false,phase:0,skipped:null,nextLine:0,drafts:{},
+  return {liftOverride:false,table:false,briefed:false,fragments:[],authorized:false,phase:0,skipped:null,nextLine:0,drafts:{},
     records:[],timeline:[],scientific:false,subsystems:[],powered:false,played:[],visited:[],started:[],
     cooling:Array.from({length:25},(_,i)=>(i*3+1)%4),rings:[1,4,2],routing:[0,0,0]};
 }
-export const coreUnlocked=m=>m.authorized && m.scientific && m.powered;
+export const coreUnlocked=m=>Boolean(m?.liftOverride || (m?.authorized && m.scientific && m.powered));
 export function sectorObjective(map,m,en){
   if(map==='omega-lab'&&!m.scientific)return m.records.length===4?(en?'Reconstruct the timeline in the restricted archive.':'Reconstrua a cronologia no arquivo restrito.'):(en?'Recover scientific records':'Recupere os registros científicos')+' · '+m.records.length+'/4';
   if(map==='omega-reactor'&&!m.powered)return m.subsystems.length===3?(en?'Activate the main reactor at the core console.':'Ative o reator no console principal.'):(en?'Restore reactor subsystems':'Restaure os subsistemas')+' · '+m.subsystems.length+'/3';

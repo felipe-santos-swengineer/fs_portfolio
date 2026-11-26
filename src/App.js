@@ -43,7 +43,8 @@ import bossMusic from './assets/audio/dragon-boss.ogg';
 import victoryMusic from './assets/audio/dragon-victory.mp3';
 import cursedCastleMusic from './assets/audio/cursed-castle.ogg';
 import omegaHangarMusic from './assets/audio/omega-hangar.ogg';
-import { branchMaps, freshProgress } from './components/omegaProgress';
+import { branchMaps, coreUnlocked, freshProgress } from './components/omegaProgress';
+import commandAnnouncements from './components/commandAnnouncements.json';
 import omegaCommandMusic from './assets/audio/omega-command.ogg';
 import corridorMusic from './assets/audio/infinite-corridor.ogg';
 import witchBattleMusic from './assets/audio/witch-battle.ogg';
@@ -127,7 +128,8 @@ function Content({ index, narrationEnabled, language = 'pt-BR' }) {
 
 const dragonCampaign = ['lake', 'rapids', 'ruins', 'passage', 'temple', 'cave', 'chamber'];
 const OmegaHangar = lazy(() => import('./components/OmegaHangar'));
-const omegaCampaign = ['omega-hangar', 'omega-command', ...branchMaps];
+const NexusCore = lazy(() => import('./components/NexusCore'));
+const omegaCampaign = ['omega-hangar', 'omega-command', ...branchMaps, 'omega-core'];
 const castleCampaign = [
   'cursed-castle', 'cursed-castle-corridor', 'cursed-castle-courtyard',
   'cursed-castle-throne-entrance', 'cursed-castle-royal-arena',
@@ -147,7 +149,8 @@ export default function App() {
     catch { initialMap.current = 'village'; }
   }
   const [omegaProgress,setOmegaProgress] = useState(freshProgress);
-  const [omegaMap, setOmegaMap] = useState(() => omegaCampaign.includes(initialMap.current) ? (branchMaps.includes(initialMap.current) ? 'omega-command' : initialMap.current) : null);
+  const [omegaMap, setOmegaMap] = useState(() => omegaCampaign.includes(initialMap.current) ? ((branchMaps.includes(initialMap.current) || initialMap.current==='omega-core') ? 'omega-command' : initialMap.current) : null);
+  const [nexusScore,setNexusScore] = useState('decision');
   const inOmega = Boolean(omegaMap);
   const [inDungeon, setInDungeon] = useState(() => initialMap.current === 'dungeon');
   const [inCursedCastle, setInCursedCastle] = useState(() => initialMap.current === 'cursed-castle' || initialMap.current === 'cursed-castle-corridor' || initialMap.current === 'cursed-castle-courtyard' || initialMap.current === 'cursed-castle-throne-entrance' || initialMap.current === 'cursed-castle-royal-arena');
@@ -450,7 +453,7 @@ export default function App() {
   }, []);
 
   const musicTracks = { village: villageMusic, templeVillage: templeVillageMusic, dungeon: dungeonMusic, castle: castleMusic, rapids: rapidsMusic, temple: templeMusic, lake: lakeMusic, cave: caveMusic, boss: bossMusic, kingBattle: bossMusic, kingVictory: kingVictoryMusic, victory: victoryMusic, cursedCastle: cursedCastleMusic, corridor: corridorMusic, witchBattle: witchBattleMusic, wizardChess: wizardChessMusic };
-  const musicTrack = ({ 'omega-hangar': omegaHangarMusic, 'omega-command': omegaCommandMusic, 'omega-lab': omegaHangarMusic, 'omega-reactor': omegaCommandMusic })[omegaMap] ?? musicTracks[musicScene({ reading, wizardChessOpen: inThroneEntrance && wizardChessOpen, inCorridor, inCursedCastle, inRoyalArena, kingBattle, kingVictory, inCastleCourtyard, witchEncounter, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel: inTunnel || inPassage, templeReached: inTunnel && !inPassage, inLake, inRuins })];
+  const musicTrack = ({ 'omega-hangar': omegaHangarMusic, 'omega-command': omegaCommandMusic, 'omega-lab': omegaHangarMusic, 'omega-reactor': omegaCommandMusic, 'omega-core': ({defense:bossMusic,gravity:omegaHangarMusic,assault:cursedCastleMusic,oxygen:corridorMusic,paradox:bossMusic,decision:omegaHangarMusic})[nexusScore] || omegaCommandMusic })[omegaMap] ?? musicTracks[musicScene({ reading, wizardChessOpen: inThroneEntrance && wizardChessOpen, inCorridor, inCursedCastle, inRoyalArena, kingBattle, kingVictory, inCastleCourtyard, witchEncounter, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel: inTunnel || inPassage, templeReached: inTunnel && !inPassage, inLake, inRuins })];
 
   useEffect(() => {
     const audio = bg.current;
@@ -478,7 +481,12 @@ export default function App() {
   const commandArrival = useRef(null);
   const travelCampaign = (destination, arrival = null) => {
     if (selected !== null || audioPanelOpen || accessibilityOpen || reading || wizardChessOpen) return;
+    if (destination==='omega-core' && !coreUnlocked(omegaProgress)) return;
     if (branchMaps.includes(destination) && !omegaProgress.authorized) return;
+    if (omegaMap === 'omega-command' && branchMaps.includes(destination)) {
+      // Entering an authorized sector concludes the command briefing, even mid-clip.
+      setOmegaProgress(progress => ({ ...progress, nextLine: commandAnnouncements.length }));
+    }
     setCampaignMenuOpen(false);
     setKingBattle(false);
     setKingVictory(false);
@@ -562,8 +570,8 @@ export default function App() {
     <main id="portfolio" tabIndex={-1} className={[!showIntro && !reading && 'intro-collapsed', !reading && gameUiHidden && 'game-ui-hidden'].filter(Boolean).join(' ')}>
       <div key={mapRun} hidden={reading}>
       {inThrone && <Suspense fallback={<div className="scene-loading">{en ? 'Opening the castle...' : 'Abrindo o castelo...'}</div>}><ThroneHall language={language} keys={keys} onSpeak={speakFelipe} onStop={() => speech.current.stop()} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { speech.current.stop(); keys.current.clear(); setVillageArrival('castle'); setInThrone(false); }} /></Suspense>}
-      {inOmega && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Opening sector…' : 'Abrindo setor…'}</div>}>
-        <OmegaHangar key={omegaMap} map={omegaMap} mission={omegaProgress} setMission={setOmegaProgress} onTravel={travelCampaign} arrival={commandArrival.current} onEnterCommand={arrival => travelCampaign('omega-command', arrival)} voiceEnabled={sound && audioSettings.voices} effectsEnabled={sound && audioSettings.interactions} language={language} paused={anyPanelOpen} reduceMotion={reduceMotion} campaignNavigation={campaignNavigation(omegaMap)} />
+      {inOmega && (!reading || omegaMap==='omega-core') && <Suspense fallback={<div className="scene-loading">{en ? 'Opening sector…' : 'Abrindo setor…'}</div>}>
+        {omegaMap==='omega-core' ? <NexusCore language={language} paused={anyPanelOpen||reading} reduceMotion={reduceMotion} campaignNavigation={campaignNavigation(omegaMap)} voiceEnabled={sound && audioSettings.voices} effectsEnabled={sound && audioSettings.interactions} background={bg} onScore={setNexusScore} onExit={()=>travelCampaign('village')} /> : <OmegaHangar key={omegaMap} map={omegaMap} mission={omegaProgress} setMission={setOmegaProgress} onTravel={travelCampaign} arrival={commandArrival.current} onEnterCommand={arrival => travelCampaign('omega-command', arrival)} voiceEnabled={sound && audioSettings.voices} effectsEnabled={sound && audioSettings.interactions} language={language} paused={anyPanelOpen} reduceMotion={reduceMotion} campaignNavigation={campaignNavigation(omegaMap)} />}
       </Suspense>}
       {inLake && !inRapids && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Opening the lake...' : 'Abrindo o lago...'}</div>}><Lake campaignNavigation={campaignNavigation('lake')} language={language} onSpeak={speakLakeGuide} onStop={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); }} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} onEnterRapids={() => { keys.current.clear(); setInRapids(true); }} onSound={event => effects.current.lake(event)} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setVillageArrival('portal'); setInLake(false); }} /></Suspense>}
       {inRapids && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the rapids...' : 'Entrando nas corredeiras...'}</div>}><Rapids campaignNavigation={campaignNavigation('rapids')} onAdvance={() => { keys.current.clear(); setInRapids(false); setInLake(false); setInRuins(true); }} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setInRapids(false); }} /></Suspense>}
@@ -628,7 +636,7 @@ export default function App() {
         <div className="modal-header"><h2 id="campaign-title">{en ? 'Choose a destination' : 'Escolha um destino'}</h2>
           <button className="close" onClick={() => setCampaignMenuOpen(false)} aria-label={en ? 'Close' : 'Fechar'}><X /></button></div>
         <button onClick={() => travelCampaign('village')}>{en ? 'Return to village' : 'Voltar para a vila'}</button>
-        <button disabled={stage <= 0} onClick={() => travelCampaign(branchMaps.includes(omegaMap) ? 'omega-command' : campaign[stage - 1])}>{en ? 'Previous map' : 'Voltar ao mapa anterior'}</button>
+        <button disabled={stage <= 0} onClick={() => travelCampaign((branchMaps.includes(omegaMap)||omegaMap==='omega-core') ? 'omega-command' : campaign[stage - 1])}>{en ? 'Previous map' : 'Voltar ao mapa anterior'}</button>
         {inOmega && <button onClick={()=>{setOmegaProgress(freshProgress());travelCampaign('omega-hangar');}}>{en?'Restart Omega campaign':'Reiniciar campanha Ômega'}</button>}
         <button onClick={() => travelCampaign(campaignMap)}>{en ? 'Restart current map' : 'Reiniciar mapa atual'}</button>
          {inOmega && omegaMap !== 'omega-hangar' && branchMaps.filter(id=>id!==omegaMap).map(id=><button key={id} disabled={!omegaProgress.authorized} onClick={()=>travelCampaign(id)}>{id==='omega-lab'?(en?'Experimental Laboratory':'Laboratório Experimental'):(en?'Reactor Room':'Sala do Reator')}</button>)}

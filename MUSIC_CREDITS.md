@@ -21,3 +21,19 @@
 ## Trilha do Xadrez de Bruxo
 
 - [Whispers in the Fog](https://opengameart.org/content/whispers-in-the-fog), de Ruhinre, sob [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/). Arquivo original em Ogg, reproduzido em loop durante o desafio.
+
+## Hangar de chegada — Protocolo Ômega
+
+- Anúncios da estação e de NEXUS em português com a voz Elisangela, gerados no ElevenLabs. Versão inglesa sintetizada com Microsoft Zira Desktop. As gravações são distribuídas em `public/audio/omega`.
+- Efeitos de contenção e scanner sintetizados para este cenário.
+
+- Centro de Comando: sete transmissões de NEXUS em português com a voz Elisangela (ElevenLabs) e em inglês com Microsoft Zira Desktop. Os sinais de confirmação dos consoles foram sintetizados para o jogo.
+
+## Trilhas da campanha Protocolo Ômega
+
+- Hangar de chegada — “Lost in a bad place”, de congusbongus. Loop ambiente de cordas e sinais distantes. [Fonte](https://opengameart.org/content/lost-in-a-bad-place-horror-ambience-loop) · [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+- Centro de Comando — “The Cogs”, de turtletooth. Loop de ficção científica convertido para Ogg com redução de 7,4 dB para equilibrar a passagem entre os setores. [Fonte](https://opengameart.org/content/the-cogs) · [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Protocolo Ômega — laboratório e reator
+
+Os setores reaproveitam as trilhas do hangar e do Centro de Comando. As sete transmissões locais de NEXUS usam ElevenLabs (Elisangela) em português e Microsoft Zira em inglês. Os arquivos ficam em `public/audio/omega`.

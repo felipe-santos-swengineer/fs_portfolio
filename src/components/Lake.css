@@ -88,3 +88,28 @@
 
 .lake-touch.sword-controls button.touch-attack { width:auto; min-width:70px; padding:0 10px; font-size:14px; }
 @media(max-width:420px) { .lake-touch.sword-controls { gap:5px; padding:10px 5px; } .lake-touch.sword-controls button { width:44px; height:48px; } .lake-touch.sword-controls button.touch-attack { width:auto; min-width:62px; } }
+.lake-viewport > .omega-status { position: absolute; z-index: 3; pointer-events: none; }
+.lake-viewport > .omega-caption {
+  position: absolute; z-index: 4; bottom: 20%; left: 50%; transform: translateX(-50%);
+  width: min(88%, 36rem); box-sizing: border-box; padding: .65rem 1rem; pointer-events: none;
+  color: #e8f7ff; background: #10232fee; border-left: 3px solid #74d8ee; border-radius: 4px;
+}
+.omega-caption p { margin: .3rem 0 0; }
+.app .lake-viewport .omega-terminal {
+  bottom: 8%; width: min(90%, 34rem); max-height: 82%; overflow-y: auto; z-index: 8;
+}
+
+.omega-star-map { position:relative; height:9rem; background:#0a1726; border:1px solid #355566; }
+.omega-star-map svg { position:absolute; inset:0; width:100%; height:100%; }
+.omega-star-map button { position:absolute; transform:translate(-50%,-50%); font-size:.76rem; }
+.omega-wave { width:100%; height:5rem; background:#0a1726; }
+.omega-puzzle label,.omega-power { display:flex; align-items:center; gap:.6rem; margin:.45rem 0; }
+.omega-power span { margin-left:auto; }
+.omega-puzzle button[aria-pressed="true"] { outline:2px solid #55d9d8; }
+.omega-fragments { display:flex; flex-wrap:wrap; gap:.4rem; } .omega-fragments span { padding:.35rem .55rem; border:1px solid; border-radius:4px; }
+
+.omega-pipes { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); width:min(100%, 16rem); margin:auto; }
+.omega-pipes button { padding:.1rem; aspect-ratio:1; }
+.omega-pipes svg, .omega-ring-view, .omega-route-view { display:block; width:100%; }
+.omega-ring-view { max-width:10rem; margin:auto; }
+.omega-route-view { max-width:19rem; margin:auto; }

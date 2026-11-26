@@ -49,6 +49,8 @@ Estas regras se aplicam a novos mapas e a alterações nos mapas existentes. Sig
 
 ## Áudio e campanhas
 
+- Em todos os mapas, mantenha os passos silenciosos ao caminhar ou correr. Esta regra vale para o jogador e os NPCs, em qualquer superfície.
+
 - Integre música e efeitos aos controles de áudio existentes, sem reprodução independente que ignore as preferências. Para músicas e efeitos externos, use recursos CC0 quando disponíveis e registre autor, licença e fonte em `MUSIC_CREDITS.md` ou no arquivo de créditos apropriado.
 - No menu do portal, mantenha campanhas agrupadas e recolhidas inicialmente; numere as salas na ordem da campanha. As imagens devem ser coerentes com o estilo e com a expectativa do jogo, evitando arte realista que sugira visuais que o mapa não possui.
 

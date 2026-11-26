@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { createAdventurer } from './VillageScene';
 import { createLakeBoat } from './lakeBoat';
-import { createCoveOcclusion } from './ruinsCoast';
 import MapControlGuide from './MapControlGuide';
 import { sceneFrameDelta } from './sceneFrameDelta';
 import { TUNNEL, createDragonTunnel, tunnelCenter, tunnelFloor, tunnelRegion } from './dragonTunnelWorld';
@@ -59,6 +58,9 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     };
     const boat = createLakeBoat(add);
     const sail = boat.getObjectByName('boat-sail');
+    sail.material.transparent = true;
+    sail.material.opacity = 0.25;
+    sail.material.depthWrite = false;
     const faceAlongPath = (z, direction) => {
       const tangentX = tunnelCenter(z - .6) - tunnelCenter(z + .6);
       const forwardAngle = Math.atan2(-tangentX, 1.2);
@@ -78,9 +80,6 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
     const { player } = createAdventurer(boat, { box, sphere, mesh, cylinder });
     player.position.set(0, 1, .55);
     player.rotation.y = Math.PI;
-    // Mesmo mecanismo de opacidade da enseada, forçado a 1: a vela continua
-    // sólida mesmo quando fica entre a câmera e o barco na volta.
-    const keepSailOpaque = sail ? createCoveOcclusion([sail], { forcedOpacity: 1 }) : null;
 
     let sceneDt = 0;
     const updateCamera = instant => {
@@ -165,7 +164,6 @@ export default function AncientTunnel({ campaignNavigation, language, paused, re
       } else clear();
       world.update(time, sceneDt, settings.current.reduceMotion, previousRegion);
       updateCamera();
-      keepSailOpaque?.(camera, player, sceneDt, true, 0);
       renderer.render(scene, camera);
     };
     frame = requestAnimationFrame(animate);

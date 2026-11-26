@@ -42,6 +42,9 @@ import caveMusic from './assets/audio/cave-action.mp3';
 import bossMusic from './assets/audio/dragon-boss.ogg';
 import victoryMusic from './assets/audio/dragon-victory.mp3';
 import cursedCastleMusic from './assets/audio/cursed-castle.ogg';
+import omegaHangarMusic from './assets/audio/omega-hangar.ogg';
+import { branchMaps, freshProgress } from './components/omegaProgress';
+import omegaCommandMusic from './assets/audio/omega-command.ogg';
 import corridorMusic from './assets/audio/infinite-corridor.ogg';
 import witchBattleMusic from './assets/audio/witch-battle.ogg';
 import wizardChessMusic from './assets/audio/whispers-in-the-fog.ogg';
@@ -123,6 +126,8 @@ function Content({ index, narrationEnabled, language = 'pt-BR' }) {
 }
 
 const dragonCampaign = ['lake', 'rapids', 'ruins', 'passage', 'temple', 'cave', 'chamber'];
+const OmegaHangar = lazy(() => import('./components/OmegaHangar'));
+const omegaCampaign = ['omega-hangar', 'omega-command', ...branchMaps];
 const castleCampaign = [
   'cursed-castle', 'cursed-castle-corridor', 'cursed-castle-courtyard',
   'cursed-castle-throne-entrance', 'cursed-castle-royal-arena',
@@ -141,6 +146,9 @@ export default function App() {
     try { const savedMap = sessionStorage.getItem('portfolio-map'); initialMap.current = savedMap === 'cursed-castle-interior' ? 'cursed-castle-courtyard' : ['cursed-castle-vestibule', 'cursed-castle-throne'].includes(savedMap) ? 'cursed-castle-throne-entrance' : savedMap || 'village'; }
     catch { initialMap.current = 'village'; }
   }
+  const [omegaProgress,setOmegaProgress] = useState(freshProgress);
+  const [omegaMap, setOmegaMap] = useState(() => omegaCampaign.includes(initialMap.current) ? (branchMaps.includes(initialMap.current) ? 'omega-command' : initialMap.current) : null);
+  const inOmega = Boolean(omegaMap);
   const [inDungeon, setInDungeon] = useState(() => initialMap.current === 'dungeon');
   const [inCursedCastle, setInCursedCastle] = useState(() => initialMap.current === 'cursed-castle' || initialMap.current === 'cursed-castle-corridor' || initialMap.current === 'cursed-castle-courtyard' || initialMap.current === 'cursed-castle-throne-entrance' || initialMap.current === 'cursed-castle-royal-arena');
   const [inCorridor, setInCorridor] = useState(() => initialMap.current === 'cursed-castle-corridor');
@@ -171,9 +179,9 @@ export default function App() {
   const [returnFromCave, setReturnFromCave] = useState(() => initialMap.current === 'cave' || initialMap.current === 'chamber');
   const [inThrone, setInThrone] = useState(() => initialMap.current === 'throne');
   useEffect(() => {
-    try { sessionStorage.setItem('portfolio-map', inRoyalArena ? 'cursed-castle-royal-arena' : inCorridor ? 'cursed-castle-corridor' : inThroneEntrance ? 'cursed-castle-throne-entrance' : inCastleCourtyard ? 'cursed-castle-courtyard' : inCursedCastle ? 'cursed-castle' : inDungeon ? 'dungeon' : inChamber ? 'chamber' : inCave ? 'cave' : inPassage ? 'tunnel' : inTunnel ? 'temple' : inRuins ? 'ruins' : inRapids ? 'rapids' : inLake ? 'lake' : inThrone ? 'throne' : 'village'); }
+    try { sessionStorage.setItem('portfolio-map', omegaMap || (inRoyalArena ? 'cursed-castle-royal-arena' : inCorridor ? 'cursed-castle-corridor' : inThroneEntrance ? 'cursed-castle-throne-entrance' : inCastleCourtyard ? 'cursed-castle-courtyard' : inCursedCastle ? 'cursed-castle' : inDungeon ? 'dungeon' : inChamber ? 'chamber' : inCave ? 'cave' : inPassage ? 'tunnel' : inTunnel ? 'temple' : inRuins ? 'ruins' : inRapids ? 'rapids' : inLake ? 'lake' : inThrone ? 'throne' : 'village')); }
     catch { /* The map still works when browser storage is unavailable. */ }
-  }, [inDungeon, inLake, inThrone, inRapids, inRuins, inPassage, inTunnel, inCave, inChamber, inCursedCastle, inCorridor, inCastleCourtyard, inThroneEntrance, inRoyalArena]);
+  }, [omegaMap, inDungeon, inLake, inThrone, inRapids, inRuins, inPassage, inTunnel, inCave, inChamber, inCursedCastle, inCorridor, inCastleCourtyard, inThroneEntrance, inRoyalArena]);
   const [visited, setVisited] = useState([]);
   const [missionRound, setMissionRound] = useState(0);
   const celebrationDone = useRef(false);
@@ -215,11 +223,6 @@ export default function App() {
   const bg = useRef(null);
   const effects = useRef(null);
   const speech = useRef(null);
-  const dragonDialogueActive = useRef(false);
-  const setDragonDialogueActive = useCallback(active => {
-    dragonDialogueActive.current = active;
-    if (bg.current) bg.current.volume = active || speech.current?.playing || [...document.querySelectorAll('audio[data-narration]')].some(a => !a.paused && !a.ended) ? .025 : .09;
-  }, []);
   if (!speech.current) speech.current = new VillagerSpeech();
   const visits = useRef(VILLAGERS.map(() => 0));
   const npcPanel = useRef(null);
@@ -233,10 +236,10 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(a => { if (!a.paused) a.pause(); });
-    bg.current.volume = .025; setSpeaking(true); setVoiceNotice('');
+    setSpeaking(true); setVoiceNotice('');
     const person = en ? { ...VILLAGERS[index], ...english.VILLAGERS[index] } : VILLAGERS[index];
     speech.current.speak(person.lines[line], en ? ENGLISH_VOICES[person.name] : VILLAGER_VOICES[person.name], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Try again or read the message.' : 'Não foi possível reproduzir a fala. Tente ouvir novamente ou acompanhe a mensagem em texto.');
     });
   }, [en]);
@@ -244,10 +247,10 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     speech.current.speak(en ? english.felipe[line] : FELIPE_LINES[line], en ? ENGLISH_FELIPE_VOICE : FELIPE_VOICE, success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the message.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe a mensagem em texto.');
     });
   }, [en]);
@@ -255,11 +258,11 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     speech.current.speak(lakeGuide[locale][line], LAKE_GUIDE_VOICES[locale], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the message.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe a mensagem em texto.');
     });
   }, [en]);
@@ -267,11 +270,11 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     speech.current.speak(ruinsPirate[locale][line], RUINS_PIRATE_VOICES[locale], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the message.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe a mensagem em texto.');
     });
   }, [en]);
@@ -279,11 +282,11 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     speech.current.speak(templeDialogue[locale][line], TEMPLE_VOICES[locale], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the message.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe a mensagem em texto.');
     });
   }, [en]);
@@ -291,11 +294,11 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     speech.current.speak(caveDialogue[locale][line], CAVE_VOICES[locale], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the message.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe a mensagem em texto.');
     });
   }, [en]);
@@ -303,11 +306,11 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     speech.current.speak(dragonDialogue[locale][line], DRAGON_VOICES[locale], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = dragonDialogueActive.current ? .025 : .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe o di\u00e1logo em texto.');
     });
   }, [en]);
@@ -315,9 +318,9 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     speech.current.speak(text, profile, () => {
-      if (bg.current) bg.current.volume = .09;
+
     });
   }, []);
   const stopWitchVoice = useCallback(() => speech.current.stop(), []);
@@ -325,11 +328,11 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     speech.current.speak(lines[locale][line], voices[locale], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe o di\u00e1logo em texto.');
     });
   }, [en]);
@@ -341,21 +344,21 @@ export default function App() {
     }
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     const profile = KING_VOICES[locale];
     const clip = profile.clips[line];
     if (!clip) {
       setSpeaking(false);
-      if (bg.current) bg.current.volume = .09;
+
       setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'Não foi possível reproduzir a fala. Acompanhe o diálogo em texto.');
       onDone?.(false);
       return;
     }
     speech.current.speak(clip.text, profile, success => {
       setSpeaking(false);
-      if (bg.current) bg.current.volume = .09;
+
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'Não foi possível reproduzir a fala. Acompanhe o diálogo em texto.');
       onDone?.(success);
     });
@@ -365,11 +368,11 @@ export default function App() {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
     document.querySelectorAll('audio[data-narration]').forEach(audio => { if (!audio.paused) audio.pause(); });
-    if (bg.current) bg.current.volume = .025;
+
     setSpeaking(true); setVoiceNotice('');
     const locale = en ? 'en-US' : 'pt-BR';
     speech.current.speak(cursedCastleDialogue[locale][line], CURSED_CASTLE_VOICES[locale], success => {
-      setSpeaking(false); if (bg.current) bg.current.volume = .09;
+      setSpeaking(false);
       if (!success) setVoiceNotice(en ? 'Could not play the voice. Please read the dialogue.' : 'N\u00e3o foi poss\u00edvel reproduzir a fala. Acompanhe o di\u00e1logo em texto.');
     });
   }, [en]);
@@ -390,21 +393,26 @@ export default function App() {
   useEffect(() => {
     const handler = e => {
       if (e.key === 'Escape' && conversation && !anyPanelOpen) { speech.current.stop(); setSpeaking(false); setConversation(null); }
-      if (!anyPanelOpen && !inDungeon && !inThrone && !inLake && !inRuins && !inCursedCastle && !e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement?.tagName === 'CANVAS' && e.key.toLowerCase() === 'e' && !e.repeat && selected === null && !reading && !conversation && (nearNpc >= 0 || near >= 0)) { e.preventDefault(); if (nearNpc >= 0) talk(nearNpc); else open(near); }
+      if (!anyPanelOpen && !inOmega && !inDungeon && !inThrone && !inLake && !inRuins && !inCursedCastle && !e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement?.tagName === 'CANVAS' && e.key.toLowerCase() === 'e' && !e.repeat && selected === null && !reading && !conversation && (nearNpc >= 0 || near >= 0)) { e.preventDefault(); if (nearNpc >= 0) talk(nearNpc); else open(near); }
     };
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
-  }, [conversation, near, nearNpc, selected, reading, talk, anyPanelOpen, inDungeon, inThrone, inLake, inRuins, inCursedCastle]);
+  }, [conversation, near, nearNpc, selected, reading, talk, anyPanelOpen, inOmega, inDungeon, inThrone, inLake, inRuins, inCursedCastle]);
 
   useEffect(() => {
     const engine = effects.current;
     const background = bg.current;
     const voice = speech.current;
     const revision = audioRevision;
-    const duck = e => { if (e.target.hasAttribute?.('data-narration') && (!preferences.current.master || !preferences.current.narration)) { if (!e.target.paused) e.target.pause(); return; } if (e.type === 'play' && e.target.hasAttribute?.('data-narration')) voice.stop(); background.volume = dragonDialogueActive.current || voice.playing || [...document.querySelectorAll('audio[data-narration]')].some(a => !a.paused && !a.ended) ? .025 : .09; };
+    background.volume = .06;
+    const onNarrationPlay = event => {
+      if (!event.target.hasAttribute?.('data-narration')) return;
+      if (!preferences.current.master || !preferences.current.narration) event.target.pause();
+      else voice.stop();
+    };
     const hide = () => { if (document.hidden) { voice.stop(); engine.stopWeather?.(); } };
     document.addEventListener('visibilitychange', hide);
-    document.addEventListener('play', duck, true); document.addEventListener('pause', duck, true); document.addEventListener('ended', duck, true);
-    return () => { soundRequested.current = false; revision.current++; voice.stop(); engine.dispose(); if (!background.paused) background.pause(); document.removeEventListener('visibilitychange', hide); document.removeEventListener('play', duck, true); document.removeEventListener('pause', duck, true); document.removeEventListener('ended', duck, true); };
+    document.addEventListener('play', onNarrationPlay, true);
+    return () => { soundRequested.current = false; revision.current++; voice.stop(); engine.dispose(); if (!background.paused) background.pause(); document.removeEventListener('visibilitychange', hide); document.removeEventListener('play', onNarrationPlay, true); };
   }, []);
 
 
@@ -419,7 +427,6 @@ export default function App() {
     document.querySelectorAll('audio[data-narration]').forEach(a => { a.muted = !next.master || !next.narration; if (a.muted && !a.paused) a.pause(); });
     if (!next.master) { effects.current.mute(); bg.current.pause(); return; }
     if (!next.music) bg.current.pause();
-    bg.current.volume = dragonDialogueActive.current || speech.current.playing || [...document.querySelectorAll('audio[data-narration]')].some(a => !a.paused && !a.ended) ? .025 : .09;
     const musicAttempt = next.music ? bg.current.play().then(() => true).catch(() => false) : Promise.resolve(true);
     const effectAttempt = next.interactions ? effects.current.enable() : Promise.resolve(true);
     if (!next.interactions) effects.current.mute();
@@ -443,14 +450,14 @@ export default function App() {
   }, []);
 
   const musicTracks = { village: villageMusic, templeVillage: templeVillageMusic, dungeon: dungeonMusic, castle: castleMusic, rapids: rapidsMusic, temple: templeMusic, lake: lakeMusic, cave: caveMusic, boss: bossMusic, kingBattle: bossMusic, kingVictory: kingVictoryMusic, victory: victoryMusic, cursedCastle: cursedCastleMusic, corridor: corridorMusic, witchBattle: witchBattleMusic, wizardChess: wizardChessMusic };
-  const musicTrack = musicTracks[musicScene({ reading, wizardChessOpen: inThroneEntrance && wizardChessOpen, inCorridor, inCursedCastle, inRoyalArena, kingBattle, kingVictory, inCastleCourtyard, witchEncounter, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel: inTunnel || inPassage, templeReached: inTunnel && !inPassage, inLake, inRuins })];
+  const musicTrack = ({ 'omega-hangar': omegaHangarMusic, 'omega-command': omegaCommandMusic, 'omega-lab': omegaHangarMusic, 'omega-reactor': omegaCommandMusic })[omegaMap] ?? musicTracks[musicScene({ reading, wizardChessOpen: inThroneEntrance && wizardChessOpen, inCorridor, inCursedCastle, inRoyalArena, kingBattle, kingVictory, inCastleCourtyard, witchEncounter, inDungeon, inThrone, inRapids, inChamber, dragonBattle, dragonVictory, inCave, inTunnel: inTunnel || inPassage, templeReached: inTunnel && !inPassage, inLake, inRuins })];
 
   useEffect(() => {
     const audio = bg.current;
     if (audio && audioInitiated.current && preferences.current.master && preferences.current.music) audio.play().catch(() => setAudioNotice(en ? 'Could not start the music. Try enabling it in audio settings.' : 'Não foi possível iniciar a música. Tente ativá-la nas configurações de áudio.'));
   }, [musicTrack, en]);
 
-  useEffect(() => { if (inDungeon || inThrone || inLake || inRuins || inCursedCastle || reading) effects.current.stopWeather?.(); }, [inDungeon, inThrone, inLake, inRuins, inCursedCastle, reading]);
+  useEffect(() => { if (inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle || reading) effects.current.stopWeather?.(); }, [inOmega, inDungeon, inThrone, inLake, inRuins, inCursedCastle, reading]);
 
   const updateAccessibility = next => {
     keys.current.clear();
@@ -462,14 +469,16 @@ export default function App() {
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   const setReading = value => updateAccessibility({ ...accessibility, readingMode: value });
   const openAccessibility = () => { keys.current.clear(); setAudioPanelOpen(false); setAccessibilityOpen(true); };
-  const campaignMap = inCursedCastle
+  const campaignMap = inOmega ? omegaMap : inCursedCastle
     ? castleCampaign[inRoyalArena ? 4 : inThroneEntrance ? 3 : inCastleCourtyard ? 2 : inCorridor ? 1 : 0]
     : inChamber ? 'chamber' : inCave ? 'cave' : inPassage ? 'passage' : inTunnel ? 'temple' : inRuins ? 'ruins'
       : inRapids ? 'rapids' : inLake ? 'lake' : null;
 
   const [mapRun, setMapRun] = useState(0);
-  const travelCampaign = destination => {
+  const commandArrival = useRef(null);
+  const travelCampaign = (destination, arrival = null) => {
     if (selected !== null || audioPanelOpen || accessibilityOpen || reading || wizardChessOpen) return;
+    if (branchMaps.includes(destination) && !omegaProgress.authorized) return;
     setCampaignMenuOpen(false);
     setKingBattle(false);
     setKingVictory(false);
@@ -498,6 +507,9 @@ export default function App() {
     setReturnFromCave(dragonStage >= 5 || (destination === 'temple' && campaignMap === 'cave'));
     setReturnFromChamber(returnedFromChamber);
 
+    if (inOmega && !omegaCampaign.includes(destination)) setOmegaProgress(freshProgress());
+    commandArrival.current = arrival;
+    setOmegaMap(omegaCampaign.includes(destination) ? destination : null);
     setInCursedCastle(castleStage >= 0);
     setInCorridor(castleStage === 1);
     setInCastleCourtyard(castleStage === 2);
@@ -513,10 +525,10 @@ export default function App() {
     }
   };
 
-  const campaign = inCursedCastle ? castleCampaign : dragonCampaign;
+  const campaign = inOmega ? omegaCampaign : inCursedCastle ? castleCampaign : dragonCampaign;
   const stage = campaign.indexOf(campaignMap);
-  const nextCampaign = campaign === dragonCampaign && stage === campaign.length - 1;
-  const nextMap = nextCampaign ? castleCampaign[0] : campaign[stage + 1];
+  const nextCampaign = campaign !== omegaCampaign && stage === campaign.length - 1;
+  const nextMap = nextCampaign ? (campaign === dragonCampaign ? castleCampaign[0] : omegaCampaign[0]) : campaign[stage + 1];
   const campaignNavigation = map => map === campaignMap ? (
     <CampaignNavigation language={language} paused={anyPanelOpen || reading} hidden={map !== 'rapids' && wizardChessOpen}
       onOpen={() => { keys.current.clear(); setCampaignMenuOpen(true); }} />
@@ -550,13 +562,16 @@ export default function App() {
     <main id="portfolio" tabIndex={-1} className={[!showIntro && !reading && 'intro-collapsed', !reading && gameUiHidden && 'game-ui-hidden'].filter(Boolean).join(' ')}>
       <div key={mapRun} hidden={reading}>
       {inThrone && <Suspense fallback={<div className="scene-loading">{en ? 'Opening the castle...' : 'Abrindo o castelo...'}</div>}><ThroneHall language={language} keys={keys} onSpeak={speakFelipe} onStop={() => speech.current.stop()} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { speech.current.stop(); keys.current.clear(); setVillageArrival('castle'); setInThrone(false); }} /></Suspense>}
+      {inOmega && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Opening sector…' : 'Abrindo setor…'}</div>}>
+        <OmegaHangar key={omegaMap} map={omegaMap} mission={omegaProgress} setMission={setOmegaProgress} onTravel={travelCampaign} arrival={commandArrival.current} onEnterCommand={arrival => travelCampaign('omega-command', arrival)} voiceEnabled={sound && audioSettings.voices} effectsEnabled={sound && audioSettings.interactions} language={language} paused={anyPanelOpen} reduceMotion={reduceMotion} campaignNavigation={campaignNavigation(omegaMap)} />
+      </Suspense>}
       {inLake && !inRapids && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Opening the lake...' : 'Abrindo o lago...'}</div>}><Lake campaignNavigation={campaignNavigation('lake')} language={language} onSpeak={speakLakeGuide} onStop={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); }} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} onEnterRapids={() => { keys.current.clear(); setInRapids(true); }} onSound={event => effects.current.lake(event)} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setVillageArrival('portal'); setInLake(false); }} /></Suspense>}
       {inRapids && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the rapids...' : 'Entrando nas corredeiras...'}</div>}><Rapids campaignNavigation={campaignNavigation('rapids')} onAdvance={() => { keys.current.clear(); setInRapids(false); setInLake(false); setInRuins(true); }} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setInRapids(false); }} /></Suspense>}
       {inRuins && !inPassage && !inTunnel && !reading && <div><Suspense fallback={<div className="scene-loading">{en ? 'Opening the ruins...' : 'Abrindo as ruínas...'}</div>}><Ruins campaignNavigation={campaignNavigation('ruins')} startNearPassage={templeReached} language={language} onSound={event => effects.current.ruins?.(event)} onEnterTunnel={() => { speech.current.stop(); keys.current.clear(); effects.current.ruins?.('passage'); setPassageFromVillage(false); setTempleReached(true); setInPassage(true); }} onSpeak={speakRuinsPirate} onStop={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); }} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setTempleReached(false); setInRuins(false); }} /></Suspense></div>}
       {inPassage && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Descending into the passage...' : 'Descendo pela passagem...'}</div>}><AncientTunnel campaignNavigation={campaignNavigation('passage')} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} fromVillage={passageFromVillage} onSound={event => effects.current.ruins?.(event)} onExit={() => { keys.current.clear(); setInPassage(false); }} onArrive={() => { keys.current.clear(); setPassageFromVillage(false); setInPassage(false); setInTunnel(true); setTempleReached(true); }} onReturnCove={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); keys.current.clear(); setPassageFromVillage(false); setInPassage(false); setInRuins(true); setTempleReached(false); }} /></Suspense>}
       {inTunnel && !inCave && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the village...' : 'Entrando na aldeia...'}</div>}><TempleVillage campaignNavigation={campaignNavigation('temple')} startNearCave={returnFromCave} onEnterCave={() => { speech.current.stop(); setSpeaking(false); keys.current.clear(); setReturnFromCave(true); setReturnFromChamber(false); setInCave(true); }} onSpeak={speakTempleResident} onStop={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); }} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onSound={event => effects.current.ruins?.(event)} onExit={() => { speech.current.stop(); setSpeaking(false); keys.current.clear(); effects.current.ruins?.('passage'); setReturnFromCave(false); travelCampaign('passage'); }} /></Suspense>}
       {inCave && !inChamber && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the cave...' : 'Entrando na caverna...'}</div>}><DragonCave campaignNavigation={campaignNavigation('cave')} startAtChamber={returnFromChamber} onEnterChamber={() => { speech.current.stop(); setSpeaking(false); keys.current.clear(); setInChamber(true); }} onSpeak={speakCaveTraveler} onStop={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); }} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} onSound={event => effects.current.cave(event)} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { speech.current.stop(); setSpeaking(false); keys.current.clear(); setReturnFromChamber(false); setInCave(false); }}/></Suspense>}
-      {inChamber && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the chamber...' : 'Entrando na câmara...'}</div>}><DragonChamber campaignNavigation={campaignNavigation('chamber')} onPrincessSpeak={speakPrincess} speaking={speaking} onVictoryChange={setDragonVictory} onReturnVillage={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); keys.current.clear(); setInChamber(false); setInCave(false); setInTunnel(false); setInRuins(false); setVillageArrival('portal'); }} onDialogueChange={setDragonDialogueActive} onBattleChange={setDragonBattle} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onSpeak={speakElder} onStop={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); }} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} onSound={event => effects.current.dragon(event)} onExit={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); keys.current.clear(); setReturnFromChamber(true); setInChamber(false); }}/></Suspense>}
+      {inChamber && !reading && <Suspense fallback={<div className="scene-loading">{en ? 'Entering the chamber...' : 'Entrando na câmara...'}</div>}><DragonChamber campaignNavigation={campaignNavigation('chamber')} onPrincessSpeak={speakPrincess} speaking={speaking} onVictoryChange={setDragonVictory} onReturnVillage={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); keys.current.clear(); setInChamber(false); setInCave(false); setInTunnel(false); setInRuins(false); setVillageArrival('portal'); }} onBattleChange={setDragonBattle} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onSpeak={speakElder} onStop={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); }} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} onSound={event => effects.current.dragon(event)} onExit={() => { speech.current.stop(); setSpeaking(false); setVoiceNotice(''); keys.current.clear(); setReturnFromChamber(true); setInChamber(false); }}/></Suspense>}
       {inCursedCastle && !inCorridor && !inCastleCourtyard && !inThroneEntrance && !inRoyalArena && !reading && <Suspense fallback={<div className="scene-loading">{en?'Approaching the cursed castle...':'Chegando ao castelo amaldi\u00e7oado...'}</div>}><CursedCastle campaignNavigation={campaignNavigation('cursed-castle')} startNearGate={returnFromCastleCourtyard} onEnterCastle={()=>{keys.current.clear();setReturnFromCastleCourtyard(true);setInCorridor(true);setInCastleCourtyard(false);}} onSound={event=>effects.current.cursedCastle?.(event)} weatherEffects={accessibility.weatherEffects} onWeather={strength=>effects.current.setWeather?.(strength)} onSpeak={speakCastleArchivist} onStop={()=>{speech.current.stop();setSpeaking(false);setVoiceNotice('');}} speaking={speaking} voiceEnabled={sound && audioSettings.voices} voiceNotice={voiceNotice} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={()=>{keys.current.clear();setInCursedCastle(false);setReturnFromCastleCourtyard(false);setVillageArrival('portal');}} /></Suspense>}
       {inCorridor && !reading && <Suspense fallback={<div className="scene-loading">{en?'Entering the hall of infinity...':'Entrando no corredor do infinito...'}</div>}><InfiniteCorridor campaignNavigation={campaignNavigation('cursed-castle-corridor')} language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onSound={event=>{if(event==='monster')effects.current.dungeon?.('monsterAttack');else if(event==='cloak')effects.current.ruins?.('rune');else effects.current.cursedCastle?.(event);}} onExit={()=>{keys.current.clear();setReturnFromCastleCourtyard(true);setInCorridor(false);}} onAdvance={()=>{keys.current.clear();setInCorridor(false);setInCastleCourtyard(true);}} /></Suspense>}
       {inCastleCourtyard && !reading && <Suspense fallback={<div className="scene-loading">{en?'Entering the courtyard...':'Entrando no pátio...'}</div>}><CursedCastleCourtyard campaignNavigation={campaignNavigation('cursed-castle-courtyard')} onAdvance={()=>{keys.current.clear();setInCastleCourtyard(false);setInThroneEntrance(true);}} onEncounterChange={setWitchEncounter} language={language} onSpeak={speakWitch} onStopVoice={stopWitchVoice} voiceEnabled={sound && audioSettings.voices} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onSound={(event,onDone)=>effects.current.cursedCastle?.(event,onDone)} weatherEffects={accessibility.weatherEffects} onWeather={strength=>effects.current.setWeather?.(strength)} onExit={()=>{keys.current.clear();setReturnFromCastleCourtyard(true);setInCastleCourtyard(false);}} /></Suspense>}
@@ -574,7 +589,7 @@ export default function App() {
         language={language} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear();setInThroneEntrance(false);setInCastleCourtyard(true); }} /></Suspense>}
       {inDungeon && <Suspense fallback={<div className="scene-loading">{en ? 'Opening the portal...' : 'Abrindo o portal...'}</div>}><Dungeon language={language} keys={keys} onSound={event => effects.current.dungeon(event)} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setInDungeon(false); }} /></Suspense>}
       </div>
-      <div hidden={!reading && (inDungeon || inThrone || inLake || inRuins || inCursedCastle)}>
+      <div hidden={!reading && (inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle)}>
       <div className="intro">
         {!showIntro && !reading && <h1 className="sr-only">{en ? 'Felipe Santos portfolio' : 'Portfólio de Felipe Santos'}</h1>}
         {!reading && <button className="intro-toggle" aria-expanded={showIntro} aria-controls="intro-copy" onClick={() => setShowIntro(visible => !visible)}>{showIntro ? <EyeOff size={15} /> : <Eye size={15} />}{showIntro ? (en ? 'Hide text' : 'Ocultar texto') : (en ? 'Show text' : 'Mostrar texto')}</button>}
@@ -582,7 +597,7 @@ export default function App() {
       </div>
       {reading ? <div className="reading-list"><nav className="reading-navigation" aria-label={en ? 'Portfolio sections' : 'Seções do portfólio'}><button type="button" className="reading-nav-toggle" aria-expanded={readingMenuOpen} aria-controls="reading-menu-links" onClick={() => setReadingMenuOpen(open => !open)}>{readingMenuOpen ? (en ? 'Collapse menu' : 'Recolher menu') : (en ? 'Open menu' : 'Abrir menu')} <span aria-hidden="true">{readingMenuOpen ? '−' : '+'}</span></button><div id="reading-menu-links" className="reading-menu-links" hidden={!readingMenuOpen}><span className="reading-nav-title">{en ? 'Explore the portfolio' : 'Explore o portfólio'}</span>{activePlaces.map((p, i) => <a href={`#reading-section-${i}`} key={p.name}>{p.section}</a>)}<a href="#reading-villagers">{en ? 'Village residents' : 'Moradores da vila'}</a></div></nav>{activePlaces.map((p, i) => <section id={`reading-section-${i}`} tabIndex={-1} key={p.name}><span className="eyebrow">0{i + 1} · {p.name}</span><h2>{p.section}</h2><Content language={language} index={i} narrationEnabled={sound && audioSettings.narration} /></section>)}<section id="reading-villagers" tabIndex={-1}><h2>{en ? 'Village residents' : 'Moradores da vila'}</h2><p>{en ? 'Read the villagers’ greetings without exploring the 3D scene.' : 'Conheça as saudações dos moradores sem navegar pelo cenário.'}</p>{activeVillagers.map((person, i) => <details className="reading-villager" key={person.name}><summary>{person.name} · {person.role}</summary>{person.lines.map((line, j) => <div key={line}><p>{line}</p><button disabled={!sound || !audioSettings.voices} onClick={() => speakNpc(i, j)}>{en ? 'Listen to message' : 'Ouvir mensagem'} {j + 1} {en ? 'from' : 'de'} {person.name}</button></div>)}</details>)}{speaking && <button onClick={() => speech.current.stop()}>{en ? 'Stop voice' : 'Parar voz'}</button>}</section></div> : <>
         <div className="viewport" aria-label={en ? '3D portfolio village' : 'Vilarejo tridimensional do portfólio'}>
-          <Suspense fallback={<div className="scene-loading">{en ? 'Lighting the village lanterns…' : 'Acendendo as lanternas da vila…'}</div>}><VillageScene language={language} weatherMode={weatherMode} weatherEffects={accessibility.weatherEffects} onWeather={strength => effects.current.setWeather?.(strength)} keys={keys} compassRef={compassDial} sceneHidden={inDungeon || inThrone || inLake || inRuins || inCursedCastle} paused={selected !== null || anyPanelOpen || inDungeon || inThrone || inLake || inRuins || inCursedCastle} reduceMotion={reduceMotion} ambientPaused={accessibility.pauseScene} cameraTurn={cameraTurn} onOpen={open} onNear={setNear} onTalk={talk} onNearNpc={setNearNpc} talkingNpc={conversation?.index} zoom={zoom} resetKey={resetKey} villageArrival={villageArrival} onVillageArrivalHandled={() => setVillageArrival(null)} missionRound={missionRound} missionComplete={missionComplete && !celebrationDone.current} onFirework={stage => { if (preferences.current.master && preferences.current.interactions) effects.current.firework(stage); }} onCelebrate={() => { celebrationDone.current = true; }} /></Suspense>
+          <Suspense fallback={<div className="scene-loading">{en ? 'Lighting the village lanterns…' : 'Acendendo as lanternas da vila…'}</div>}><VillageScene language={language} weatherMode={weatherMode} weatherEffects={accessibility.weatherEffects} onWeather={strength => effects.current.setWeather?.(strength)} keys={keys} compassRef={compassDial} sceneHidden={inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle} paused={selected !== null || anyPanelOpen || inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle} reduceMotion={reduceMotion} ambientPaused={accessibility.pauseScene} cameraTurn={cameraTurn} onOpen={open} onNear={setNear} onTalk={talk} onNearNpc={setNearNpc} talkingNpc={conversation?.index} zoom={zoom} resetKey={resetKey} villageArrival={villageArrival} onVillageArrivalHandled={() => setVillageArrival(null)} missionRound={missionRound} missionComplete={missionComplete && !celebrationDone.current} onFirework={stage => { if (preferences.current.master && preferences.current.interactions) effects.current.firework(stage); }} onCelebrate={() => { celebrationDone.current = true; }} /></Suspense>
           {conversation && <section className="npc-dialogue" aria-label={`${en ? 'Conversation with' : 'Conversa com'} ${activeVillagers[conversation.index].name}`} tabIndex={-1} ref={npcPanel}>
             <div className="npc-dialogue-heading"><span className="npc-avatar" style={{ background: activeVillagers[conversation.index].color }}>{activeVillagers[conversation.index].name[0]}</span><div><h2>{activeVillagers[conversation.index].name}</h2><small>{activeVillagers[conversation.index].role}</small></div><button onClick={endConversation} aria-label={en ? 'End conversation' : 'Encerrar conversa'}><X size={18} /></button></div>
             <p aria-live="polite">{activeVillagers[conversation.index].lines[conversation.line]}</p>
@@ -613,9 +628,11 @@ export default function App() {
         <div className="modal-header"><h2 id="campaign-title">{en ? 'Choose a destination' : 'Escolha um destino'}</h2>
           <button className="close" onClick={() => setCampaignMenuOpen(false)} aria-label={en ? 'Close' : 'Fechar'}><X /></button></div>
         <button onClick={() => travelCampaign('village')}>{en ? 'Return to village' : 'Voltar para a vila'}</button>
-        <button disabled={stage <= 0} onClick={() => travelCampaign(campaign[stage - 1])}>{en ? 'Previous map' : 'Voltar ao mapa anterior'}</button>
+        <button disabled={stage <= 0} onClick={() => travelCampaign(branchMaps.includes(omegaMap) ? 'omega-command' : campaign[stage - 1])}>{en ? 'Previous map' : 'Voltar ao mapa anterior'}</button>
+        {inOmega && <button onClick={()=>{setOmegaProgress(freshProgress());travelCampaign('omega-hangar');}}>{en?'Restart Omega campaign':'Reiniciar campanha Ômega'}</button>}
         <button onClick={() => travelCampaign(campaignMap)}>{en ? 'Restart current map' : 'Reiniciar mapa atual'}</button>
-        <button disabled={!nextMap} onClick={() => travelCampaign(nextMap)}>{nextCampaign ? (en ? 'Next campaign' : 'Avançar para a próxima campanha') : (en ? 'Next map' : 'Avançar ao próximo mapa')}</button>
+         {inOmega && omegaMap !== 'omega-hangar' && branchMaps.filter(id=>id!==omegaMap).map(id=><button key={id} disabled={!omegaProgress.authorized} onClick={()=>travelCampaign(id)}>{id==='omega-lab'?(en?'Experimental Laboratory':'Laboratório Experimental'):(en?'Reactor Room':'Sala do Reator')}</button>)}
+        <button hidden={inOmega && omegaMap !== 'omega-hangar'} disabled={!nextMap} onClick={() => travelCampaign(nextMap)}>{nextCampaign ? (en ? 'Next campaign' : 'Avançar para a próxima campanha') : (en ? 'Next map' : 'Avançar ao próximo mapa')}</button>
       </section>
     </div>}
     {selected !== null && <div className="modal-backdrop" inert={anyPanelOpen || undefined} aria-hidden={anyPanelOpen || undefined} onClick={e => { if (e.target === e.currentTarget) close(); }}><article className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabIndex={-1} ref={dialog}><div className="modal-header"><span className="eyebrow">0{selected + 1} · {activePlaces[selected].name}</span><div className="modal-header-actions"><button className="close" onClick={close} aria-label={en ? 'Close section' : 'Fechar seção'}><X /></button><button className="section-audio-button" onClick={() => setAudioPanelOpen(true)}>{en ? 'Audio settings' : 'Configurar áudio'}</button><button className="section-audio-button" onClick={openAccessibility}>{en ? 'Accessibility' : 'Acessibilidade'}</button></div></div><h2 id="dialog-title">{selected === 4 ? (en ? 'Choose a destination' : 'Escolha um destino') : activePlaces[selected].section}</h2>{selected === 4 ? <div className="portal-destinations"><p>{en ? 'Where would you like to go?' : 'Para onde você deseja ir?'}</p><details className="portal-campaign"><summary>{en ? 'Evil Dragon Campaign' : 'Campanha do Dragão Maligno'}</summary><div className="portal-campaign-maps"><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInLake(true); }}><PortalArtwork scene="lake" /><span className="portal-card-copy"><strong>1. {en ? 'Lake of Interfaces' : 'Lago das Interfaces'}</strong><span>{en ? 'Explore the lake by boat' : 'Explore o lago de barco'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInLake(true); setInRapids(true); }}><PortalArtwork scene="rapids" /><span className="portal-card-copy"><strong>2. {en ? 'Canyon Rapids' : 'Corredeiras do Desfiladeiro'}</strong><span>{en ? 'Steer through the canyon' : 'Desça o desfiladeiro de barco'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); }}><PortalArtwork scene="ruins" /><span className="portal-card-copy"><strong>3. {en ? 'Sunken Ruins Cove' : 'Enseada das Ruínas Submersas'}</strong><span>{en ? 'Explore the ancient cove' : 'Explore a enseada e suas ruínas'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(false); setInCave(false); setInChamber(false); setPassageFromVillage(false); setInPassage(true); }}><PortalArtwork scene="passage" /><span className="portal-card-copy"><strong>4. {en ? 'Ancient Passage' : 'Passagem Antiga'}</strong><span>{en ? 'Descend to the temple village' : 'Desça até a aldeia do templo'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(true); }}><PortalArtwork scene="temple" />
@@ -644,7 +661,15 @@ export default function App() {
           <path d="M281 129V67l19 13 19-13v62Z" fill="#562539"/><path d="m300 75 8 15-8 13-8-13Z" fill="#ac83db"/>
         </svg><span className="portal-card-copy"><strong>5. {en ? 'Evil Throne Room' : 'Sala do Trono Maligno'}</strong>
           <span>{en ? 'Face the Castle Lord' : 'Enfrente o Senhor do Castelo'}</span></span><ArrowUpRight size={20} aria-hidden="true" />
-      </button></div></details></div> : <Content language={language} index={selected} narrationEnabled={sound && audioSettings.narration} />}</article></div>}
+      </button></div></details>
+      <details className="portal-campaign"><summary>{en ? 'Omega Protocol' : 'Protocolo Ômega'}</summary><div className="portal-campaign-maps">
+        <button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setOmegaMap('omega-hangar'); }}>
+          <svg className="portal-card-image" viewBox="0 0 600 250" aria-hidden="true"><rect width="600" height="250" fill="#0b1426"/><path d="M0 0l140 50v120L0 250m600-250L460 50v120l140 80" fill="#33475b"/><path d="M0 250l140-80h320l140 80" fill="#536479"/><path d="M160 170l90-53 65-53 70 80-88-18z" fill="#c4d5dd"/><path d="M270 106l43-33 18 25z" fill="#00bfff"/><path d="M32 55l66 23m402 0l66-23" stroke="#ff4848" strokeWidth="7"/></svg>
+          <span className="portal-card-copy"><strong>1. {en ? 'Arrival Hangar' : 'Hangar de chegada'}</strong><span>{en ? 'Investigate the hangar control terminal' : 'Investigue o terminal de controle do hangar'}</span></span><ArrowUpRight size={20} aria-hidden="true"/>
+        </button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setOmegaMap('omega-command'); }}>
+          <svg className="portal-card-image" viewBox="0 0 600 250" aria-hidden="true"><rect width="600" height="250" fill="#0b1727"/><circle cx="180" cy="78" r="60" fill="#538ca8"/><path d="M0 168h600v82H0z" fill="#384e60"/><ellipse cx="305" cy="198" rx="90" ry="17" fill="#192c3c"/><path d="m305 68 45 42-45 47-45-47z m0 0v89m-45-47h90" fill="none" stroke="#6aeaf8" strokeWidth="4"/></svg>
+          <span className="portal-card-copy"><strong>2. {en ? 'Command Center' : 'Centro de Comando'}</strong><span>{en ? 'Consult the station hologram' : 'Consulte o holograma da estação'}</span></span><ArrowUpRight size={20} aria-hidden="true"/>
+        </button></div></details></div> : <Content language={language} index={selected} narrationEnabled={sound && audioSettings.narration} />}</article></div>}
     {accessibilityOpen && <AccessibilitySettings language={language} settings={accessibility} onChange={updateAccessibility} onClose={closeAccessibility} />}
     {audioPanelOpen && <AudioSettings language={language} settings={audioSettings} onChange={updateAudio} onClose={closeAudioPanel} notice={audioNotice} />}
     <audio ref={bg} src={musicTrack} loop preload="none" />

@@ -7,7 +7,7 @@ import { cameraRelativeDirection } from './cameraRelativeDirection';
 import { isRunning } from './touchMovement';
 import { createAdventurer } from './VillageScene';
 import { sceneFrameDelta } from './sceneFrameDelta';
-import galaxyPanorama from '../assets/omega-galaxy.jpg';
+import galaxyPanorama from '../assets/images/omega-galaxy.jpg';
 
 import { buildCommandCenter, commandOffset } from './omegaCommandCenter';
 import { buildDock, canWalk, deckHeight, consolePosition } from './omegaDock';

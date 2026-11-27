@@ -1,3 +1,7 @@
+import laugh1 from '../assets/audio/effects/dragon-laughs/1.mp3';
+import laugh2 from '../assets/audio/effects/dragon-laughs/2.mp3';
+import laugh3 from '../assets/audio/effects/dragon-laughs/3.mp3';
+import laugh4 from '../assets/audio/effects/dragon-laughs/4.mp3';
 import { bindNpcTap } from './bindNpcTap';
 import { poseAdventurerStride, poseAdventurerSword } from './adventurerAnimation';
 import { isRunning, setTouchMovement } from './touchMovement';
@@ -21,6 +25,7 @@ import './Lake.css';
 import './DragonChamber.css';
 
 const DRAGON_HEALTH = 12;
+const dragonLaughs = [laugh1, laugh2, laugh3, laugh4];
 
 export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speaking,onVictoryChange,onDialogueChange,onBattleChange,language,paused,reduceMotion,onExit,onReturnVillage,onSpeak,onStop,onSound,voiceEnabled,voiceNotice}){
   const mount=useRef(null),keys=useRef(new Set()),state=useRef({}),modeRef=useRef('sleep'),skipRef=useRef(null),stopVoice=useRef(onStop);stopVoice.current=onStop;
@@ -76,7 +81,7 @@ export default function DragonChamber({ campaignNavigation,onPrincessSpeak,speak
     const removeObject=(list,item)=>{scene.remove(item.group);item.group.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});list.splice(list.indexOf(item),1);};
     const resetBattle=()=>{while(hazards.length)removeObject(hazards,hazards[0]);while(pickups.length)removeObject(pickups,pickups[0]);battle={lives:3,hits:0,phase:'fire',timer:-4,spawn:4,pickup:12,invincible:0,swing:0};princess.visible=false;celebration.root.visible=false;skeleton.visible=false;dragon.group.visible=true;princessNearRef.current=false;setPrincessNear(false);princessTalkingRef.current=false;setPrincessTalking(false);dragonHitUntil=0;playerHitUntil=0;spitUntil=0;deathStarted=0;dragonBody.rotation.z=0;dragonBody.position.y=0;setPrincessLine(0);setHud({...battle});};
     const sync=()=>setHud({lives:battle.lives,hits:battle.hits,phase:battle.phase});
-    const laugh=()=>{if(!voiceRef.current)return;if(laughAudio){laughAudio.pause();}laughAudio=new Audio(`${process.env.PUBLIC_URL}/audio/dragon-laughs/${1+Math.floor(Math.random()*4)}.mp3`);laughRef.current=laughAudio;laughAudio.play().catch(()=>{});};
+    const laugh=()=>{if(!voiceRef.current)return;if(laughAudio){laughAudio.pause();}laughAudio=new Audio(dragonLaughs[Math.floor(Math.random()*dragonLaughs.length)]);laughRef.current=laughAudio;laughAudio.play().catch(()=>{});};
     const groundMesh=(geometry,color,opacity=1)=>{const m=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,transparent:opacity<1,opacity,side:THREE.DoubleSide,depthWrite:false}));m.rotation.x=-Math.PI/2;return m;};
     // Volumetric flame clusters give each attack a bright core and flickering outer fire.
     const flame=(parent,size,color)=>{const part=new THREE.Mesh(new THREE.IcosahedronGeometry(size,1),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,depthWrite:false,blending:THREE.AdditiveBlending}));parent.add(part);return part;};

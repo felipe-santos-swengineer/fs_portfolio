@@ -1,3 +1,5 @@
+import { omegaEffects } from '../audio/omegaEffects';
+import { omegaVoiceClips } from '../audio/omegaVoiceClips';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { setTouchMovement } from './touchMovement';
 import MapControlGuide from './MapControlGuide';
@@ -15,7 +17,6 @@ import announcements from './omegaAnnouncements.json';
 import './DragonChamber.css';
 import './Lake.css';
 
-const audioRoot = process.env.PUBLIC_URL + '/audio/omega/';
 const arrows = [['arrowleft','←','Esquerda','Left'], ['arrowup','↑','Frente','Forward'], ['arrowdown','↓','Trás','Back'], ['arrowright','→','Direita','Right']];
 const objectives = [
   ['Desembarque e explore a plataforma OMEGA-03.', 'Disembark and explore pad OMEGA-03.'],
@@ -139,9 +140,13 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
   useEffect(() => { if (frozen) keys.current.clear(); }, [frozen]);
   useEffect(() => {
     if (error || !transmission) return;
-    const prefix = command ? 'command-' : '';
+    const section = command ? 'command' : 'hangar';
     const number = command ? commandLine : phase;
-    const clip = new Audio(audioRoot + (sectorLine ? sectorLine+(en?'-en.wav':'-pt.mp3') : prefix + (en ? 'en-' + number + '.wav' : 'pt-' + number + '.mp3')));
+    const locale = en ? 'en-us' : 'pt-br';
+    const file = sectorLine || section + '/' + number;
+    const url = omegaVoiceClips[locale][file];
+    if (!url) return;
+    const clip = new Audio(url);
     clip.volume = .38;
     voice.current = clip;
     clip.onended = () => { if(sectorLine)setSectorLine(null); else if(command)setNextLine(n=>n===commandLine?n+1:n); };
@@ -164,7 +169,7 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
   const effect = useRef(null);
   useEffect(() => {
     const name = hangar && {2:'lock',6:'scan'}[phase];
-    effect.current = name ? new Audio(audioRoot+name+'.wav') : null;
+    effect.current = name ? new Audio(omegaEffects[name]) : null;
     if (effect.current) effect.current.volume = .22;
     return () => { effect.current?.pause(); effect.current = null; };
   }, [phase,hangar]);

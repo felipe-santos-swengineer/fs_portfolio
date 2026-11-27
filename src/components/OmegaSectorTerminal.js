@@ -1,3 +1,4 @@
+import { omegaEffects } from '../audio/omegaEffects';
 import SkipMinigame from './SkipMinigame';
 import { useEffect, useRef, useState } from 'react';
 import {coolantFlow,coolingPorts,events,freshProgress,lanesAtGates,records,sectorObjective,systems} from './omegaProgress';
@@ -8,7 +9,7 @@ export default function SectorTerminal({id,map,m,setMission,en,effectsEnabled,pa
   const l=Number(en),[notice,setNotice]=useState(''),[hint,setHint]=useState(false),sound=useRef(null);
   const field=(key,value)=>setMission(old=>({...old,[key]:typeof value==='function'?value(old[key]):value}));
   useEffect(()=>{if(paused||!effectsEnabled)sound.current?.pause();return ()=>sound.current?.pause();},[paused,effectsEnabled]);
-  const cue=()=>{if(!paused&&effectsEnabled){sound.current?.pause();sound.current=new Audio(process.env.PUBLIC_URL+'/audio/omega/console-'+(map==='omega-lab'?'NAV':'ENG')+'.wav');sound.current.volume=.18;sound.current.play().catch(()=>{});}};
+  const cue=()=>{if(!paused&&effectsEnabled){sound.current?.pause();sound.current=new Audio(omegaEffects[map==='omega-lab'?'console-NAV':'console-ENG']);sound.current.volume=.18;sound.current.play().catch(()=>{});}};
   const mutate=(key,fn)=>{setNotice('');field(key,fn);};
   if(id.startsWith('record')){
     const index=Number(id.slice(-1)),r=records[index];

@@ -1,3 +1,5 @@
+import { omegaEffects } from '../audio/omegaEffects';
+import { nexusVoiceClips } from '../audio/nexusVoiceClips';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { mountHangar } from './omegaHangarWorld';
 import { buildNexusArena, nexusArrival } from './nexusArena';
@@ -13,7 +15,6 @@ import './NexusCore.css';
 
 const arrows=[['arrowleft','←','Esquerda','Left'],['arrowup','↑','Frente','Forward'],['arrowdown','↓','Trás','Back'],['arrowright','→','Direita','Right']];
 const warnings={laser:['Mira laser','Laser lock'],drone:['Drone interceptador','Interceptor drone'],field:['Campo gravitacional','Gravity field'],wave:['Onda de energia','Energy wave'],arm:['Impacto mecânico','Mechanical strike'],arc:['Descarga no piso','Floor discharge'],steam:['Jato de vapor','Steam jet'],vent:['Corrente de ar','Air current']};
-const audioRoot=process.env.PUBLIC_URL+'/audio/omega/';
 const flightMessages=[
   [1,'Cápsula liberada. Destino confirmado: Terra.','Escape pod away. Destination confirmed: Earth.'],
   [6,'Sinal de uma instância remota detectado. Origem desconhecida.','Signal from a remote instance detected. Origin unknown.'],
@@ -25,6 +26,7 @@ export default function NexusCore({language,paused,reduceMotion,voiceEnabled,eff
   const [,refresh]=useReducer(n=>n+1,0);
   const settings=useRef({}),host=useRef(null),keys=useRef(new Set()),dialog=useRef(null),clip=useRef(null),lastCue=useRef(0),lastView=useRef('');
   const en=language==='en-US',l=en?1:0;
+  const locale=en?'en-us':'pt-br';
   const fight=battle.mode==='fight',canMove=['fight','decision','escape'].includes(battle.mode)&&!battle.panel;
   const canAct=canMove && !paused && !error && near!==null && battle.hold===null;
   const focus=()=>host.current?.querySelector('canvas')?.focus({preventScroll:true});
@@ -52,12 +54,14 @@ export default function NexusCore({language,paused,reduceMotion,voiceEnabled,eff
   const group=battle.lineGroup,index=battle.lineIndex,id=battle.lineId,hasLine=!!battle.line;
   useEffect(()=>{
     if(!hasLine)return;
-    const audio=new Audio(audioRoot+'nexus/'+group+'-'+index+'-'+l+'.mp3');
+    const url=nexusVoiceClips[locale][`${group}-${index}`];
+    if(!url)return;
+    const audio=new Audio(url);
     clip.current={audio,id};audio.volume=.48;
     audio.onended=()=>{finishVoice(battle,id);refresh();};
     audio.onerror=()=>{if(battle.lineId===id)battle.voicePlaying=false;};
     return ()=>{audio.onended=null;audio.onerror=null;audio.pause();clip.current=null;battle.voicePlaying=false;};
-  },[battle,group,index,id,l,hasLine]);
+  },[battle,group,index,id,locale,hasLine]);
   useEffect(()=>{
     const audio=clip.current?.audio;
     if(!audio)return;
@@ -82,8 +86,7 @@ export default function NexusCore({language,paused,reduceMotion,voiceEnabled,eff
     if(!cue||cue===lastCue.current)return;
     lastCue.current=cue;
     if(!effectsEnabled||paused)return;
-    const local=battle.cueName==='gravity';
-    const audio=new Audio(audioRoot+(local?'nexus/':'')+battle.cueName+'.wav');audio.volume=.18;
+    const audio=new Audio(omegaEffects[battle.cueName]);audio.volume=.18;
     audio.play().catch(()=>{});
     return ()=>{audio.pause();};
   },[battle,cue,effectsEnabled,paused]);

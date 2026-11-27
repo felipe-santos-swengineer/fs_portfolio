@@ -2,9 +2,10 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const root = path.resolve(__dirname, '..');
-const output = path.join(root, 'src/assets/audio');
+const output = path.join(root, 'src/assets/audio/pt-br/villagers');
 async function main() {
   const lines = JSON.parse((await fs.readFile(path.join(output, 'felipe-dialogues.json'), 'utf8')).replace(/^\uFEFF/, ''));
+  await fs.mkdir(output, { recursive: true });
   const client = new MsEdgeTTS({ connectionTimeoutMs: 15000, synthesisTimeoutMs: 30000 });
   try {
     await client.setMetadata('pt-BR-AntonioNeural', OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3, { voiceLocale: 'pt-BR' });

@@ -3,15 +3,16 @@ const path=require('node:path');
 const {MsEdgeTTS,OUTPUT_FORMAT}=require('msedge-tts');
 const lines=require('../src/components/lakeGuide.json');
 (async()=>{
- const output=path.resolve('src/assets/audio/lake-guide'); await fs.mkdir(output,{recursive:true});
  for(const [locale,voice,prefix] of [['pt-BR','pt-BR-FranciscaNeural','pt'],['en-US','en-US-JennyNeural','en']]) {
+  const output=path.resolve('src/assets/audio',locale==='pt-BR'?'pt-br':'en-us','lake-guide');
+  await fs.mkdir(output,{recursive:true});
   const client=new MsEdgeTTS({connectionTimeoutMs:15000,synthesisTimeoutMs:30000});
   try {await client.setMetadata(voice,OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3,{voiceLocale:locale});
    for(let i=0;i<lines[locale].length;i++) {
     const result=await client.toFile(output,lines[locale][i],{rate:'-3%',pitch:'+0Hz'});
     const data=await fs.readFile(result.audioFilePath); if(data.length<1000)throw Error('Empty voice clip');
-    await fs.writeFile(path.join(output,`${prefix}-${i+1}.mp3`),data);
-    if(path.resolve(result.audioFilePath)!==path.join(output,`${prefix}-${i+1}.mp3`))await fs.unlink(result.audioFilePath);
+    await fs.writeFile(path.join(output,`${i+1}.mp3`),data);
+    if(path.resolve(result.audioFilePath)!==path.join(output,`${i+1}.mp3`))await fs.unlink(result.audioFilePath);
     if(result.metadataFilePath)await fs.unlink(result.metadataFilePath).catch(()=>{});
     console.log(`${prefix}-${i+1}: ${data.length} bytes`);
    }

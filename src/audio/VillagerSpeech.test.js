@@ -1,7 +1,7 @@
 import VillagerSpeech from './VillagerSpeech';
 import { VILLAGER_VOICES } from './villagerClips';
 import { VILLAGERS } from '../components/villagers';
-import manifest from '../assets/audio/villagers/manifest.json';
+import manifest from '../assets/audio/pt-br/villagers/manifest.json';
 
 let previousAudio;
 beforeEach(() => {

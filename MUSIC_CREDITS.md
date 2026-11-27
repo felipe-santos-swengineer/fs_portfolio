@@ -15,7 +15,7 @@
 
 ## Dublagem da vila e das campanhas de fantasia
 
-As 96 falas de 28 personagens foram geradas no ElevenLabs com o modelo Eleven Multilingual v2. Cada personagem usa a mesma voz nas versões em português brasileiro e inglês americano, com 48 gravações por idioma. Os MP3 ficam em `src/assets/audio`. O manifesto identifica a voz, o texto e o arquivo de cada fala. [Manifesto das gravações](src/assets/audio/elevenlabs-manifest.json).
+As 96 falas de 28 personagens foram geradas no ElevenLabs com o modelo Eleven Multilingual v2. Cada personagem usa a mesma voz nas versões em português brasileiro e inglês americano, com 48 gravações por idioma. Os MP3 ficam nas pastas `pt-br` e `en-us` de `src/assets/audio`. O manifesto identifica a voz, o texto e o arquivo de cada fala. [Manifesto das gravações](src/assets/audio/elevenlabs-manifest.json).
 
 - **Vila e salão do trono** — Bia usa Alice, Tom usa Charlie, Lia usa Laura, Rui usa Roger e Felipe usa Chris.
 - **Lago e enseada** — Marina usa Sarah e Duarte usa Callum.
@@ -28,7 +28,7 @@ As 96 falas de 28 personagens foram geradas no ElevenLabs com o modelo Eleven Mu
 
 ## Hangar de chegada — Protocolo Ômega
 
-- Os anúncios da estação e de NEXUS usam Britney nos dois idiomas. As gravações ficam em `public/audio/omega`.
+- Os anúncios da estação e de NEXUS usam Britney nos dois idiomas. As gravações ficam em `src/assets/audio/pt-br/omega` e `src/assets/audio/en-us/omega`.
 - Efeitos de contenção e scanner sintetizados para este cenário.
 
 - As sete transmissões de NEXUS no Centro de Comando usam Britney nos dois idiomas. Os sinais de confirmação dos consoles foram sintetizados para o jogo.
@@ -40,17 +40,15 @@ As 96 falas de 28 personagens foram geradas no ElevenLabs com o modelo Eleven Mu
 
 ## Protocolo Ômega — laboratório e reator
 
-Os setores reaproveitam as trilhas do hangar e do Centro de Comando. As sete transmissões locais de NEXUS usam Britney nos dois idiomas. Os arquivos ficam em `public/audio/omega`.
+Os setores reaproveitam as trilhas do hangar e do Centro de Comando. As sete transmissões locais de NEXUS usam Britney nos dois idiomas. Os arquivos ficam em `src/assets/audio/pt-br/omega` e `src/assets/audio/en-us/omega`.
 
 ## Núcleo de NEXUS
 
-Todas as falas do Núcleo usam a voz Britney do ElevenLabs nos dois idiomas. As gravações locais e os efeitos sintetizados de pressão e gravidade estão em `public/audio/omega/nexus`.
+Todas as falas do Núcleo usam a voz Britney do ElevenLabs nos dois idiomas. As gravações ficam nas subpastas `omega/nexus` de `src/assets/audio/pt-br` e `src/assets/audio/en-us`. Os efeitos de pressão e gravidade ficam em `src/assets/audio/effects/omega/nexus`.
 
 - Confronto com NEXUS. “Hard Boss Battle 1”, de MintoDog. Ogg original reproduzido em loop da rebelião ao fim do combate. [Fonte](https://opengameart.org/content/hard-boss-battle-1) · [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 
 ## Redublagem em português do Protocolo Ômega
-
-A versão da **Fernanda – Formal, Polite and Direct**, listada no ElevenLabs como **Fernanda – Agente URA IA** (`7iqXtOF3wl3pomwXFY7G`), tem 86 falas preservadas em `src/assets/audio/omega-fernanda-backup`. O backup inclui as duas correções da cutscene. O Hangar foi gerado com Eleven Multilingual v2 e os demais lotes com Eleven Flash v2.5.
 
 A dublagem oficial em PT-BR usa **Britney – Calm and Calculative Villain** (`esy0r39YPLQjOczyOib8`) com Eleven Flash v2.5. [Primeiro fluxo](https://elevenlabs.io/app/flows/2Dr5UOXQwxfVNSHgWreY) · [Fluxo final](https://elevenlabs.io/app/flows/REcv1w8unILSzc1uiziY)
 

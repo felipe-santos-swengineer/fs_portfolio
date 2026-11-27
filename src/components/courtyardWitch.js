@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import line1 from '../assets/audio/witch-dialogue/pt-BR/line-1.mp3';
-import line2 from '../assets/audio/witch-dialogue/pt-BR/line-2.mp3';
-import line3 from '../assets/audio/witch-dialogue/pt-BR/line-3.mp3';
-import line4 from '../assets/audio/witch-dialogue/pt-BR/line-4.mp3';
-import line5 from '../assets/audio/witch-dialogue/pt-BR/line-5.mp3';
-import enLine1 from '../assets/audio/witch-dialogue/en-US/line-1.mp3';
-import enLine2 from '../assets/audio/witch-dialogue/en-US/line-2.mp3';
-import enLine3 from '../assets/audio/witch-dialogue/en-US/line-3.mp3';
-import enLine4 from '../assets/audio/witch-dialogue/en-US/line-4.mp3';
-import enLine5 from '../assets/audio/witch-dialogue/en-US/line-5.mp3';
+import line1 from '../assets/audio/pt-br/witch-dialogue/line-1.mp3';
+import line2 from '../assets/audio/pt-br/witch-dialogue/line-2.mp3';
+import line3 from '../assets/audio/pt-br/witch-dialogue/line-3.mp3';
+import line4 from '../assets/audio/pt-br/witch-dialogue/line-4.mp3';
+import line5 from '../assets/audio/pt-br/witch-dialogue/line-5.mp3';
+import enLine1 from '../assets/audio/en-us/witch-dialogue/line-1.mp3';
+import enLine2 from '../assets/audio/en-us/witch-dialogue/line-2.mp3';
+import enLine3 from '../assets/audio/en-us/witch-dialogue/line-3.mp3';
+import enLine4 from '../assets/audio/en-us/witch-dialogue/line-4.mp3';
+import enLine5 from '../assets/audio/en-us/witch-dialogue/line-5.mp3';
 
 export const WITCH_LAUGH_AT = 2;
 export const WITCH_FLIGHT_END = 4.4;

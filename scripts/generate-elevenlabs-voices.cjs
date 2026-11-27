@@ -13,7 +13,7 @@ async function main() {
   if (name === 'Marina') {
     lines = JSON.parse(await fs.readFile(path.join(root, 'src/components/lakeGuide.json'), 'utf8'))['pt-BR'];
   } else {
-    const manifest = JSON.parse(await fs.readFile(path.join(root, 'src/assets/audio/villagers/manifest.json'), 'utf8'));
+    const manifest = JSON.parse(await fs.readFile(path.join(root, 'src/assets/audio/pt-br/villagers/manifest.json'), 'utf8'));
     lines = manifest.filter(row => row.npc === name).sort((a,b) => a.line-b.line).map(row => row.text);
   }
   if (!lines?.length) throw new Error('No dialogue found for this character.');

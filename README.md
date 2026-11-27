@@ -130,11 +130,16 @@ A versão exibida no cabeçalho corresponde aos primeiros 12 caracteres do ident
 
 ```text
 public/                         HTML e arquivos públicos
+docs/                           Campanhas
 AGENTS.md                       Padrões de interação e componentes para novas áreas
 MUSIC_CREDITS.md                Fontes e licenças de músicas e efeitos das campanhas
 scripts/generate-villager-voices.cjs
 src/
-  assets/                       Imagens, música, narrações e vozes
+  assets/                       Imagens, ícones e áudio empacotado
+    audio/pt-br/                 Falas e narrações em português brasileiro
+    audio/en-us/                 Falas e narrações em inglês americano
+    audio/music/                Trilhas sonoras
+    audio/effects/              Efeitos sonoros
   audio/                        Reprodução e síntese de efeitos sonoros
   components/
     VillageScene.js             Cena 3D, personagens e interações
@@ -162,7 +167,6 @@ src/
   content.js                    Textos e projetos do portfólio
 ```
 
-Consulte [VILAREJO.md](VILAREJO.md) para detalhes do cenário, áudio, controles e comportamento dos recursos.
 
 ## Contato
 

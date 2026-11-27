@@ -1,7 +1,7 @@
 import { nextWitchLaugh } from './witchAmbience';
 import VillageAudio from './VillageAudio';
-import witchIntroLaugh from '../assets/audio/witch-dialogue/intro-laugh.mp3';
-import witchLightningReaction from '../assets/audio/witch-dialogue/lightning-reaction.mp3';
+import witchIntroLaugh from '../assets/audio/effects/witch-dialogue/intro-laugh.mp3';
+import witchLightningReaction from '../assets/audio/effects/witch-dialogue/lightning-reaction.mp3';
 
 test('all four laughs can play without an immediate repeat', () => {
   expect([0,.25,.5,.75].map(n=>nextWitchLaugh(-1,()=>n))).toEqual([0,1,2,3]);

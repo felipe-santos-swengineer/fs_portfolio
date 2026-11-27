@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
 const root = path.resolve(__dirname, '..');
-const output = path.join(root, 'src/assets/audio/villagers');
+const output = path.join(root, 'src/assets/audio/pt-br/villagers');
 const profiles = {
   Bia: { voice: 'pt-BR-FranciscaNeural', gender: 'female', tone: 'Calma e acolhedora', rate: '-3%' },
   Tom: { voice: 'pt-BR-AntonioNeural', gender: 'male', tone: 'Firme e descontraído', rate: '+0%' },

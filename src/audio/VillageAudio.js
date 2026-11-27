@@ -1,13 +1,13 @@
-import castleGateClip from '../assets/audio/cursed-gate.ogg';
-import castleScream1 from '../assets/audio/cursed-scream-1.ogg';
-import castleScream2 from '../assets/audio/cursed-scream-2.ogg';
-import castleScream3 from '../assets/audio/cursed-scream-3.ogg';
-import witch1 from '../assets/audio/witches/1.mp3';
-import witch2 from '../assets/audio/witches/2.mp3';
-import witch3 from '../assets/audio/witches/3.mp3';
-import witch4 from '../assets/audio/witches/4.mp3';
-import witchIntroLaugh from '../assets/audio/witch-dialogue/intro-laugh.mp3';
-import witchLightningReaction from '../assets/audio/witch-dialogue/lightning-reaction.mp3';
+import castleGateClip from '../assets/audio/effects/cursed-gate.ogg';
+import castleScream1 from '../assets/audio/effects/cursed-scream-1.ogg';
+import castleScream2 from '../assets/audio/effects/cursed-scream-2.ogg';
+import castleScream3 from '../assets/audio/effects/cursed-scream-3.ogg';
+import witch1 from '../assets/audio/effects/witches/1.mp3';
+import witch2 from '../assets/audio/effects/witches/2.mp3';
+import witch3 from '../assets/audio/effects/witches/3.mp3';
+import witch4 from '../assets/audio/effects/witches/4.mp3';
+import witchIntroLaugh from '../assets/audio/effects/witch-dialogue/intro-laugh.mp3';
+import witchLightningReaction from '../assets/audio/effects/witch-dialogue/lightning-reaction.mp3';
 import { nextWitchLaugh } from './witchAmbience';
 import { KING_LAUGHS } from './kingVoices';
 

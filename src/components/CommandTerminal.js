@@ -1,3 +1,4 @@
+import { omegaEffects } from '../audio/omegaEffects';
 import SkipMinigame from './SkipMinigame';
 import { sectorObjective } from './omegaProgress';
 import { useEffect, useRef, useState } from 'react';
@@ -70,7 +71,7 @@ export default function CommandTerminal({id,en,mission,setMission,paused,effects
   function playCue(key){
     if(paused || !effectsEnabled)return;
     cue.current?.pause();
-    cue.current=new Audio(process.env.PUBLIC_URL+'/audio/omega/console-'+key+'.wav');
+    cue.current=new Audio(omegaEffects['console-'+key]);
     cue.current.volume=.2;
     cue.current.play().catch(()=>{});
   }

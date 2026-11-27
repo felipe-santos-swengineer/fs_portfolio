@@ -30,7 +30,7 @@ noise/=max(np.max(np.abs(noise)),1e-9)
 signal += .025*noise*(.55+.45*np.cos(2*np.pi*t/16+.8))
 signal=np.tanh(signal*1.3)*.8
 pcm=np.asarray(np.clip(signal,-1,1)*32767,dtype='<i2')
-out=Path('src/assets/audio/temple-mystery.wav');out.parent.mkdir(parents=True,exist_ok=True)
+out=Path('src/assets/audio/music/temple-mystery.wav');out.parent.mkdir(parents=True,exist_ok=True)
 with wave.open(str(out),'wb') as f:
     f.setnchannels(1);f.setsampwidth(2);f.setframerate(rate);f.writeframes(pcm.tobytes())
 print(f'{out}: {duration}s, {rate}Hz')

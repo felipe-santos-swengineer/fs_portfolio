@@ -15,9 +15,6 @@ import announcements from './omegaAnnouncements.json';
 import './DragonChamber.css';
 import './Lake.css';
 
-// Measured against the Portuguese arrival announcement.
-const portugueseGainDb = {1: -15.1, [SUIT_READY]: -3.1};
-const commandGainDb = [-10.3,-15.3,-2.6,-.7,-2.6,4.2,-16.6];
 const audioRoot = process.env.PUBLIC_URL + '/audio/omega/';
 const arrows = [['arrowleft','←','Esquerda','Left'], ['arrowup','↑','Frente','Forward'], ['arrowdown','↓','Trás','Back'], ['arrowright','→','Direita','Right']];
 const objectives = [
@@ -58,15 +55,20 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
     if(branch && !mission.visited.includes(map))key=map==='omega-lab'?(mission.powered?'lab-powered':'lab-entry'):(mission.scientific?'reactor-informed':'reactor-entry');
     else if(map==='omega-lab' && mission.scientific)key='lab-reveal';
     else if(map==='omega-reactor' && mission.powered)key='reactor-online';
-    else if(command && coreUnlocked(mission))key='core-access';
+    else if(command && commandLine!==0 && coreUnlocked(mission))key='core-access';
     if(!key || mission.played.includes(key))return;
     setSectorLine(key);
     setMission(m=>({...m,played:[...new Set([...m.played,key])],visited:[...new Set([...m.visited,map])]}));
-  },[map,branch,command,mission,paused,terminal,sectorLine,setMission]);
+  },[map,branch,command,commandLine,mission,paused,terminal,sectorLine,setMission]);
   const transmission = sectorLine ? lines[sectorLine][locale] : command ? commandAnnouncements[commandLine]?.[locale] : hangar && skippedPhase !== phase && announcements[phase]?.[locale];
-  const canSkipMinigames = (command && mission.fragments.length < stations.length)
-    || (map==='omega-reactor' && !mission.powered)
-    || (map==='omega-lab' && !mission.scientific);
+  // Keep each map's skip action scoped to its own minigames. In particular,
+  // Command Center may fill only its authentication fragments; Engineering
+  // and Laboratory progress must be earned or skipped from those maps.
+  const canSkipMinigames = command
+    ? mission.fragments.length < stations.length
+    : map==='omega-reactor'
+      ? !mission.powered
+      : map==='omega-lab' && !mission.scientific;
   const skipMinigames = () => {
     if (frozen || !canSkipMinigames) return;
     keys.current.clear();
@@ -103,12 +105,6 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
     requestAnimationFrame(() => host.current?.querySelector('canvas')?.focus({ preventScroll: true }));
   };
   useModalFocus(panel, close, Boolean(terminal) && !paused);
-  const unlockLift = () => {
-    if (!command || frozen || coreUnlocked(mission)) return;
-    keys.current.clear();
-    change('liftOverride',true);
-    host.current?.querySelector('canvas')?.focus({preventScroll:true});
-  };
   const act = () => {
     if (!available) return;
     keys.current.clear();
@@ -120,13 +116,13 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
       setNear(false);
       host.current?.querySelector('canvas')?.focus({ preventScroll: true });
     } else {
-      finishTransmission();
+      if(commandLine!==0)finishTransmission();
       setTerminal(hangar ? true : near);
       if(branch)setMission(m=>m.started.includes(near)?m:{...m,started:[...m.started,near]});
       if(command && near==='table' && !mission.table)setMission(m=>({...m,table:true}));
       if(command && near==='bridge' && mission.table && !mission.briefed){
         // Reading the commander's terminal also satisfies the queued instruction to visit it.
-        setMission(m=>({...m,briefed:true,nextLine:Math.max(m.nextLine,2)}));
+        setMission(m=>({...m,briefed:true,nextLine:m.nextLine===0?0:Math.max(m.nextLine,2)}));
       }
     }
   };
@@ -146,9 +142,7 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
     const prefix = command ? 'command-' : '';
     const number = command ? commandLine : phase;
     const clip = new Audio(audioRoot + (sectorLine ? sectorLine+(en?'-en.wav':'-pt.mp3') : prefix + (en ? 'en-' + number + '.wav' : 'pt-' + number + '.mp3')));
-    const gainDb = sectorLine ? -4 : command ? commandGainDb[commandLine] : portugueseGainDb[phase];
-    const gain = en ? 1 : 10 ** ((gainDb || 0) / 20);
-    clip.volume = .38 * gain;
+    clip.volume = .38;
     voice.current = clip;
     clip.onended = () => { if(sectorLine)setSectorLine(null); else if(command)setNextLine(n=>n===commandLine?n+1:n); };
     return () => { clip.onended = null; clip.pause(); voice.current = null; };
@@ -184,9 +178,6 @@ export default function OmegaHangar({ map, mission, setMission, onTravel, arriva
       <div className="lake-canvas" ref={host}/>
       <div className="encounter-controls">
         {campaignNavigation}
-        {command && !terminal && !coreUnlocked(mission) && <button type="button" className="battle-skip" disabled={paused||error} onClick={unlockLift}>
-          {en?'Unlock NEXUS elevator':'Liberar elevador para NEXUS'}
-        </button>}
         {!terminal && hangar && <button type="button" className="battle-skip" disabled={paused} onClick={() => { keys.current.clear(); onEnterCommand(); }}>
           {en ? 'Skip to Command Center' : 'Ir direto ao Centro de Comando'}
         </button>}

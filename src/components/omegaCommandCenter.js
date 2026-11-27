@@ -8,6 +8,29 @@ export const stations = [
   { id:'ENG', x:11, z:7, color:'#efae54' }, { id:'SEC', x:-11, z:7, color:'#62c99f' },
 ];
 
+function addCommandLabel(root,text,x,y,z,rotationY=0) {
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#122332';ctx.fillRect(0,0,256,64);ctx.fillStyle='#e5f4f7';ctx.font='bold 46px monospace';ctx.textAlign='center';ctx.fillText(text,128,49);
+  const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.55),new THREE.MeshBasicMaterial({map,side:THREE.DoubleSide}));
+  sign.rotation.y=rotationY;
+  sign.position.set(x,y,z);root.add(sign);
+}
+
+export const commandTerminalSize = { width:3.2, depth:1.7 };
+export function addCommandTerminal(root,box,{id,x=0,z=0,color}) {
+  const dark='#192c3c', steel='#384e60';
+  box(root,commandTerminalSize.width,1.2,commandTerminalSize.depth,dark,x,.6,z);
+  const panel=box(root,2.9,1.05,.17,color,x,1.7,z-.55);panel.rotation.x=-.18;
+  addCommandLabel(root,id,x,2.6,z);
+  for(let j=0;j<7;j++){
+    const px=x-1+j/3;
+    const height=id==='COM'?.23+.2*Math.cos(j):id==='ENG'?.1+j*.065:.08;
+    box(root,.15,height,.045,dark,px,1.65+(id==='NAV'?Math.sin(j)*.3:0),z-.42);
+  }
+  return box(root,.9,.09,.14,steel,x,1.23,z+.68);
+}
+
 export function commandFloor(x,z) {
   const radius=Math.hypot(x,z);
   const dais=THREE.MathUtils.clamp((6-radius)*.65,0,1);
@@ -15,7 +38,7 @@ export function commandFloor(x,z) {
   return Math.max(dais,bridge);
 }
 
-export function buildCommandCenter(root, { box, cylinder, sphere }, preview=false) {
+export function buildCommandCenter(root, { box, cylinder }, preview=false) {
   const steel='#384e60', trim='#7cced7', dark='#192c3c', white='#cedde1';
   const walls=[];
   function wall(w,h,d,x,y,z) {
@@ -77,15 +100,6 @@ export function buildCommandCenter(root, { box, cylinder, sphere }, preview=fals
   wall(34,1,.6,0,.5,-17);
   const glass=new THREE.Mesh(new THREE.PlaneGeometry(33,8),new THREE.MeshPhysicalMaterial({color:'#a5e6ff',roughness:.14,transparent:true,opacity:.055,depthWrite:false,side:THREE.DoubleSide}));
   glass.position.set(0,4.8,-17);root.add(glass);
-  const planet=sphere(root,11,'#648eae',-8,8,-41);
-  const atmosphere=new THREE.Mesh(new THREE.SphereGeometry(11.2,40,24),new THREE.MeshBasicMaterial({color:'#80cbef',side:THREE.BackSide,transparent:true,opacity:.28}));
-  atmosphere.position.copy(planet.position);root.add(atmosphere);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(14,.38,8,80),new THREE.MeshStandardMaterial({color:'#a8bfce'}));
-  ring.rotation.set(1.22,.3,-.24);ring.position.copy(planet.position);root.add(ring);
-  const stars=[];
-  for(let i=0;i<210;i++)stars.push(Math.sin(i*17)*50,7+Math.cos(i*3.7)*25,-57-i%8);
-  const sky=new THREE.BufferGeometry();sky.setAttribute('position',new THREE.Float32BufferAttribute(stars,3));
-  root.add(new THREE.Points(sky,new THREE.PointsMaterial({color:white,size:.09})));
   cylinder(root,2.6,.48,steel,0,1.24,0,32);cylinder(root,1.85,.85,dark,0,1.8,0,32);
   cylinder(root,2.35,.16,trim,0,2.29,0,32);
   const hologram=new THREE.Group();hologram.position.y=3.46;root.add(hologram);
@@ -97,26 +111,9 @@ export function buildCommandCenter(root, { box, cylinder, sphere }, preview=fals
   const paths=[[0,1],[1,2],[1,3],[2,4],[3,4],[4,5]].flatMap(([a,b])=>[...nodes[a],...nodes[b]]);
   const links=new THREE.BufferGeometry();links.setAttribute('position',new THREE.Float32BufferAttribute(paths,3));
   hologram.add(new THREE.LineSegments(links,new THREE.LineBasicMaterial({color:trim})));
-  function label(text,x,y,z,rotationY=0) {
-    const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
-    const ctx=canvas.getContext('2d');ctx.fillStyle='#122332';ctx.fillRect(0,0,256,64);ctx.fillStyle='#e5f4f7';ctx.font='bold 46px monospace';ctx.textAlign='center';ctx.fillText(text,128,49);
-    const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;
-    const sign=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.55),new THREE.MeshBasicMaterial({map,side:THREE.DoubleSide}));
-    sign.rotation.y=rotationY;
-    sign.position.set(x,y,z);root.add(sign);
-  }
+  const label=(...args)=>addCommandLabel(root,...args);
   label('Ω / 02',0,4.8,-15.1);
-  const panels=stations.map(({id,x,z,color})=>{
-    box(root,3.2,1.2,1.7,dark,x,.6,z);
-    const panel=box(root,2.9,1.05,.17,color,x,1.7,z-.55); panel.rotation.x=-.18;
-    label(id,x,2.6,z);
-    for(let j=0;j<7;j++){
-      const px=x-1+j/3;
-      const height=id==='COM'?.23+.2*Math.cos(j):id==='ENG'?.1+j*.065:.08;
-      box(root,.15,height,.045,dark,px,1.65+(id==='NAV'?Math.sin(j)*.3:0),z-.42);
-    }
-    return box(root,.9,.09,.14,steel,x,1.23,z+.68);
-  });
+  const panels=stations.map(station=>addCommandTerminal(root,box,station));
   const panelOn=sectorMeshes[0].material.clone();
   panelOn.wireframe=false;
   // A fixed status LED also owns this shared material during scene cleanup.

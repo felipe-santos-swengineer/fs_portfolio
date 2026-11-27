@@ -90,34 +90,11 @@ export function buildDock(scene, language) {
     box(cyan,x-side*.85,7,z,.1,.22,3.7);
     beam([x-side*.9,9,z-3],[x-side*.9,9,z+3],.35,iron,true);
   }
-  // Window looking past the command bulkhead, with a luminous planetary limb.
+  // Window looking past the command bulkhead into the shared galactic panorama.
   for(const x of [-21,-14,-7,0,7,14,21]) box(edge,x,11,-23,.32,14,.65);
   box(deck,0,17.8,-23,43,.6,1); box(deck,0,5.2,-23,43,.6,1);
   const glass = new T.MeshPhysicalMaterial({color:'#9bdbff',transparent:true,opacity:.065,depthWrite:false,roughness:.17,side:T.DoubleSide});
   mesh(new T.PlaneGeometry(42,12),glass,0,11.5,-23.1);
-  const planetMat = new T.MeshStandardMaterial({color:'#6189a5',roughness:1,emissive:'#203a54'});
-  const planet=mesh(new T.SphereGeometry(15,48,32),planetMat,-9,13,-58);
-  // Cloud belts are painted once on a repeating equirectangular map.
-  const clouds=document.createElement('canvas'); clouds.width=512; clouds.height=256;
-  const painter=clouds.getContext('2d');
-  for(let y=0;y<256;y++){
-    const wave=Math.sin(y*.19+Math.sin(y*.13)*1.9);
-    painter.fillStyle='hsl('+(201+wave*8)+' 33% '+(51+wave*9)+'%)';
-    painter.fillRect(0,y,512,1);
-  }
-  for(let i=0;i<150;i++){
-    const x=(i*127)%512,y=(i*71)%256;
-    painter.fillStyle='rgba(211,226,230,.17)';
-    painter.beginPath();painter.ellipse(x,y,4+i%23,1+i%3,.03,0,Math.PI*2);painter.fill();
-  }
-  planetMat.map=new T.CanvasTexture(clouds); planetMat.map.colorSpace=T.SRGBColorSpace;
-  const bands = new T.TorusGeometry(19,.8,6,96);
-  const ring=mesh(bands,material('#93b6c9'),-9,13,-58); ring.rotation.set(1.22,.3,-.24);
-  const atmosphere=mesh(new T.SphereGeometry(15.3,48,32),new T.MeshBasicMaterial({color:'#7fd8ff',side:T.BackSide,transparent:true,opacity:.4}),-9,13,-58);
-  const stars=[];
-  for(let i=1;i<=460;i++) stars.push(Math.sin(i*12.7)*92,Math.cos(i*3.7)*43,-75-i%16);
-  const sky=new T.BufferGeometry(); sky.setAttribute('position',new T.Float32BufferAttribute(stars,3));
-  scene.add(new T.Points(sky,new T.PointsMaterial({size:.12,color:'#d3eaff'})));
   // Eight-sided docking collar and chevron markings.
   stamp(tube,iron,-7,.02,8,8,.12,10);
   for(let i=0;i<32;i++) {
@@ -295,7 +272,6 @@ export function buildDock(scene, language) {
   let clock=0, opening=0, exitOpening=0, lockdown=0;
   return {
     updateVisibility,
-    setCommandView(active) { planet.visible = ring.visible = atmosphere.visible = !active; },
     setLanguage(locale) {
       if (locale === language) return;
       language = locale;
@@ -313,7 +289,7 @@ export function buildDock(scene, language) {
       landingShutter.position.y=height*(1-lockdown*lockdown*(3-2*lockdown));
       doors.forEach((door,i)=>{door.position.x=(i?1:-1)*(1.65+opening*3.2);});
       indicator.material.color.set(releaseDoor && opening>=.99?'#82ffb0':opening>0 || releaseDoor?'#ffc252':signal);
-      if(!reduced){fan.rotation.z+=dt*.7;ring.rotation.z+=dt*.002;planet.rotation.y+=dt*.013;steam.position.y=Math.sin(clock*.8)*.25;}
+      if(!reduced){fan.rotation.z+=dt*.7;steam.position.y=Math.sin(clock*.8)*.25;}
       monitor.material.emissiveIntensity=phase===1 && !reduced ? .48+.3*Math.sin(clock*7) : .48;
       material(signal).emissiveIntensity=phase>=2 && !reduced ? .65+.3*Math.sin(clock*2) : .65;
       return lockdown;

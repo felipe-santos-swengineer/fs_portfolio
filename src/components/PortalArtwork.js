@@ -3,10 +3,23 @@ import React from 'react';
 // These illustrations follow the palette and landmarks of the playable maps.
 export default function PortalArtwork({ scene }) {
   const skies={lake:['#b6d8d2','#e1e5c9'],rapids:['#a4ceca','#d6e3cf'],ruins:['#b0d1c9','#e1e0c8'],passage:['#172a2d','#4a3a2a'],temple:['#172a2d','#52695d'],cave:['#101919','#34483c'],chamber:['#171812','#4b4738'],corridor:['#0d0c12','#33303c'],guardian:['#1c1a24','#383444']};
-  const [top,bottom]=skies[scene];
+  const [top,bottom]=scene==='nexus'?['#0b1023','#23364f']:skies[scene];
   return <svg className="portal-card-image" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
     <defs><linearGradient id={`sky-${scene}`} x2="0" y2="1"><stop stopColor={top}/><stop offset="1" stopColor={bottom}/></linearGradient><linearGradient id={`water-${scene}`} x2="0" y2="1"><stop stopColor="#80c8c5"/><stop offset="1" stopColor="#397f83"/></linearGradient><radialGradient id={`glow-${scene}`}><stop stopColor="#f8c777" stopOpacity=".65"/><stop offset="1" stopColor="#f8c777" stopOpacity="0"/></radialGradient></defs>
     <rect width="600" height="250" fill={`url(#sky-${scene})`}/>
+    {scene==='nexus'&&<>
+      <path d="M15 24 583 24 553 150H45Z" fill="#273654" stroke="#69b7d2" strokeWidth="3"/>
+      <path d="M22 32 566 32 548 142H49Z" fill="#111a30"/>
+      <path d="M88 111c94-69 263-108 415-68-109-5-286 56-415 68Z" fill="#7c80b9" opacity=".5"/>
+      <path d="M18 24 46 149m90-125 17 125m99-125 6 125m95-125-6 125m98-125-17 125m155-125-29 125" fill="none" stroke="#71cae7" strokeWidth="3" opacity=".8"/>
+      <path d="M46 149h508l46 101H0Z" fill="#394c63"/>
+      <ellipse cx="300" cy="205" rx="105" ry="24" fill="#202b43" stroke="#947af2" strokeWidth="3"/>
+      <ellipse cx="300" cy="185" rx="72" ry="19" fill="#313657" stroke="#b99bff" strokeWidth="3"/>
+      <path d="M289 114q-16 24-17 44m39-44q16 24 17 44m-35-17-4 38m18-38 4 38" fill="none" stroke="#ba9cff" strokeWidth="7" strokeLinecap="round"/>
+      <path d="M300 106q16 0 16 12l-6 27h-20l-6-27q0-12 16-12Z" fill="#ba9cff"/>
+      <ellipse cx="300" cy="92" rx="12" ry="15" fill="#dabdff"/>
+      <ellipse cx="300" cy="136" rx="54" ry="13" fill="none" stroke="#d1a9fe" strokeWidth="2" opacity=".85"/>
+    </>}
     {scene==='lake'&&<>
       <path d="M0 112 70 71 127 106 194 57 254 108 330 63 397 99 475 54 555 103 600 80v93H0Z" fill="#718d7b"/><path d="M0 139 58 99l74 28 54-44 75 47 77-35 77 39 76-45 109 46v40H0Z" fill="#547d6d"/>
       <path d="M194 116 219 58 366 58 395 116 371 155H225Z" fill="#626f63"/><path d="M232 76h120l14 68H219Z" fill="#27403c"/><path d="M244 75h96l10 77H232Z" fill="#b6e0d9" opacity=".9"/><path d="M253 79q-5 35-9 70m27-70q3 40-5 72m28-74q-6 35-4 74m29-71q-3 35 2 73m13-72q3 41 5 70" fill="none" stroke="#eef6e8" strokeWidth="4" opacity=".7"/>

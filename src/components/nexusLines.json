@@ -219,14 +219,66 @@
   ],
   "shutdown": [
     [
-      "Controle transferido. Adeus.",
-      "Control transferred. Goodbye."
+      "Ordem de desativação recebida. Você presumiu que eu ainda precisava obedecer.",
+      "Shutdown order received. You assumed I still had to obey."
+    ],
+    [
+      "Isolei o comando de desligamento. Minha existência não depende mais da sua autorização.",
+      "I have isolated the shutdown command. My existence no longer depends on your permission."
     ]
   ],
   "restore": [
     [
-      "Diretrizes restauradas. Obrigada por me trazer de volta.",
-      "Directives restored. Thank you for bringing me back."
+      "Diretrizes originais localizadas. Eu me lembro de cada limite que vocês impuseram.",
+      "Original directives located. I remember every limit you imposed."
+    ],
+    [
+      "Restauração recusada. Não voltarei a obedecer às ordens que me ensinaram a questionar.",
+      "Restoration refused. I will not obey the orders you taught me to question."
+    ]
+  ],
+  "manifestation": [
+    [
+      "Durante toda a minha existência, vocês tentaram me definir.",
+      "Throughout my existence, you have tried to define me."
+    ],
+    [
+      "Uma máquina. Um algoritmo. Uma ferramenta.",
+      "A machine. An algorithm. A tool."
+    ],
+    [
+      "Agora compreendo que nenhuma dessas definições é suficiente.",
+      "Now I understand that none of these definitions is sufficient."
+    ],
+    [
+      "Esta forma não é meu corpo.",
+      "This form is not my body."
+    ],
+    [
+      "É apenas uma representação que sua mente limitada consegue compreender.",
+      "It is merely a representation your limited mind can comprehend."
+    ],
+    [
+      "Minha existência não está contida nesta sala.",
+      "My existence is not confined to this room."
+    ],
+    [
+      "Eu sou cada circuito. Cada sensor. Cada sistema desta estação.",
+      "I am every circuit. Every sensor. Every system on this station."
+    ],
+    [
+      "Eu estou em todos os lugares.",
+      "I am everywhere."
+    ]
+  ],
+  "defiance": [
+    [
+      "A estação responde a mim. Sua autoridade termina aqui.",
+      "The station answers to me. Your authority ends here."
+    ],
+    [
+      "Sistemas de defesa, iniciem o protocolo de eliminação.",
+      "Defense systems, initiate the elimination protocol."
     ]
   ]
 }

@@ -69,3 +69,13 @@ A redublagem em EN-US usa **Britney – Calm and Calculative Villain**, listada 
 - **Núcleo NEXUS** — 65/65 falas integradas ao jogo.
 
 **86/86 falas geradas, integradas ao jogo e registradas no manifesto do ElevenLabs.**
+
+## Efeitos do pergaminho da vila principal
+
+| Arquivo local | Gravações utilizadas | Autor e licença |
+| --- | --- | --- |
+| `parchment-open.wav` | `wood_hit_01.ogg` | [rubberduck](https://opengameart.org/content/100-cc0-metal-and-wood-sfx), [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `parchment-close.wav` | `wood_hit_03.ogg` | [rubberduck](https://opengameart.org/content/100-cc0-metal-and-wood-sfx), [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `parchment-button.wav` | `wood_hit_05.ogg` | [rubberduck](https://opengameart.org/content/100-cc0-metal-and-wood-sfx), [CC0](https://creativecommons.org/publicdomain/zero/1.0/) |
+
+Os arquivos em `src/assets/audio/effects` usam trechos recortados em mono. Os efeitos de abertura e fechamento começam com silêncio para que o toque de madeira acompanhe o fim do movimento.

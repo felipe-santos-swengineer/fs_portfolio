@@ -10,8 +10,12 @@ import witchIntroLaugh from '../assets/audio/effects/witch-dialogue/intro-laugh.
 import witchLightningReaction from '../assets/audio/effects/witch-dialogue/lightning-reaction.mp3';
 import { nextWitchLaugh } from './witchAmbience';
 import { KING_LAUGHS } from './kingVoices';
+import parchmentOpen from '../assets/audio/effects/parchment-open.wav';
+import parchmentClose from '../assets/audio/effects/parchment-close.wav';
+import parchmentButton from '../assets/audio/effects/parchment-button.wav';
 
 const WITCH_LAUGHS=[witch1,witch2,witch3,witch4];
+const PARCHMENT_SAMPLES = { open: parchmentOpen, close: parchmentClose, button: parchmentButton };
 
 // Local effects, synthesized or played from bundled audio clips.
 export default class VillageAudio {
@@ -23,6 +27,7 @@ export default class VillageAudio {
     this.channel = 'interactions';
     this.castleEffectRevision = 0;
     this.castleSamples = new Map();
+    this.parchmentRevision = 0;
     this.witchGeneration=0; this.witchActive=false; this.witchTimer=null; this.witchSource=null; this.witchPrevious=-1;
     this.witchCompletion = null;
     this.witchLaughState = null;
@@ -31,7 +36,7 @@ export default class VillageAudio {
 
   setChannels(channels) {
     this.channels = { ...this.channels, ...channels };
-    if (!this.channels.interactions) { this.stopWeather(); this.stopCastleEffects(); this.stopWitchAmbience(); this.stopKingLaughs(); }
+    if (!this.channels.interactions) { this.stopWeather(); this.stopCastleEffects(); this.stopWitchAmbience(); this.stopKingLaughs(); this.stopParchment(); }
     for (const source of this.sources) if (!this.channels[source.villageChannel]) { try { source.stop(); } catch { /* Already ended. */ } }
   }
 
@@ -50,6 +55,9 @@ export default class VillageAudio {
       }
       await this.context.resume();
       this.enabled = this.context.state === 'running';
+      if (this.enabled && this.channels.interactions) {
+        Object.values(PARCHMENT_SAMPLES).forEach(url => this.loadSample(url).catch(() => {}));
+      }
       return this.enabled;
     } catch { return false; }
   }
@@ -59,6 +67,7 @@ export default class VillageAudio {
     this.stopKingLaughs();
     this.stopCastleEffects();
     this.stopWeather();
+    this.stopParchment();
     this.enabled = false;
     for (const source of [...this.sources]) { try { source.stop(); } catch { /* Already ended. */ } }
     this.sources.clear();
@@ -174,18 +183,59 @@ export default class VillageAudio {
     else if (event === 'breath') { this.rustle(1.1, 1200, .16); this.rustle(.75, 320, .13, .1); this.tone(95, .9, .08, 0, 'sawtooth', 55); }
   }
 
-  loadCastleSample(url) {
+  loadSample(url) {
     if (!this.castleSamples.has(url)) {
+      const context = this.context;
       const promise = fetch(url).then(response => {
         if (!response.ok) throw new Error('Unable to load sound effect');
         return response.arrayBuffer();
-      }).then(data => this.context.decodeAudioData(data)).catch(error => {
-        this.castleSamples.delete(url);
+      }).then(data => context.decodeAudioData(data)).catch(error => {
+        if (this.castleSamples.get(url) === promise) this.castleSamples.delete(url);
         throw error;
       });
       this.castleSamples.set(url, promise);
     }
     return this.castleSamples.get(url);
+  }
+
+  loadCastleSample(url) { return this.loadSample(url); }
+
+  stopParchment() {
+    this.parchmentRevision++;
+    for (const source of this.sources) {
+      if (source.villageEffect === 'parchment') {
+        try { source.stop(); } catch { /* Already ended. */ }
+      }
+    }
+  }
+
+  parchment(cue) {
+    if (!this.ready() || !this.channels.interactions) return;
+    if (cue !== 'button') this.stopParchment();
+    const context = this.context;
+    const revision = this.parchmentRevision;
+    const start = context.currentTime;
+    this.loadSample(PARCHMENT_SAMPLES[cue]).then(buffer => {
+      if (this.context !== context || revision !== this.parchmentRevision || !this.ready() || !this.channels.interactions) return;
+      // Skip the elapsed portion so the wooden tap stays aligned with the roll.
+      const elapsed = context.currentTime - start;
+      if (elapsed >= buffer.duration) return;
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      gain.gain.value = cue === 'button' ? .38 : .70;
+      source.connect(gain);
+      gain.connect(this.master);
+      source.villageEffect = cue === 'button' ? 'parchmentButton' : 'parchment';
+      source.villageChannel = 'interactions';
+      this.sources.add(source);
+      source.onended = () => {
+        this.sources.delete(source);
+        source.disconnect();
+        gain.disconnect();
+      };
+      source.start(0, elapsed);
+    }).catch(() => {});
   }
 
   stopCastleEffects() {

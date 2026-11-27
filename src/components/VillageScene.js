@@ -426,20 +426,23 @@ export function createVillage(scene) {
   return { buildings, portal, castleDoor, backdrop, player, body, limbs, crystal, flames, fireflies, cape, npcs, performers, castleGuards, castleArchers, castleTowers, marketStall, marketVendors, marketFood: produce, marketPotions: goods };
 }
 
-export default function VillageScene({ language = 'pt-BR', keys, compassRef, paused, sceneHidden = false, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival = null, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, weatherEffects = true, weatherMode = 'auto', onWeather, cameraTurn = 0 }) {
+export default function VillageScene({ language = 'pt-BR', keys, compassRef, paused, sceneHidden = false, suspendFrames = false, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival = null, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion = false, ambientPaused = false, weatherEffects = true, weatherMode = 'auto', onWeather, cameraTurn = 0 }) {
   const mount = useRef(null);
   const wake = useRef(null);
   const updateSigns = useRef(null);
   useEffect(() => { updateSigns.current?.(language); }, [language]);
-  const live = useRef({ paused, sceneHidden, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn });
-  live.current = { paused, sceneHidden, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn };
+  const live = useRef(null);
+  live.current = { paused, sceneHidden, suspendFrames, onOpen, onNear, onTalk, onNearNpc, talkingNpc, zoom, resetKey, villageArrival, onVillageArrivalHandled, missionComplete, missionRound, onFirework, onCelebrate, reduceMotion, ambientPaused, weatherEffects, weatherMode, onWeather, cameraTurn };
   const [error, setError] = useState(null);
   const [rendererAttempt, setRendererAttempt] = useState(0);
   const wasSceneHidden = useRef(sceneHidden);
   useEffect(() => {
-    if (!sceneHidden) wake.current?.(wasSceneHidden.current);
-    wasSceneHidden.current = sceneHidden;
-  }, [sceneHidden]);
+    if (sceneHidden) wasSceneHidden.current = true;
+    if (!sceneHidden && !suspendFrames) {
+      wake.current?.(wasSceneHidden.current);
+      wasSceneHidden.current = false;
+    }
+  }, [sceneHidden, suspendFrames]);
 
   useEffect(() => {
     const container = mount.current;
@@ -488,7 +491,14 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     const camera = new THREE.PerspectiveCamera(44, 1, .1, 260); const initialOffset = new THREE.Vector3(0, 12, 16).multiplyScalar(portrait ? 1.25 : 1); camera.position.copy(world.player.position).add(initialOffset);
     const controls = allowRunAndRotate(new OrbitControls(camera, renderer.domElement)); controls.target.set(0, 3.2, 11); controls.enableDamping = true; controls.dampingFactor = .07; controls.enablePan = false;
     controls.minDistance = 7; controls.maxDistance = 78; controls.minPolarAngle = .25; controls.maxPolarAngle = Math.PI / 2 - .09; controls.update();
-    const resize = () => { const { width, height } = container.getBoundingClientRect(); renderer.setSize(width, height); camera.aspect = width / Math.max(height, 1); camera.updateProjectionMatrix(); };
+    const resize = () => {
+      const { width, height } = container.getBoundingClientRect();
+      renderer.setSize(width, height);
+      camera.aspect = width / Math.max(height, 1);
+      camera.updateProjectionMatrix();
+      // Resizing clears the canvas, so refresh the held frame when necessary.
+      if (live.current.suspendFrames && !live.current.sceneHidden && !document.hidden) renderer.render(scene, camera);
+    };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
     const raycaster = new THREE.Raycaster(); const pointer = new THREE.Vector2(); let start;
     const pointerdown = e => { renderer.domElement.focus({ preventScroll: true }); start = { x: e.clientX, y: e.clientY }; };
@@ -512,6 +522,13 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
     let frame, previous = 0, clock = 0, environmentTime = 0, portalContact = false, castleContact = false, oldNear = -2, oldNearNpc = -2, lastWeatherReport = -1, oldZoom = live.current.zoom, oldReset = live.current.resetKey;
     const draw = time => {
       if (document.hidden || live.current.sceneHidden) { frame = 0; previous = 0; return; }
+      if (live.current.suspendFrames) {
+        controls.enabled = false;
+        live.current.onWeather?.(0);
+        frame = 0;
+        previous = 0;
+        return;
+      }
       if (live.current.villageArrival) {
         const fromCastle = live.current.villageArrival === 'castle';
         const x = fromCastle ? CASTLE_ENTRANCE.x : PORTAL_ARRIVAL.x;
@@ -606,7 +623,7 @@ export default function VillageScene({ language = 'pt-BR', keys, compassRef, pau
         if (isCastleThreshold(world.player.position.x, world.player.position.z)) { world.player.position.z = -16.3; castleContact = false; }
         renderer.domElement.focus({ preventScroll: true });
       }
-      if (!frame && !document.hidden && !live.current.sceneHidden) { previous = 0; frame = requestAnimationFrame(draw); }
+      if (!frame && !document.hidden && !live.current.sceneHidden && !live.current.suspendFrames) { previous = 0; frame = requestAnimationFrame(draw); }
     };
     const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; previous = 0; keys.current.clear(); } else resume(); };
     wake.current = resume; document.addEventListener('visibilitychange', visibility); resume();

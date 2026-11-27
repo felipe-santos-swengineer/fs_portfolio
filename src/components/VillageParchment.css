@@ -1,0 +1,312 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap');
+
+.app .modal-backdrop.parchment-backdrop {
+  padding: max(26px, env(safe-area-inset-top)) max(25px, env(safe-area-inset-right))
+    max(26px, env(safe-area-inset-bottom)) max(25px, env(safe-area-inset-left));
+  background: radial-gradient(ellipse at 50% 38%, #2a1d17a8, #100b0be8);
+  backdrop-filter: none;
+}
+
+.village-parchment {
+  --parchment-fold: 50%;
+  --parchment-curl: 1.36;
+  --parchment-shadow: .48;
+  --parchment-ink: #302015;
+  --parchment-rule: #8a592f;
+  --parchment-gold: #694014;
+  --parchment-padding: clamp(20px, 5vw, 61px);
+  position: relative;
+  isolation: isolate;
+  width: min(850px, 100%);
+  min-width: 0;
+  color: var(--parchment-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.parchment-window {
+  clip-path: inset(var(--parchment-fold) -4px);
+}
+
+.parchment-window[data-unrolled] {
+  clip-path: none;
+  box-shadow: 0 18px 28px #10060278;
+}
+
+.parchment-paper {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-height: calc(100dvh - 74px);
+  position: relative;
+}
+
+.parchment-paper::before,
+.parchment-paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.parchment-paper::before {
+  clip-path: polygon(
+    0 0, 100% 0, 99.8% 4%, 99.2% 7%, 99.6% 12%, 99.4% 19%, 100% 26%,
+    99.5% 32%, 99.8% 38%, 99% 45%, 99.5% 49%, 99.3% 57%, 100% 64%,
+    99.6% 71%, 99.8% 76%, 99.1% 82%, 99.7% 90%, 99.5% 96%, 100% 100%,
+    0 100%, .4% 94%, .1% 89%, .8% 82%, .3% 76%, .7% 71%, 0 63%,
+    .5% 57%, .2% 49%, .9% 44%, .3% 37%, .7% 31%, .2% 26%, 0 20%, .6% 13%, .2% 7%
+  );
+  background:
+    radial-gradient(ellipse at 50% 28%, #fff0c67a 8%, transparent 66%),
+    radial-gradient(ellipse at 10% 90%, #9a592832, transparent 34%),
+    radial-gradient(ellipse at 96% 12%, #9a59283d, transparent 30%),
+    url('../assets/images/village-parchment.webp') center / cover;
+  box-shadow: inset 0 0 18px 6px #5e2a16a8, inset 0 0 64px 9px #9d5c3055;
+}
+
+.parchment-paper::after {
+  inset: 22px 13px;
+  border-inline: 3px double #9a6235;
+  border-radius: 8px;
+  opacity: .65;
+}
+
+.parchment-scroll {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 var(--parchment-padding) clamp(33px, 5vh, 53px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+  scroll-padding-block: 32px;
+  scrollbar-color: #845027 #edcf99;
+  scrollbar-width: thin;
+}
+
+.parchment-scroll::-webkit-scrollbar { width: 9px; }
+.parchment-scroll::-webkit-scrollbar-track { background: #edcf99; }
+.parchment-scroll::-webkit-scrollbar-thumb { background: #845027; border: 2px solid #edcf99; border-radius: 8px; }
+
+.parchment-roll {
+  position: absolute;
+  z-index: 3;
+  inset-inline: -12px;
+  height: clamp(20px, 3.6vw, 29px);
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%) scaleY(var(--parchment-curl));
+  pointer-events: none;
+}
+
+.parchment-roll-top { top: var(--parchment-fold); }
+.parchment-roll-bottom { top: calc(100% - var(--parchment-fold)); }
+
+.parchment-roll i {
+  width: 100%;
+  height: 56%;
+  position: relative;
+  z-index: 1;
+  border-radius: 45% / 16%;
+  background:
+    repeating-linear-gradient(3deg, #512b193d 0 1px, #d5914821 1px 3px, transparent 3px 6px),
+    linear-gradient(#3c1e12, #a56939 28%, #714022 55%, #32190f 92%);
+  box-shadow: 0 3px 5px #301408a3;
+}
+
+.parchment-roll::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0 16px;
+  border-radius: 48% / 28%;
+  background:
+    linear-gradient(#6a351c 0%, #b57b49 12%, #f2d49b 31%, #e5b978 48%, #b27943 77%, #774224 93%, #4b2718),
+    url('../assets/images/village-parchment.webp') center / 100% auto;
+  background-blend-mode: multiply;
+  box-shadow: inset 6px 0 7px #60371e, inset -6px 0 7px #60371e;
+}
+
+.parchment-roll-bottom::before {
+  transform: scaleY(-1);
+}
+
+.parchment-roll::after {
+  content: '';
+  position: absolute;
+  inset: 47% 16px -95%;
+  background: linear-gradient(#38200d, transparent);
+  opacity: var(--parchment-shadow);
+  z-index: 1;
+}
+
+.parchment-roll-bottom::after { inset: -95% 16px 47%; transform: scaleY(-1); }
+
+.parchment-roll i::before,
+.parchment-roll i::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  top: -22%;
+  width: 13px;
+  height: 140%;
+  border-radius: 52% / 34%;
+  background: radial-gradient(ellipse at 34% 32%, #c19751, #8d571f 49%, #522b13 76%);
+  border: 1px solid #573015;
+  box-shadow: inset 0 0 0 2px #41251045, 1px 2px 3px #27130f94;
+}
+
+.parchment-roll i::before { left: 0; }
+.parchment-roll i::after { right: 0; }
+
+.parchment-header {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px 16px;
+  padding: clamp(26px, 4vh, 44px) var(--parchment-padding) 8px;
+}
+
+.parchment-header > .eyebrow {
+  flex: 1 1 145px;
+  color: #5f3b19;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.parchment-actions {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+}
+
+.village-parchment h2,
+.village-parchment h3 {
+  color: #4d2818;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -.018em;
+  text-shadow: 0 1px #fff2c76b;
+}
+
+.village-parchment h2 {
+  position: relative;
+  margin: 26px 0 23px;
+  padding-bottom: 21px;
+  font-size: calc(clamp(1.5rem, 4.7vw, 2.7rem) * var(--text-scale, 1));
+}
+
+.village-parchment h2::after {
+  content: '◆';
+  position: absolute;
+  inset: auto 0 0;
+  height: 11px;
+  font: 11px/11px Georgia, serif;
+  text-align: center;
+  color: var(--parchment-gold);
+  background: linear-gradient(90deg, transparent, #8f5b30 38%, transparent 48% 52%, #8f5b30 62%, transparent) center / 100% 3px no-repeat;
+}
+
+.app .village-parchment :is(.story, .project) h3 {
+  color: #4d2818;
+  font-family: Cinzel, Georgia, serif;
+  font-size: calc(clamp(1.18rem, 3.3vw, 1.74rem) * var(--text-scale, 1));
+  font-weight: 700;
+}
+.app .village-parchment :is(p, small, em, strong, .project p, .story p) { color: inherit; }
+.village-parchment :is(.story, .project, .portal-destinations, .contact-links) { color: var(--parchment-ink); }
+.village-parchment .project { border-color: #a37448; }
+.village-parchment .story hr { border-color: #a37448; }
+.village-parchment .project-details :is(dt, dd) { line-height: 1.55; }
+.village-parchment .gallery img { border-color: #81542c; }
+
+.app .village-parchment :is(.section-audio-button, .project a, .contact-links a, .portal-destinations button, .portal-campaign > summary, .market-options button) {
+  color: #45270f;
+  background: linear-gradient(#fbebbb, #d9ab67);
+  border: 1px solid #8a5427;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 2px #f9dda28c, 0 1px 2px #6e3b214d;
+}
+
+.app .village-parchment :is(.section-audio-button, .project a, .contact-links a, .market-options button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: calc(.81rem * var(--text-scale, 1));
+  font-weight: 700;
+}
+
+.village-parchment .portal-campaign > summary { padding-inline: 12px; }
+.village-parchment .portal-campaign > summary::before { color: #75430f; }
+.village-parchment .portal-destinations button .portal-card-copy,
+.village-parchment .portal-destinations button .portal-card-copy span { color: #45270f; }
+.village-parchment .portal-destinations button > svg:not(.portal-card-image) { color: #664019; }
+.village-parchment .narration {
+  background: #f4dbab;
+  border: 1px solid #9a693b;
+  color: #422713;
+}
+
+.village-parchment .market-result {
+  padding: 14px 17px;
+  border-left: 2px solid #896036;
+  background: #f9e6b9a6;
+  color: var(--parchment-ink);
+}
+
+.app .village-parchment .market-options button[aria-pressed="true"] {
+  background: #714724;
+  color: #fff3d5;
+  border-color: #4c2816;
+  box-shadow: inset 0 0 0 2px #ac7d46;
+}
+
+.app .village-parchment .parchment-seal {
+  order: 1;
+  flex: 0 0 50px;
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 2px solid #70201a;
+  border-radius: 46% 54% 47% 53% / 54% 48% 52% 46%;
+  color: #fff0ce;
+  background: radial-gradient(ellipse at 34% 26%, #ba5844, #852e28 56%, #5a1b19 94%);
+  box-shadow: inset 0 0 0 3px #ef998333, inset 0 0 0 5px #4a100d55, 0 3px 5px #4c231c85;
+}
+
+.parchment-seal:hover,
+.village-parchment :is(.section-audio-button, .project a, .contact-links a, .portal-destinations button, .portal-campaign > summary, .market-options button):hover {
+  filter: brightness(1.09);
+}
+
+.app .village-parchment :is(button, a, summary, audio, [tabindex]):focus-visible {
+  outline: 3px solid #502817;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #fff1d2;
+}
+
+.app.high-contrast .village-parchment { --parchment-ink: #160d08; }
+.app.high-contrast .parchment-paper::before { background: #fff3d5; box-shadow: inset 0 0 18px #82552a; }
+.app.high-contrast .village-parchment :is(p, small, em, .eyebrow) { color: #160d08 !important; }
+
+@media (max-width: 600px) {
+  .app .modal-backdrop.parchment-backdrop { padding-inline: max(16px, env(safe-area-inset-left), env(safe-area-inset-right)); }
+  .parchment-header > .eyebrow { flex-basis: 100%; }
+  .parchment-actions { flex: 1 1 100%; justify-content: flex-start; }
+  .app .parchment-actions .section-audio-button { padding-inline: 8px; overflow-wrap: anywhere; }
+  .parchment-paper::after { inset-inline: 8px; }
+  .village-parchment h2 { margin-top: 18px; }
+  .parchment-roll { inset-inline: -9px; }
+  .parchment-roll::before, .parchment-roll::after { inset-inline: 12px; }
+}

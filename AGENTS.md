@@ -59,6 +59,7 @@ Estas regras se aplicam a novos mapas e a alterações nos mapas existentes. Sig
 - Teste os fluxos alterados, incluindo contato e retorno de portais, proximidade e encerramento de diálogo, áudio e controles relevantes. Verifique renderização e interação nos tamanhos de tela pertinentes quando houver acesso ao navegador. Se a verificação visual ou auditiva não for possível, informe essa limitação ao concluir.
 - Execute os testes relevantes e a compilação quando a alteração atingir código de produção. Para animações, evite intervalos de quadro negativos e respeite movimento reduzido; consulte `src/components/sceneFrameDelta.js`.
 
+
 ## Restrições de execução e validação
 
 - Para reduzir o tempo de execução e o consumo de recursos:

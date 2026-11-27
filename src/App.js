@@ -1,13 +1,15 @@
 import { setTouchMovement } from './components/touchMovement';
 import TouchInteract from './components/TouchInteract';
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { Compass, Volume2, VolumeX, BookOpen, ArrowUpRight, X, Footprints, Eye, EyeOff, RotateCcw, RotateCw, Accessibility, Github } from 'lucide-react';
+import { Fragment, lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Compass, Volume2, VolumeX, BookOpen, ArrowUpRight, X, Footprints, Eye, EyeOff, RotateCcw, RotateCw, Accessibility, Github, Mail, Phone, Linkedin, Instagram } from 'lucide-react';
 import { projetos, textos, titulosTextos } from './content';
 import VillageAudio from './audio/VillageAudio';
 import AudioSettings, { loadAudioSettings } from './components/AudioSettings';
 import AccessibilitySettings, { loadAccessibilitySettings, useSystemReducedMotion } from './components/AccessibilitySettings';
 import useModalFocus from './components/useModalFocus';
+import VillageParchment from './components/VillageParchment';
 import { MarketStall } from './components/MarketStalls';
+import ReadingPortfolio, { ProfessionalLinks } from './components/ReadingPortfolio';
 import PortalArtwork from './components/PortalArtwork';
 import CampaignNavigation from './components/CampaignNavigation';
 import VillagerSpeech from './audio/VillagerSpeech';
@@ -104,26 +106,127 @@ const EN_PLACES = [
   ['Market showcase', 'Technologies'], ['Experience stall', 'Work experience'], ['Education stall', 'Education and courses'],
 ].map(([name, section], i) => ({ ...places[i], name, section, audio: i === 0 ? ENGLISH_NARRATION.slice(0, 3) : i === 2 ? [ENGLISH_NARRATION[3]] : undefined }));
 
-function Content({ index, narrationEnabled, language = 'pt-BR' }) {
+const contacts = [
+  { icon: Mail, label: { pt: 'E-mail', en: 'Email' }, text: 'felipesantosswengineer@email.com', href: 'mailto:felipesantosswengineer@email.com' },
+  { icon: Phone, label: { pt: 'Telefone', en: 'Phone' }, text: '(88) 99837-8028', href: 'tel:+5588998378028' },
+  { icon: Linkedin, label: { pt: 'LinkedIn', en: 'LinkedIn' }, text: 'Felipe Santos Rodrigues', href: 'https://www.linkedin.com/in/felipe-santos-rodrigues/', external: true },
+  { icon: Instagram, label: { pt: 'Instagram', en: 'Instagram' }, text: '@felipe_santos_swengineer', href: 'https://www.instagram.com/felipe_santos_swengineer/', external: true },
+];
+
+function ContactLinks({ en }) {
+  return <ul className="contact-links">
+    {contacts.map(({ icon: Icon, label, text, href, external }) => (
+      <li key={href}>
+        <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noreferrer' : undefined}
+          aria-label={`${label[en ? 'en' : 'pt']}: ${text}${external ? (en ? ' (opens in a new tab)' : ' (abre em nova aba)') : ''}`}>
+          <Icon size={18} aria-hidden="true" />
+          <span>{text}</span>
+        </a>
+      </li>
+    ))}
+  </ul>;
+}
+
+function CareerEntries({ text, editorial }) {
+  return text?.split(/\n\s*\n/).map(block => {
+    const [heading, ...description] = block.trim().split('\n');
+    const [role, period] = heading.split(' | ');
+    if (editorial) {
+      const [organization, position] = role.split(' · ');
+      return <li className="career-entry" key={heading}>
+        <h3>{organization}</h3>
+        {position && <div className="editorial-position">{position}</div>}
+        {period && <div className="career-period">{period}</div>}
+        <p>{description.join('\n')}</p>
+      </li>;
+    }
+    return <div className="career-entry" key={heading}>
+      <h4>{role}</h4>
+      {period && <div className="career-period">{period}</div>}
+      <p>{description.join('\n')}</p>
+    </div>;
+  });
+}
+
+const EditorialQualifications = lazy(() => import('./components/EditorialQualifications'));
+
+function Content({ index, narrationEnabled, language = 'pt-BR', editorial = false }) {
   const en = language === 'en-US';
   const activePlaces = en ? EN_PLACES : places;
   const activeTexts = en ? english.textos : textos;
   const activeTitles = en ? english.titulosTextos : titulosTextos;
   const activeProjects = en ? projetos.map((p, i) => ({ ...p, ...english.projetos[i] })) : projetos;
   const place = activePlaces[index];
+  if (editorial && (index === 6 || index === 8)) return (
+    <Suspense fallback={null}>
+      <EditorialQualifications language={language} type={index === 6 ? 'technologies' : 'education'} />
+    </Suspense>
+  );
+  if (editorial && index === 7) return <>
+    <ol className="editorial-timeline"><CareerEntries text={activeTexts[4]} editorial /></ol>
+    <details className="editorial-role-details">
+      <summary>{en ? 'Explore each role' : 'Conheça cada experiência'}</summary>
+      <MarketStall key={language} language={language} type="experience" />
+    </details>
+  </>;
   if (index === 7) return <MarketStall key={language} language={language} type="experience" />;
   if (index === 8) return <MarketStall key={language} language={language} type="education" />;
   if (index === 6) return <MarketStall key={language} language={language} type="technologies" />;
   if (index === 5) return <p>{en ? 'Explore the castle throne room in 3D.' : 'O castelo abriga um salão do trono que pode ser explorado em 3D.'}</p>;
   if (index === 4) return <p>{en ? 'The portal leads to the lake, the ruins and the dragon island.' : 'O portal leva ao lago, às ruínas e à ilha do dragão.'}</p>;
-  return <>
-    {place.texts.map((n, i) => <section className="story" key={n}>
+  const ProjectLayout = editorial ? 'div' : Fragment;
+  const editorialAbout = editorial && index === 1;
+  const storyIndices = editorialAbout ? [2, ...place.texts.filter(n => n !== 4)] : place.texts;
+  const stories = storyIndices.map((n, i) => {
+    const narration = editorialAbout && n === 2 ? activePlaces[0].audio?.[2] : place.audio?.[i];
+    return <section className="story" key={n}>
       <h3>{activeTitles[n]}</h3>
-      {place.audio?.[i] && <label className="narration">{en ? 'LISTEN TO THE STORY' : 'OUÇA A HISTÓRIA ORIGINAL'}<audio aria-label={`${en ? 'Narration' : 'Narração'}: ${activeTitles[n]}`} controls muted={!narrationEnabled} preload="none" src={place.audio[i]} onPlay={e => { if (!narrationEnabled) { e.target.pause(); return; } document.querySelectorAll('audio[data-narration]').forEach(a => { if (a !== e.target) a.pause(); }); }} data-narration /><small>{narrationEnabled ? (en ? 'Listen to this section.' : 'A gravação original acompanha os temas desta seção; o texto foi revisado para esta edição.') : (en ? 'Narration is muted. Enable it in audio settings.' : 'Narrações silenciadas. Você pode ativá-las nas configurações de áudio.')}</small></label>}
-      {activeTexts[n]?.split(/\n\s*\n/).map((p, j) => <p key={j}>{p.trim()}</p>)}
-    </section>)}
-    {index === 2 && activeProjects.map(p => <article className="project" key={p.id}><h3>{p.titulo}</h3><p>{p.descricao}</p><dl className="project-details"><div><dt>{en ? 'Context and role' : 'Contexto e atuação'}</dt><dd>{p.contexto}</dd></div><div><dt>{en ? 'Challenge' : 'Desafio'}</dt><dd>{p.desafio}</dd></div>{p.tecnologias && <div><dt>{en ? 'Technologies' : 'Tecnologias'}</dt><dd>{p.tecnologias}</dd></div>}</dl><div className="gallery" role="region" aria-label={`${en ? 'Images for project' : 'Imagens do projeto'} ${p.titulo}`} tabIndex={0}>{p.imagens.map((src, i) => <img src={src} alt={`${p.titulo} — ${en ? 'screen' : 'tela'} ${i + 1}`} key={src} loading="lazy" />)}</div><a href={p.github || p.link} aria-label={en ? `${p.github ? 'View code' : 'Visit website'} for ${p.titulo} (opens in a new tab)` : `${p.github ? 'Ver código' : 'Visitar site'} do projeto ${p.titulo} (abre em nova aba)`} target="_blank" rel="noreferrer">{p.github ? (en ? 'Explore on GitHub' : 'Explorar no GitHub') : (en ? 'Visit project' : 'Visitar projeto')} <ArrowUpRight size={16} /></a></article>)}
-    {index === 3 && <div className="contact-links"><a href="mailto:felipesantosswengineer@email.com">{en ? 'Send email' : 'Enviar email'} ↗</a><a href="tel:+5588998378028">{en ? 'Call' : 'Ligar'} ↗</a><a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" aria-label={en ? 'LinkedIn (opens in a new tab)' : 'LinkedIn (abre em nova aba)'} target="_blank" rel="noreferrer">LinkedIn ↗</a><a href="https://www.instagram.com/felipe_santos_swengineer/" aria-label={en ? 'Instagram (opens in a new tab)' : 'Instagram (abre em nova aba)'} target="_blank" rel="noreferrer">Instagram ↗</a></div>}
+      {narration && <label className="narration">{en ? 'LISTEN TO THE STORY' : 'OUÇA A HISTÓRIA ORIGINAL'}<audio aria-label={`${en ? 'Narration' : 'Narração'}: ${activeTitles[n]}`} controls muted={!narrationEnabled} preload="none" src={narration} onPlay={e => { if (!narrationEnabled) { e.target.pause(); return; } document.querySelectorAll('audio[data-narration]').forEach(a => { if (a !== e.target) a.pause(); }); }} data-narration /><small>{narrationEnabled ? (en ? 'Listen to this section.' : 'A gravação original acompanha os temas desta seção; o texto foi revisado para esta edição.') : (en ? 'Narration is muted. Enable it in audio settings.' : 'Narrações silenciadas. Você pode ativá-las nas configurações de áudio.')}</small></label>}
+      {n === 4 ? <CareerEntries text={activeTexts[n]} /> : activeTexts[n]?.split(/\n\s*\n/).map((p, j) => (
+        <Fragment key={j}>
+          <p>{p.trim()}</p>
+          {n === 7 && j === 0 && <ContactLinks en={en} />}
+        </Fragment>
+      ))}
+    </section>;
+  });
+  return <>
+    {editorial && index === 2 ? <details className="editorial-project-intro">
+      <summary>{en ? 'About these projects' : 'Sobre os projetos'}</summary>
+      {stories}
+    </details> : stories}
+    {index === 2 && <ProjectLayout {...(editorial ? { className: 'editorial-project-grid' } : {})}>
+      {activeProjects.map(p => (
+      <article className="project" key={p.id}>
+        <h3>{p.titulo}</h3>
+        <p>{p.descricao}</p>
+        <dl className="project-details">
+          <div><dt>{en ? 'Context and role' : 'Contexto e atuação'}</dt><dd>{p.contexto}</dd></div>
+          <div><dt>{en ? 'Challenge' : 'Desafio'}</dt><dd>{p.desafio}</dd></div>
+          {p.tecnologias && <div><dt>{en ? 'Technologies' : 'Tecnologias'}</dt><dd>{p.tecnologias}</dd></div>}
+        </dl>
+        {p.imagens.length > 0 && (
+          <div className="gallery" role="region" aria-label={`${en ? 'Images for project' : 'Imagens do projeto'} ${p.titulo}`} tabIndex={0}>
+            {p.imagens.map((src, i) => (
+              <img src={src} alt={p.imagensAlt?.[i] ?? `${p.titulo} — ${en ? 'screen' : 'tela'} ${i + 1}`} key={src} loading="lazy" />
+            ))}
+          </div>
+        )}
+        {(p.github || p.link) && <div className="project-links">
+          {p.github && (
+            <a href={p.github} aria-label={en ? `View code for ${p.titulo} (opens in a new tab)` : `Ver código do projeto ${p.titulo} (abre em nova aba)`} target="_blank" rel="noreferrer">
+              {en ? 'Explore on GitHub' : 'Explorar no GitHub'} <ArrowUpRight size={16} />
+            </a>
+          )}
+          {p.link && (
+            <a href={p.link} aria-label={en ? `Visit website for ${p.titulo} (opens in a new tab)` : `Visitar site do projeto ${p.titulo} (abre em nova aba)`} target="_blank" rel="noreferrer">
+              {en ? 'Visit project' : 'Visitar projeto'} <ArrowUpRight size={16} />
+            </a>
+          )}
+        </div>}
+      </article>
+      ))}
+    </ProjectLayout>}
   </>;
 }
 
@@ -234,8 +337,38 @@ export default function App() {
   const soundRequested = useRef(audioSettings.master);
   const dialog = useRef(null);
   const previousFocus = useRef(null);
-  const open = i => { if (i === 5) { keys.current.clear(); setConversation(null); setNear(-1); setInThrone(true); return; } speech.current.stop(); setConversation(null); previousFocus.current = document.activeElement; keys.current.clear(); if (preferences.current.master && preferences.current.interactions) effects.current.interact(i); setSelected(i); if (i < 4) setVisited(v => [...new Set([...v, i])]); };
-  const close = () => { if (preferences.current.master && preferences.current.interactions) effects.current.closeDoor(); setSelected(null); previousFocus.current?.focus(); };
+  const [parchmentClosing, setParchmentClosing] = useState(false);
+  const parchmentExit = useRef(null);
+  const playParchment = useCallback(cue => {
+    if (preferences.current.master && preferences.current.interactions) effects.current.parchment(cue);
+  }, []);
+  const open = useCallback(i => {
+    if (i === 5) { keys.current.clear(); setConversation(null); setNear(-1); setInThrone(true); return; }
+    speech.current.stop();
+    setConversation(null);
+    previousFocus.current = document.activeElement;
+    keys.current.clear();
+    setSelected(i);
+    playParchment('open');
+    if (i < 4) setVisited(visited => [...new Set([...visited, i])]);
+  }, [playParchment]);
+  const finishParchment = useCallback(() => {
+    const exit = parchmentExit.current;
+    if (!exit) return;
+    parchmentExit.current = null;
+    setSelected(null);
+    setParchmentClosing(false);
+    exit.afterClose?.();
+  }, []);
+  const close = afterClose => {
+    if (parchmentExit.current) return;
+    parchmentExit.current = { afterClose };
+    keys.current.clear();
+    dialog.current?.querySelectorAll('audio').forEach(audio => { if (!audio.paused) audio.pause(); });
+    dialog.current?.focus({ preventScroll: true });
+    playParchment('close');
+    setParchmentClosing(true);
+  };
   const speakNpc = useCallback((index, line) => {
     if (!soundRequested.current || !preferences.current.voices) return;
     speech.current.stop();
@@ -400,7 +533,7 @@ export default function App() {
       if (!anyPanelOpen && !inOmega && !inDungeon && !inThrone && !inLake && !inRuins && !inCursedCastle && !e.ctrlKey && !e.metaKey && !e.altKey && document.activeElement?.tagName === 'CANVAS' && e.key.toLowerCase() === 'e' && !e.repeat && selected === null && !reading && !conversation && (nearNpc >= 0 || near >= 0)) { e.preventDefault(); if (nearNpc >= 0) talk(nearNpc); else open(near); }
     };
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
-  }, [conversation, near, nearNpc, selected, reading, talk, anyPanelOpen, inOmega, inDungeon, inThrone, inLake, inRuins, inCursedCastle]);
+  }, [conversation, near, nearNpc, selected, reading, talk, open, anyPanelOpen, inOmega, inDungeon, inThrone, inLake, inRuins, inCursedCastle]);
 
   useEffect(() => {
     const engine = effects.current;
@@ -413,14 +546,19 @@ export default function App() {
       if (!preferences.current.master || !preferences.current.narration) event.target.pause();
       else voice.stop();
     };
-    const hide = () => { if (document.hidden) { voice.stop(); engine.stopWeather?.(); } };
+    const hide = () => { if (document.hidden) { voice.stop(); engine.stopWeather?.(); engine.stopParchment(); } };
     document.addEventListener('visibilitychange', hide);
     document.addEventListener('play', onNarrationPlay, true);
     return () => { soundRequested.current = false; revision.current++; voice.stop(); engine.dispose(); if (!background.paused) background.pause(); document.removeEventListener('visibilitychange', hide); document.removeEventListener('play', onNarrationPlay, true); };
   }, []);
 
 
-  useModalFocus(dialog, close, selected !== null && !anyPanelOpen);
+  useModalFocus(dialog, () => close(), selected !== null && !anyPanelOpen);
+  useEffect(() => {
+    if (selected !== null || !previousFocus.current) return;
+    previousFocus.current.focus();
+    previousFocus.current = null;
+  }, [selected]);
   const updateAudio = async next => {
     audioInitiated.current = true;
     const revision = ++audioRevision.current;
@@ -575,7 +713,7 @@ export default function App() {
   return <div className={`app${reading ? ' reading-mode' : ''} text-${accessibility.textSize}${accessibility.highContrast ? ' high-contrast' : ''}${accessibility.simpleFont ? ' simple-font' : ''}${reduceMotion ? ' reduce-motion' : ''}`}>
     <a className="skip-link" href="#portfolio" tabIndex={backgroundInert ? -1 : 0} aria-hidden={backgroundInert || undefined} onClick={e => { e.preventDefault(); document.getElementById('portfolio')?.focus(); }}>{en ? 'Skip to content' : 'Pular para o conteúdo'}</a>
     <div inert={backgroundInert || undefined} aria-hidden={backgroundInert || undefined}>
-    <header><a className="brand" href="#portfolio" aria-label={en ? 'Felipe Santos, home' : 'Felipe Santos, início'}><span className="brand-mark">F<span>.</span></span><span>FELIPE SANTOS<small>{en ? 'SOFTWARE ENGINEER' : 'ENGENHEIRO DE SOFTWARE'}</small></span></a><div className="header-actions"><span className="edition" title={commitId || undefined}>{en ? '3D PORTFOLIO' : 'PORTFÓLIO 3D'} · <Github size={14} aria-hidden="true" /> <span className="sr-only">Commit </span>{displayedVersion}</span><LanguageFlags language={language} onChange={changeLanguage} /><button onClick={() => { endConversation(); setReading(!reading); }}><BookOpen size={16} /><span>{reading ? 'Modo 3D' : en ? 'Reading mode' : 'Modo leitura'}</span></button><button onClick={() => { keys.current.clear(); setAccessibilityOpen(false); setAudioPanelOpen(true); }} aria-label={en ? 'Audio settings' : 'Configurações de áudio'} aria-haspopup="dialog">{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>{en ? 'Audio' : 'Áudio'}</span></button><div className="header-accessibility-actions"><button onClick={openAccessibility} aria-label={en ? 'Open accessibility settings' : 'Abrir acessibilidade'} aria-haspopup="dialog"><Accessibility size={18} /><span>{en ? 'Accessibility' : 'Acessibilidade'}</span></button>
+    <header id={reading ? "editorial-top" : undefined} className={reading ? "editorial-header" : undefined}><a className="brand" href="#portfolio" aria-label={en ? 'Felipe Santos, home' : 'Felipe Santos, início'}><span className="brand-mark">F<span>.</span></span><span>FELIPE SANTOS<small>{en ? 'SOFTWARE ENGINEER' : 'ENGENHEIRO DE SOFTWARE'}</small></span></a><div className="header-actions">{reading && <ProfessionalLinks en={en} compact />}<span className="edition" title={commitId || undefined}>{reading ? (en ? 'PORTFOLIO' : 'PORTFÓLIO') : en ? '3D PORTFOLIO' : 'PORTFÓLIO 3D'} · <Github size={14} aria-hidden="true" /> <span className="sr-only">Commit </span>{displayedVersion}</span><LanguageFlags language={language} onChange={changeLanguage} /><button className={reading ? "editorial-3d-toggle" : undefined} onClick={() => { endConversation(); setReading(!reading); }}><BookOpen size={16} /><span>{reading ? (en ? '3D mode' : 'Modo 3D') : en ? 'Reading mode' : 'Modo leitura'}</span></button><button onClick={() => { keys.current.clear(); setAccessibilityOpen(false); setAudioPanelOpen(true); }} aria-label={en ? 'Audio settings' : 'Configurações de áudio'} aria-haspopup="dialog">{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>{en ? 'Audio' : 'Áudio'}</span></button><div className="header-accessibility-actions"><button onClick={openAccessibility} aria-label={en ? 'Open accessibility settings' : 'Abrir acessibilidade'} aria-haspopup="dialog"><Accessibility size={18} /><span>{en ? 'Accessibility' : 'Acessibilidade'}</span></button>
       {!reading && <button type="button" className="game-ui-toggle" aria-pressed={gameUiHidden}
         aria-label={en ? 'Hide game overlays' : 'Ocultar sobreposi\u00e7\u00f5es do jogo'}
         title={gameUiHidden ? (en ? 'Show game overlays' : 'Mostrar sobreposi\u00e7\u00f5es do jogo') : (en ? 'Hide game overlays' : 'Ocultar sobreposi\u00e7\u00f5es do jogo')}
@@ -614,14 +752,18 @@ export default function App() {
       {inDungeon && <Suspense fallback={<div className="scene-loading">{en ? 'Opening the portal...' : 'Abrindo o portal...'}</div>}><Dungeon language={language} keys={keys} onSound={event => effects.current.dungeon(event)} paused={anyPanelOpen || reading} reduceMotion={reduceMotion} onExit={() => { keys.current.clear(); setInDungeon(false); }} /></Suspense>}
       </div>
       <div hidden={!reading && (inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle)}>
+      {reading ? <ReadingPortfolio language={language} places={activePlaces}
+        renderSection={index => <Content language={language} index={index} narrationEnabled={sound && audioSettings.narration} editorial />}
+        menuOpen={readingMenuOpen} setMenuOpen={setReadingMenuOpen}
+      /> : <>
       <div className="intro">
         {!showIntro && !reading && <h1 className="sr-only">{en ? 'Felipe Santos portfolio' : 'Portfólio de Felipe Santos'}</h1>}
         {!reading && <button className="intro-toggle" aria-expanded={showIntro} aria-controls="intro-copy" onClick={() => setShowIntro(visible => !visible)}>{showIntro ? <EyeOff size={15} /> : <Eye size={15} />}{showIntro ? (en ? 'Hide text' : 'Ocultar texto') : (en ? 'Show text' : 'Mostrar texto')}</button>}
         <div id="intro-copy" hidden={!showIntro && !reading}><h1 className="sr-only">{en ? 'Felipe Santos portfolio' : 'Portfólio de Felipe Santos'}</h1><p>{reading ? (en ? 'Explore my background, skills, and projects in reading mode.' : 'Explore minha trajet\u00f3ria, habilidades e projetos no modo leitura.') : en ? 'For smooth navigation, the 3D experience requires a capable device. Use Reading mode for the text version.' : 'Para uma navega\u00e7\u00e3o fluida, a experi\u00eancia 3D precisa de um dispositivo com bom desempenho. Se o cen\u00e1rio estiver lento, use o Modo leitura no topo da p\u00e1gina para acessar a vers\u00e3o textual.'}</p>{!reading && <div className="intro-note"><Compass size={18} /><span>{en ? 'Choose a door to begin.' : 'Escolha uma porta para começar.'}</span></div>}</div>
       </div>
-      {reading ? <div className="reading-list"><nav className="reading-navigation" aria-label={en ? 'Portfolio sections' : 'Seções do portfólio'}><button type="button" className="reading-nav-toggle" aria-expanded={readingMenuOpen} aria-controls="reading-menu-links" onClick={() => setReadingMenuOpen(open => !open)}>{readingMenuOpen ? (en ? 'Collapse menu' : 'Recolher menu') : (en ? 'Open menu' : 'Abrir menu')} <span aria-hidden="true">{readingMenuOpen ? '−' : '+'}</span></button><div id="reading-menu-links" className="reading-menu-links" hidden={!readingMenuOpen}><span className="reading-nav-title">{en ? 'Explore the portfolio' : 'Explore o portfólio'}</span>{activePlaces.map((p, i) => <a href={`#reading-section-${i}`} key={p.name}>{p.section}</a>)}<a href="#reading-villagers">{en ? 'Village residents' : 'Moradores da vila'}</a></div></nav>{activePlaces.map((p, i) => <section id={`reading-section-${i}`} tabIndex={-1} key={p.name}><span className="eyebrow">0{i + 1} · {p.name}</span><h2>{p.section}</h2><Content language={language} index={i} narrationEnabled={sound && audioSettings.narration} /></section>)}<section id="reading-villagers" tabIndex={-1}><h2>{en ? 'Village residents' : 'Moradores da vila'}</h2><p>{en ? 'Read the villagers’ greetings without exploring the 3D scene.' : 'Conheça as saudações dos moradores sem navegar pelo cenário.'}</p>{activeVillagers.map((person, i) => <details className="reading-villager" key={person.name}><summary>{person.name} · {person.role}</summary>{person.lines.map((line, j) => <div key={line}><p>{line}</p><button disabled={!sound || !audioSettings.voices} onClick={() => speakNpc(i, j)}>{en ? 'Listen to message' : 'Ouvir mensagem'} {j + 1} {en ? 'from' : 'de'} {person.name}</button></div>)}</details>)}{speaking && <button onClick={() => speech.current.stop()}>{en ? 'Stop voice' : 'Parar voz'}</button>}</section></div> : <>
+
         <div className="viewport" aria-label={en ? '3D portfolio village' : 'Vilarejo tridimensional do portfólio'}>
-          <Suspense fallback={<div className="scene-loading">{en ? 'Lighting the village lanterns…' : 'Acendendo as lanternas da vila…'}</div>}><VillageScene language={language} weatherMode={weatherMode} weatherEffects={accessibility.weatherEffects} onWeather={strength => effects.current.setWeather?.(strength)} keys={keys} compassRef={compassDial} sceneHidden={inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle} paused={selected !== null || anyPanelOpen || inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle} reduceMotion={reduceMotion} ambientPaused={accessibility.pauseScene} cameraTurn={cameraTurn} onOpen={open} onNear={setNear} onTalk={talk} onNearNpc={setNearNpc} talkingNpc={conversation?.index} zoom={zoom} resetKey={resetKey} villageArrival={villageArrival} onVillageArrivalHandled={() => setVillageArrival(null)} missionRound={missionRound} missionComplete={missionComplete && !celebrationDone.current} onFirework={stage => { if (preferences.current.master && preferences.current.interactions) effects.current.firework(stage); }} onCelebrate={() => { celebrationDone.current = true; }} /></Suspense>
+          <Suspense fallback={<div className="scene-loading">{en ? 'Lighting the village lanterns…' : 'Acendendo as lanternas da vila…'}</div>}><VillageScene language={language} weatherMode={weatherMode} weatherEffects={accessibility.weatherEffects} onWeather={strength => effects.current.setWeather?.(strength)} keys={keys} compassRef={compassDial} suspendFrames={selected !== null} sceneHidden={inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle} paused={selected !== null || anyPanelOpen || inOmega || inDungeon || inThrone || inLake || inRuins || inCursedCastle} reduceMotion={reduceMotion} ambientPaused={accessibility.pauseScene} cameraTurn={cameraTurn} onOpen={open} onNear={setNear} onTalk={talk} onNearNpc={setNearNpc} talkingNpc={conversation?.index} zoom={zoom} resetKey={resetKey} villageArrival={villageArrival} onVillageArrivalHandled={() => setVillageArrival(null)} missionRound={missionRound} missionComplete={missionComplete && !celebrationDone.current} onFirework={stage => { if (preferences.current.master && preferences.current.interactions) effects.current.firework(stage); }} onCelebrate={() => { celebrationDone.current = true; }} /></Suspense>
           {conversation && <section className="npc-dialogue" aria-label={`${en ? 'Conversation with' : 'Conversa com'} ${activeVillagers[conversation.index].name}`} tabIndex={-1} ref={npcPanel}>
             <div className="npc-dialogue-heading"><span className="npc-avatar" style={{ background: activeVillagers[conversation.index].color }}>{activeVillagers[conversation.index].name[0]}</span><div><h2>{activeVillagers[conversation.index].name}</h2><small>{activeVillagers[conversation.index].role}</small></div><button onClick={endConversation} aria-label={en ? 'End conversation' : 'Encerrar conversa'}><X size={18} /></button></div>
             <p aria-live="polite">{activeVillagers[conversation.index].lines[conversation.line]}</p>
@@ -657,25 +799,34 @@ export default function App() {
         <button onClick={() => travelCampaign(campaignMap)}>{en ? 'Restart current map' : 'Reiniciar mapa atual'}</button>
       </section>
     </div>}
-    {selected !== null && <div className="modal-backdrop" inert={anyPanelOpen || undefined} aria-hidden={anyPanelOpen || undefined} onClick={e => { if (e.target === e.currentTarget) close(); }}><article className="modal" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabIndex={-1} ref={dialog}><div className="modal-header"><span className="eyebrow">0{selected + 1} · {activePlaces[selected].name}</span><div className="modal-header-actions"><button className="close" onClick={close} aria-label={en ? 'Close section' : 'Fechar seção'}><X /></button><button className="section-audio-button" onClick={() => setAudioPanelOpen(true)}>{en ? 'Audio settings' : 'Configurar áudio'}</button><button className="section-audio-button" onClick={openAccessibility}>{en ? 'Accessibility' : 'Acessibilidade'}</button></div></div><h2 id="dialog-title">{selected === 4 ? (en ? 'Choose a destination' : 'Escolha um destino') : activePlaces[selected].section}</h2>{selected === 4 ? <div className="portal-destinations"><p>{en ? 'Where would you like to go?' : 'Para onde você deseja ir?'}</p><details className="portal-campaign"><summary>{en ? 'Evil Dragon Campaign' : 'Campanha do Dragão Maligno'}</summary><div className="portal-campaign-maps"><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInLake(true); }}><PortalArtwork scene="lake" /><span className="portal-card-copy"><strong>1. {en ? 'Lake of Interfaces' : 'Lago das Interfaces'}</strong><span>{en ? 'Explore the lake by boat' : 'Explore o lago de barco'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInLake(true); setInRapids(true); }}><PortalArtwork scene="rapids" /><span className="portal-card-copy"><strong>2. {en ? 'Canyon Rapids' : 'Corredeiras do Desfiladeiro'}</strong><span>{en ? 'Steer through the canyon' : 'Desça o desfiladeiro de barco'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); }}><PortalArtwork scene="ruins" /><span className="portal-card-copy"><strong>3. {en ? 'Sunken Ruins Cove' : 'Enseada das Ruínas Submersas'}</strong><span>{en ? 'Explore the ancient cove' : 'Explore a enseada e suas ruínas'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(false); setInCave(false); setInChamber(false); setPassageFromVillage(false); setInPassage(true); }}><PortalArtwork scene="passage" /><span className="portal-card-copy"><strong>4. {en ? 'Ancient Passage' : 'Passagem Antiga'}</strong><span>{en ? 'Descend to the temple village' : 'Desça até a aldeia do templo'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(true); }}><PortalArtwork scene="temple" />
-<span className="portal-card-copy"><strong>5. {en ? 'Ancient Temple Village' : 'Aldeia do Templo Antigo'}</strong><span>{en ? 'Explore the village and its sanctuaries' : 'Explore a aldeia e seus santuários'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(true); setReturnFromCave(true); setReturnFromChamber(false); setInCave(true); setInChamber(false); }}><PortalArtwork scene="cave" /><span className="portal-card-copy"><strong>6. {en?'The Elder’s Cave':'Caverna do Ancião'}</strong><span>{en?'Explore the dangerous caverns':'Explore as cavernas perigosas'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(true); setReturnFromCave(true); setReturnFromChamber(false); setInCave(true); setInChamber(true); }}><PortalArtwork scene="chamber" /><span className="portal-card-copy"><strong>7. {en?'The Elder’s Chamber':'Câmara do Ancião'}</strong><span>{en?'Enter the dragon’s lair':'Entre no covil do dragão'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button></div></details><details className="portal-campaign"><summary>{en?'Cursed Castle Campaign':'Campanha do Castelo Amaldi\u00e7oado'}</summary><div className="portal-campaign-maps"><button type="button" onClick={()=>{keys.current.clear();setSelected(null);setNear(-1);setReturnFromCastleCourtyard(false);setInCursedCastle(true);setInCorridor(false);setInCastleCourtyard(false);}}><svg className="portal-card-image" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><rect width="600" height="250" fill="#202d39"/><circle cx="468" cy="45" r="24" fill="#c9d2c9"/><path d="M0 155 80 98l78 50 94-82 76 74 98-69 91 67 83-50v162H0Z" fill="#3b4b48"/><path d="M0 205q120-28 240-6t180 0 180 0v51H0Z" fill="#515b50"/><path d="M170 196V91h35V76h20v15h20v-15h20v15h70V76h20v15h20V76h20v15h35v105Z" fill="#717579"/><path d="M143 196V80h22V66h18v14h18V66h18v130Zm238 0V80h22V66h18v14h18V66h18v130Z" fill="#565f64"/><path d="M259 196v-41a41 41 0 0 1 82 0v41Z" fill="#24262d"/><path d="M268 195v-40m14 40v-52m14 52v-57m14 57v-57m14 57v-52m10 52v-40M263 170h74" stroke="#88857d" strokeWidth="3"/><path d="M258 250 281 196h38l23 54Z" fill="#8b8473"/><path d="m216 181 6-14 6 14m144 0 6-14 6 14" fill="#eca25b"/></svg><span className="portal-card-copy"><strong>1. {en?'Castle Outskirts':'Arredores do Castelo'}</strong><span>{en?'Approach the cursed fortress':'Aproxime-se da fortaleza amaldi\u00e7oada'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={()=>{keys.current.clear();setSelected(null);setNear(-1);setReturnFromCastleCourtyard(true);setInCursedCastle(true);setInCorridor(true);setInCastleCourtyard(false);}}><PortalArtwork scene="corridor" /><span className="portal-card-copy"><strong>2. {en?'Hall of Infinity':'Corredor do Infinito'}</strong><span>{en?'Survive the looping corridor':'Sobreviva ao corredor sem fim'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={()=>{keys.current.clear();setSelected(null);setNear(-1);setInCursedCastle(true);setReturnFromCastleCourtyard(true);setInCorridor(false);setInCastleCourtyard(true);}}><svg className="portal-card-image" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><rect width="600" height="250" fill="#596674"/><path d="M0 171 138 120h324l138 51v79H0Z" fill="#46565c"/><path d="M0 178V54l28 13V48l31 15v19l30 15V79l31 16v20l36 8v48Zm600 0V54l-28 13V48l-31 15v19l-30 15V79l-31 16v20l-36 8v48Z" fill="#37434e"/><path d="M156 171v-48h21v-13h27v13h26v-13h27v13h26v-13h27v13h26v-13h27v13h26v-13h27v13h28v48Z" fill="#485762"/><path d="M64 231h472M153 202h294M235 250l28-79m102 79-28-79" stroke="#66777e" strokeWidth="3"/><ellipse cx="345" cy="217" rx="67" ry="8" fill="#7b8e99"/><ellipse cx="196" cy="234" rx="35" ry="5" fill="#71838e"/><path d="M0 121q156 48 600-4v65q-300 31-600-4Z" fill="#a9b8bf" opacity=".28"/><path d="m74 22-14 30m84-8-14 30m88-54-14 30m84-2-14 30m97-60-14 30m86-7-14 30m86-56-14 30m90-10-14 30M125 140l-14 30m131-59-14 30m160-22-14 30m144-49-14 30" stroke="#b2c5d2" strokeWidth="2" opacity=".68"/></svg><span className="portal-card-copy"><strong>3. {en?'Castle Courtyard':'Pátio do Castelo'}</strong><span>{en?'Explore the courtyard in the rain and fog':'Explore o pátio sob chuva e neblina'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button>
-      <button type="button" onClick={() => {
+    {selected !== null && <VillageParchment panel={dialog} suspended={anyPanelOpen}
+      closing={parchmentClosing} reduceMotion={reduceMotion} onClose={() => close()}
+      onClosed={finishParchment} onControl={() => playParchment('button')}
+      closeLabel={en ? 'Close section' : 'Fechar seção'}
+      caption={<>0{selected + 1} · {activePlaces[selected].name}</>}
+      controls={<>
+        <button className="section-audio-button" onClick={() => setAudioPanelOpen(true)}>{en ? 'Audio settings' : 'Configurar áudio'}</button>
+        <button className="section-audio-button" onClick={openAccessibility}>{en ? 'Accessibility' : 'Acessibilidade'}</button>
+      </>}>
+      <h2 id="dialog-title">{selected === 4 ? (en ? 'Choose a destination' : 'Escolha um destino') : activePlaces[selected].section}</h2>{selected === 4 ? <div className="portal-destinations"><p>{en ? 'Where would you like to go?' : 'Para onde você deseja ir?'}</p><details className="portal-campaign"><summary>{en ? 'Evil Dragon Campaign' : 'Campanha do Dragão Maligno'}</summary><div className="portal-campaign-maps"><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setInLake(true); })}><PortalArtwork scene="lake" /><span className="portal-card-copy"><strong>1. {en ? 'Lake of Interfaces' : 'Lago das Interfaces'}</strong><span>{en ? 'Explore the lake by boat' : 'Explore o lago de barco'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setInLake(true); setInRapids(true); })}><PortalArtwork scene="rapids" /><span className="portal-card-copy"><strong>2. {en ? 'Canyon Rapids' : 'Corredeiras do Desfiladeiro'}</strong><span>{en ? 'Steer through the canyon' : 'Desça o desfiladeiro de barco'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setInRuins(true); })}><PortalArtwork scene="ruins" /><span className="portal-card-copy"><strong>3. {en ? 'Sunken Ruins Cove' : 'Enseada das Ruínas Submersas'}</strong><span>{en ? 'Explore the ancient cove' : 'Explore a enseada e suas ruínas'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(false); setInCave(false); setInChamber(false); setPassageFromVillage(false); setInPassage(true); })}><PortalArtwork scene="passage" /><span className="portal-card-copy"><strong>4. {en ? 'Ancient Passage' : 'Passagem Antiga'}</strong><span>{en ? 'Descend to the temple village' : 'Desça até a aldeia do templo'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(true); })}><PortalArtwork scene="temple" />
+<span className="portal-card-copy"><strong>5. {en ? 'Ancient Temple Village' : 'Aldeia do Templo Antigo'}</strong><span>{en ? 'Explore the village and its sanctuaries' : 'Explore a aldeia e seus santuários'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(true); setReturnFromCave(true); setReturnFromChamber(false); setInCave(true); setInChamber(false); })}><PortalArtwork scene="cave" /><span className="portal-card-copy"><strong>6. {en?'The Elder’s Cave':'Caverna do Ancião'}</strong><span>{en?'Explore the dangerous caverns':'Explore as cavernas perigosas'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setInRuins(true); setTempleReached(true); setInTunnel(true); setReturnFromCave(true); setReturnFromChamber(false); setInCave(true); setInChamber(true); })}><PortalArtwork scene="chamber" /><span className="portal-card-copy"><strong>7. {en?'The Elder’s Chamber':'Câmara do Ancião'}</strong><span>{en?'Enter the dragon’s lair':'Entre no covil do dragão'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button></div></details><details className="portal-campaign"><summary>{en?'Cursed Castle Campaign':'Campanha do Castelo Amaldi\u00e7oado'}</summary><div className="portal-campaign-maps"><button type="button" onClick={() => close(() => {keys.current.clear();setNear(-1);setReturnFromCastleCourtyard(false);setInCursedCastle(true);setInCorridor(false);setInCastleCourtyard(false);})}><svg className="portal-card-image" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><rect width="600" height="250" fill="#202d39"/><circle cx="468" cy="45" r="24" fill="#c9d2c9"/><path d="M0 155 80 98l78 50 94-82 76 74 98-69 91 67 83-50v162H0Z" fill="#3b4b48"/><path d="M0 205q120-28 240-6t180 0 180 0v51H0Z" fill="#515b50"/><path d="M170 196V91h35V76h20v15h20v-15h20v15h70V76h20v15h20V76h20v15h35v105Z" fill="#717579"/><path d="M143 196V80h22V66h18v14h18V66h18v130Zm238 0V80h22V66h18v14h18V66h18v130Z" fill="#565f64"/><path d="M259 196v-41a41 41 0 0 1 82 0v41Z" fill="#24262d"/><path d="M268 195v-40m14 40v-52m14 52v-57m14 57v-57m14 57v-52m10 52v-40M263 170h74" stroke="#88857d" strokeWidth="3"/><path d="M258 250 281 196h38l23 54Z" fill="#8b8473"/><path d="m216 181 6-14 6 14m144 0 6-14 6 14" fill="#eca25b"/></svg><span className="portal-card-copy"><strong>1. {en?'Castle Outskirts':'Arredores do Castelo'}</strong><span>{en?'Approach the cursed fortress':'Aproxime-se da fortaleza amaldi\u00e7oada'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => {keys.current.clear();setNear(-1);setReturnFromCastleCourtyard(true);setInCursedCastle(true);setInCorridor(true);setInCastleCourtyard(false);})}><PortalArtwork scene="corridor" /><span className="portal-card-copy"><strong>2. {en?'Hall of Infinity':'Corredor do Infinito'}</strong><span>{en?'Survive the looping corridor':'Sobreviva ao corredor sem fim'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button><button type="button" onClick={() => close(() => {keys.current.clear();setNear(-1);setInCursedCastle(true);setReturnFromCastleCourtyard(true);setInCorridor(false);setInCastleCourtyard(true);})}><svg className="portal-card-image" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false"><rect width="600" height="250" fill="#596674"/><path d="M0 171 138 120h324l138 51v79H0Z" fill="#46565c"/><path d="M0 178V54l28 13V48l31 15v19l30 15V79l31 16v20l36 8v48Zm600 0V54l-28 13V48l-31 15v19l-30 15V79l-31 16v20l-36 8v48Z" fill="#37434e"/><path d="M156 171v-48h21v-13h27v13h26v-13h27v13h26v-13h27v13h26v-13h27v13h26v-13h27v13h28v48Z" fill="#485762"/><path d="M64 231h472M153 202h294M235 250l28-79m102 79-28-79" stroke="#66777e" strokeWidth="3"/><ellipse cx="345" cy="217" rx="67" ry="8" fill="#7b8e99"/><ellipse cx="196" cy="234" rx="35" ry="5" fill="#71838e"/><path d="M0 121q156 48 600-4v65q-300 31-600-4Z" fill="#a9b8bf" opacity=".28"/><path d="m74 22-14 30m84-8-14 30m88-54-14 30m84-2-14 30m97-60-14 30m86-7-14 30m86-56-14 30m90-10-14 30M125 140l-14 30m131-59-14 30m160-22-14 30m144-49-14 30" stroke="#b2c5d2" strokeWidth="2" opacity=".68"/></svg><span className="portal-card-copy"><strong>3. {en?'Castle Courtyard':'Pátio do Castelo'}</strong><span>{en?'Explore the courtyard in the rain and fog':'Explore o pátio sob chuva e neblina'}</span></span><ArrowUpRight size={20} aria-hidden="true" /></button>
+      <button type="button" onClick={() => close(() => {
         keys.current.clear();
-        setSelected(null);
+
         setNear(-1);
         setInCursedCastle(true);
         setReturnFromCastleCourtyard(true);
         setInThroneEntrance(true);
-      }}>
+      })}>
         <PortalArtwork scene="guardian" />
         <span className="portal-card-copy">
           <strong>4. {en ? 'Arcane Guardian Chamber' : 'Câmara do Guardião Arcano'}</strong>
           <span>{en ? "Face the ancient seal in a game of wizard's chess" : 'Enfrente o selo antigo no xadrez de bruxo'}</span>
         </span>
         <ArrowUpRight size={20} aria-hidden="true" />
-      </button><button type="button" onClick={() => {
-        keys.current.clear(); setSelected(null); setNear(-1); setInCursedCastle(true); setInRoyalArena(true);
-      }}>
+      </button><button type="button" onClick={() => close(() => {
+        keys.current.clear(); setNear(-1); setInCursedCastle(true); setInRoyalArena(true);
+      })}>
         <svg className="portal-card-image" viewBox="0 0 600 250" aria-hidden="true"><rect width="600" height="250" fill="#211d31"/>
           <path d="M0 250 160 146h280l160 104Z" fill="#48424b"/><path d="m216 250 60-104h48l60 104Z" fill="#582536"/>
           <path d="M240 161h120v-12H240zm12-12h96v-10h-96z" fill="#92704a"/>
@@ -685,23 +836,23 @@ export default function App() {
           <span>{en ? 'Face the Castle Lord' : 'Enfrente o Senhor do Castelo'}</span></span><ArrowUpRight size={20} aria-hidden="true" />
       </button></div></details>
       <details className="portal-campaign"><summary>{en ? 'Omega Protocol' : 'Protocolo Ômega'}</summary><div className="portal-campaign-maps">
-        <button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setOmegaMap('omega-hangar'); }}>
+        <button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setOmegaMap('omega-hangar'); })}>
           <svg className="portal-card-image" viewBox="0 0 600 250" aria-hidden="true"><rect width="600" height="250" fill="#0b1426"/><path d="M0 0l140 50v120L0 250m600-250L460 50v120l140 80" fill="#33475b"/><path d="M0 250l140-80h320l140 80" fill="#536479"/><path d="M160 170l90-53 65-53 70 80-88-18z" fill="#c4d5dd"/><path d="M270 106l43-33 18 25z" fill="#00bfff"/><path d="M32 55l66 23m402 0l66-23" stroke="#ff4848" strokeWidth="7"/></svg>
           <span className="portal-card-copy"><strong>1. {en ? 'Arrival Hangar' : 'Hangar de chegada'}</strong><span>{en ? 'Investigate the hangar control terminal' : 'Investigue o terminal de controle do hangar'}</span></span><ArrowUpRight size={20} aria-hidden="true"/>
-        </button><button type="button" onClick={() => { keys.current.clear(); setSelected(null); setNear(-1); setOmegaMap('omega-command'); }}>
+        </button><button type="button" onClick={() => close(() => { keys.current.clear(); setNear(-1); setOmegaMap('omega-command'); })}>
           <svg className="portal-card-image" viewBox="0 0 600 250" aria-hidden="true"><rect width="600" height="250" fill="#0b1727"/><circle cx="180" cy="78" r="60" fill="#538ca8"/><path d="M0 168h600v82H0z" fill="#384e60"/><ellipse cx="305" cy="198" rx="90" ry="17" fill="#192c3c"/><path d="m305 68 45 42-45 47-45-47z m0 0v89m-45-47h90" fill="none" stroke="#6aeaf8" strokeWidth="4"/></svg>
           <span className="portal-card-copy"><strong>2. {en ? 'Command Center' : 'Centro de Comando'}</strong><span>{en ? 'Consult the station hologram' : 'Consulte o holograma da estação'}</span></span><ArrowUpRight size={20} aria-hidden="true"/>
-        </button><button type="button" onClick={() => {
+        </button><button type="button" onClick={() => close(() => {
           keys.current.clear();
           commandArrival.current = null;
-          setSelected(null);
+
           setNear(-1);
           setNexusScore('decision');
           setOmegaMap('omega-core');
-        }}>
+        })}>
           <PortalArtwork scene="nexus" />
           <span className="portal-card-copy"><strong>3. {en ? 'NEXUS Core' : 'Núcleo NEXUS'}</strong><span>{en ? 'Confront the station’s intelligence' : 'Enfrente a inteligência da estação'}</span></span><ArrowUpRight size={20} aria-hidden="true"/>
-        </button></div></details></div> : <Content language={language} index={selected} narrationEnabled={sound && audioSettings.narration} />}</article></div>}
+        </button></div></details></div> : <Content language={language} index={selected} narrationEnabled={sound && audioSettings.narration} />}</VillageParchment>}
     {accessibilityOpen && <AccessibilitySettings language={language} settings={accessibility} onChange={updateAccessibility} onClose={closeAccessibility} />}
     {audioPanelOpen && <AudioSettings language={language} settings={audioSettings} onChange={updateAudio} onClose={closeAudioPanel} notice={audioNotice} />}
     <audio ref={bg} src={musicTrack} loop preload="none" />

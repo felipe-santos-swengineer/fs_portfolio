@@ -28,18 +28,17 @@ test('o painel ajusta leitura, contraste e movimento, preserva preferências e d
   expect(loadAccessibilitySettings().simpleFont).toBe(true);
 });
 
-test('o link de pulo dá foco ao conteúdo e o modo leitura inclui todos os moradores', async () => {
+test('o link de pulo dá foco ao conteúdo e o modo leitura limita o menu às seções profissionais', async () => {
   await act(async () => { render(<App />); });
   fireEvent.click(screen.getByRole('link', { name: 'Pular para o conteúdo' }));
   expect(document.activeElement).toBe(screen.getByRole('main'));
   fireEvent.click(screen.getByRole('button', { name: 'Abrir acessibilidade' }));
-  fireEvent.click(screen.getByRole('checkbox', { name: /^Modo leitura sem 3D/ }));
+  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: /^Modo leitura sem 3D/ })); });
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(screen.queryByTestId('scene')).toBeNull();
   expect(screen.getByRole('navigation', { name: 'Seções do portfólio' })).toBeTruthy();
-  for (const name of ['Bia', 'Tom', 'Lia', 'Rui']) expect(screen.getByText(new RegExp(`^${name} ·`))).toBeTruthy();
-  fireEvent.click(screen.getByText(/^Bia ·/));
-  expect(screen.getByText(/Que bom receber você por aqui!/)).toBeTruthy();
+  expect(screen.queryByText('Mais', { exact: true })).toBeNull();
+  expect(screen.queryByRole('heading', { name: /Moradores da vila|Playground|Salão do trono|Minha história/ })).toBeNull();
 });
 
 test('preferências inválidas não quebram a página', () => {
@@ -48,6 +47,7 @@ test('preferências inválidas não quebram a página', () => {
 });
 
 test('auditoria estrutural de acessibilidade na vila, painel, seção e modo leitura', async () => {
+  localStorage.setItem('village-accessibility', JSON.stringify({ motion: 'reduce' }));
   const { container } = await act(async () => render(<App />));
   // jsdom cannot calculate rendered contrast; visual contrast needs browser QA.
   const audit = async () => {
@@ -59,5 +59,5 @@ test('auditoria estrutural de acessibilidade na vila, painel, seção e modo lei
   fireEvent.keyDown(document, { key: 'Escape' });
   fireEvent.click(screen.getByRole('button', { name: 'Entrar: Projetos' })); await audit();
   fireEvent.keyDown(document, { key: 'Escape' });
-  fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' })); await audit();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' })); }); await audit();
 }, 20000);

@@ -1,29 +1,97 @@
 {
   "projetos": [
     {
+      "titulo": "Funcap Showcase",
+      "contexto": "Participation in front-end development",
+      "tecnologias": "React and Node.js in the first version; Laravel in a later stage",
+      "desafio": "Give visibility to research and innovation initiatives and bring them closer to society.",
+      "descricao": "Platform for disseminating research, innovation and entrepreneurship initiatives supported by the Cearense Foundation to Support Scientific and Technological Development.\n\nThe showcase presents projects developed in Ceará, their solutions and application possibilities. The objective is to make scientific production more accessible and bring researchers, companies, investors and society closer together."
+    },
+    {
+      "titulo": "Plataforma Montenegro",
+      "imagensAlt": [
+        "Plataforma Montenegro homepage with navigation and Funcap news.",
+        "Funding opportunities page with search, filters and open calls for proposals.",
+        "Funding results page with filters, published results and document download links."
+      ],
+      "contexto": "Contributed to the development of Funcap’s funding portal",
+      "desafio": "Bring Funcap's funding opportunities, calls for proposals and results together in one portal.",
+      "descricao": "Plataforma Montenegro brings together Funcap's funding services and information. Researchers, institutions and businesses can search for opportunities by title or call number, check deadlines and access proposal submission.\n\nThe platform also publishes selection results, provides PDF documents and offers access to transparency information and user portals."
+    },
+    {
+      "titulo": "Chronos-UFC",
+      "imagensAlt": [
+        "Simulated preview of the Chronos student dashboard with complementary activity hours and submissions.",
+        "Simulated preview of the Chronos review screen with a supporting document, validated hours and feedback."
+      ],
+      "contexto": "Full-stack development fellow at UFC",
+      "desafio": "Facilitate the registration and evaluation of complementary activities during graduation.",
+      "descricao": "Complementary activities management system for students at the Federal University of Ceará. The student records their activities, informs the workload and attaches receipts.\n\nTeachers or coordinators evaluate records, approve hours or request adjustments with comments. Monitoring by category helps the student understand what they have already completed and what is missing to meet the training requirements."
+    },
+    {
+      "titulo": "Órbita",
+      "contexto": "Help desk and knowledge base",
+      "desafio": "Track support requests and reuse solutions the team has already reviewed.",
+      "descricao": "Requesters submit tickets and follow their progress. Support agents manage priorities, look up similar cases and can use Ollama to draft replies from knowledge base excerpts. The team reviews suggestions before approving a reply and can turn a solution into an article.\n\nThe application includes role-based access and support metrics such as open tickets, average resolution time and SLA compliance. The online demo uses sample data. Ollama runs in the local version."
+    },
+    {
+      "titulo": "ClickDown",
+      "imagensAlt": [
+        "Simulated preview of the ClickDown Kanban board with filters, project metrics and tasks in four columns.",
+        "Simulated preview of the ClickDown list showing each task's status, priority and assignee."
+      ],
+      "contexto": "Collaborative project management",
+      "desafio": "Give teams a shared view of their work, deadlines and assignees.",
+      "descricao": "Teams organize tasks and subtasks on a Kanban board with configurable columns. The same work is available in list and calendar views, with filters for priority, due date and assignee. Tasks support multiple assignees, checklists, comments with mentions and attachments.\n\nThe server enforces project permissions and records who made each change. Notifications and reminders help users keep track of assignments, mentions and deadlines."
+    },
+    {
       "titulo": "Talkdoor",
+      "imagensAlt": [
+        "Simulated preview of the Talkdoor academic feed with posts, likes and comments.",
+        "Simulated preview of Talkdoor people search with results and links to academic profiles."
+      ],
       "contexto": "Course completion project",
       "desafio": "Bringing students, teachers and researchers together in a space for academic collaboration.",
       "descricao": "Academic social network developed at my TCC to bring students, teachers and researchers together. The platform brings together articles, events, subject discussions, research projects and academic opportunities.\n\nThe proposal is to facilitate collaboration within the university, with a feed that prioritizes content according to the interests of each user."
     },
     {
-      "titulo": "Funcap Showcase",
-      "contexto": "Participation in front-end development",
-      "tecnologias": "React and Node.js in the first version; PHP and Laravel in a later stage",
-      "desafio": "Give visibility to research and innovation initiatives and bring them closer to society.",
-      "descricao": "Platform for disseminating research, innovation and entrepreneurship initiatives supported by the Cearense Foundation to Support Scientific and Technological Development.\n\nThe showcase presents projects developed in Ceará, their solutions and application possibilities. The objective is to make scientific production more accessible and bring researchers, companies, investors and society closer together."
+      "titulo": "Nexo",
+      "imagensAlt": [
+        "Simulated preview of Nexo's guided mission showing the party reference sheet.",
+        "Simulated preview of the step where learners compare the invitation with the reference sheet and flag an unconfirmed address."
+      ],
+      "contexto": "AI learning application",
+      "desafio": "Explain how AI produces answers and how to check them, with no coding required.",
+      "descricao": "In a guided mission, learners write a party invitation and check the details against an event brief. Other activities use everyday examples to show how systems predict text, find related ideas and retrieve sources before answering.\n\nIn the lab, learners can load text documents, compare search settings and inspect retrieved passages. An evaluation workspace compares retrieval results against expected sources."
+    },
+    {
+      "titulo": "Freelancer Vitrine",
+      "contexto": "Catalog of interactive demos",
+      "desafio": "Show how different interfaces address business and product needs.",
+      "descricao": "The catalog includes interactive demos such as an online store with a cart and mock checkout, service booking, a dashboard with filters and CSV export, games and 3D experiences.\n\nVisitors can filter the catalog by category and visual style. Inside a demo, they can change the layout while keeping their data and session progress."
+    },
+    {
+      "titulo": "Tela Livre",
+      "imagensAlt": [
+        "Illustration of the Tela Livre interface showing the stream preview and resolution and frame-rate controls.",
+        "Simulated preview of the viewer interface showing a live screen share."
+      ],
+      "contexto": "Live screen sharing",
+      "desafio": "Let someone share a live view of a window, browser tab or screen through a link.",
+      "descricao": "The host chooses what to share, the resolution, the frame rate and, when available, screen or tab audio. Anyone with the link can watch in their browser.\n\nSupabase Realtime coordinates the connection, and WebRTC sends video directly from the host to each viewer. Streaming depends on a direct connection between participants."
+    },
+    {
+      "titulo": "Chat IA Local",
+      "imagensAlt": ["Simulated preview of the local AI chat showing a conversation about organizing programming practice."],
+      "contexto": "Full-stack AI chat application",
+      "desafio": "Explore how to integrate a local language model into a chat interface.",
+      "descricao": "The chat interface sends a message to an Express API. The server forwards it to Ollama, which runs Llama 3 locally. The API records the prompt and reply in Supabase and returns the reply to the browser."
     },
     {
       "titulo": "Tetris for 2 players",
       "contexto": "Competitive game for two people",
       "desafio": "Combine strategy, spatial reasoning and interaction between players.",
       "descricao": "A competitive version of Tetris for two people: each player organizes their pieces, completes lines and sends obstacles to the opponent.\n\nThe duel combines spatial reasoning, strategy and reflexes into a shared experience, with a track inspired by Naruto battles."
-    },
-    {
-      "titulo": "Chronos-UFC",
-      "contexto": "Full-stack development for UFC",
-      "desafio": "Facilitate the registration and evaluation of complementary activities during graduation.",
-      "descricao": "Complementary activities management system for students at the Federal University of Ceará. The student records their activities, informs the workload and attaches receipts.\n\nTeachers or coordinators evaluate records, approve hours or request adjustments with comments. Monitoring by category helps the student understand what they have already completed and what is missing to meet the training requirements."
     }
   ],
   "textos": [
@@ -31,10 +99,10 @@
     "I've always liked stories in which each discovery opens up a new possibility. In software development, I encounter something similar: an idea becomes an interface, a need becomes a tool and a problem becomes an opportunity to learn.\n\nThis portfolio was born from the desire to unite code, design and the language of RPGs. The village gives shape to this mix: each building holds a part of my trajectory, and each project records a solution that came out of the paper.\n\nBehind the ambiance, my purpose is simple: to create experiences that make sense to those who use it and have a structure that allows them to continue evolving.",
     "My approach to technology began with a question: how does it work? I wanted to understand what was happening behind the screens of the websites, apps and games I used.\n\nThis curiosity led me to languages, algorithms and software engineering. Figuring out how the pieces connect continues to be one of the most interesting parts of my job.\n\nToday, I transform this desire to learn into interfaces, systems and interactive experiences. Each challenge is a chance to investigate, build and improve the solution.",
     "My journey at the Federal University of Ceará began in 2018, when I joined SISU on the Software Engineering course, on the Russas campus.\n\nDuring my bachelor's degree, I studied requirements, data structures, programming and the fundamentals that support software construction. Academic projects also gave me space to experiment and work on concrete problems.\n\nI took this base to the market and continue to expand my repertoire with practice: understanding the need, choosing an approach and improving the result with each delivery.",
-    "UFC · Full-stack development | apr. 2021 – Jan. 2022\nDevelopment of a web application for managing complementary activities, supporting students in recording activities and monitoring the hours required for graduation.\n\nUFC Software Solutions Center · Internship in web development | May – Sep. 2021\nWork in Darwin, selection and competition management module used in scholarship processes on the Russas campus, including PIBI, PAIP and PID.\n\nTOTVS · Internship in web development | Jun. 2022 – May 2023\nDevelopment and maintenance of ERP Protheus with AdvPL, in addition to JavaScript applications with React and Node.js.\n\nFuncap · Front-end development | Aug. 2021 – Apr. 2025\nParticipation in the creation of a digital showcase of public and business innovation. The first version used React and Node.js; a later stage started using PHP and Laravel.\n\nTechnologies and tools\nHTML5, CSS3, JavaScript, React, Tailwind, Node.js, PHP, Laravel and AdvPL. On a daily basis, I use Git, GitHub, VS Code and REST APIs. My focus includes responsive interfaces, component organization, performance, and troubleshooting.",
+    "Funcap · Front-end development fellow | Aug. 2021 – Apr. 2026\nI contributed to the Funcap Showcase, which highlights public and business innovation data and initiatives, and to Plataforma Montenegro, which brings together funding opportunities, calls for proposals and results. I worked with JavaScript, React, Next.js and Laravel, created and maintained PostgreSQL databases, and applied generative AI in Funcap’s solutions. I also helped maintain, support and deploy applications to a network environment.\n\nTOTVS · Full-stack development intern | Jun. 2022 – May 2023\nI built and maintained Protheus ERP features in AdvPL and web applications with JavaScript, Node.js and React. I implemented and integrated REST APIs for business applications.\n\nUFC Software Solutions Center · Full-stack development intern | May – Sep. 2021\nI analyzed requirements and maintained DARWIN, a system for managing selections and competitions used by scholarship programs including PIBI, PAIP and PID at the Russas campus. I developed with Java and HTML5 on a Scrum team.\n\nChronos-UFC · Full-stack development fellow | Apr. 2021 – Jan. 2022\nI worked with React, Node.js and PostgreSQL on a system for submitting extracurricular activities, attaching supporting documents, tracking reviews and checking approved hours.\n\nTechnologies and tools\nOn the front end, I work with React, Next.js, TypeScript, Redux, HTML5, CSS3, Sass, Bootstrap and Tailwind CSS. On the back end, I use Node.js, Laravel, Java web development and REST APIs. I have experience with PostgreSQL, MySQL, MongoDB and Firebase. My development tools include Git, GitHub, Linux and VS Code, and I use Jest and Playwright for testing.\n\nAgents and local AI\nI use Codex, Google Antigravity, GitHub Copilot and OpenCode for development. I also work with prompt engineering and use Ollama to run language models locally.",
     "I like to investigate before choosing a path. Curiosity, persistence and analytical thinking help me understand problems and transform ideas into solutions.\n\nInteractive interfaces and experiences\nI have an affinity with React and building modular systems. I try to organize components so that the interface is pleasant to use and can grow without losing clarity.\n\nDesign and visual storytelling\nI believe typography, colors and interaction also tell a story. This portfolio is a space to explore this relationship between presentation and functionality.\n\nGames, RPGs and learning\nGames interest me because of collaboration, strategy and the freedom to explore. Outside of them, I continue to look for new references in development, software architecture and design.",
     "This is the village workshop: the place where ideas become solutions. Here I brought together projects from different contexts, from academic collaboration to scientific dissemination, including university management and games.\n\nIn each project, you will find the problem that motivated its construction, the main features and images of the interface. Links lead to the available code or publication.\n\nExplore the screens and learn about the choices behind each creation.",
-    "A good journey is also made in company. If you want to talk about a project, exchange ideas about technology or learn more about my work, choose one of the channels below.\n\nEmail: felipesantosswengineer@email.com\nTelephone: (88) 99837-8028\nLinkedIn: Felipe Santos Rodrigues\nInstagram: @felipe_santos_swengineer\n\nThanks for visiting. The village's doors remain open for your next discovery."
+    "A good journey is also made in company. If you want to talk about a project, exchange ideas about technology or learn more about my work, choose one of the channels below.\n\nThanks for visiting. The village's doors remain open for your next discovery."
   ],
   "titulosTextos": [
     "Welcome to the village",

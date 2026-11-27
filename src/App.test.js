@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import App from './App';
 import VillageAudio from './audio/VillageAudio';
+import { projetos } from './content';
 
 jest.mock('./components/VillageScene', () => ({ __esModule: true, default: ({ onTalk, onOpen, onNear, onNearNpc, zoom, missionRound, weatherMode, villageArrival }) => <div data-testid="village-canvas" data-village-arrival={villageArrival || ''} data-weather={weatherMode} data-zoom={zoom} data-round={missionRound}><button onClick={() => onOpen(5)}>Simular entrada no castelo</button><button onClick={() => onOpen(4)}>Simular entrada no portal</button><button onClick={() => onOpen(6)}>Simular vitrine do mercado</button><button onClick={() => onOpen(7)}>Simular alimentos</button><button onClick={() => onOpen(8)}>Simular pocoes</button><button onClick={() => onTalk(0)}>Conversar com Bia</button><button onClick={() => onNearNpc(0)}>Aproximar da Bia</button><button onClick={() => onNear(0)}>Aproximar da taverna</button></div> }));
 jest.mock('./audio/VillageAudio', () => jest.fn());
@@ -32,8 +33,9 @@ jest.mock('./components/InfiniteCorridor', () => ({ __esModule: true, default: (
 
 beforeEach(() => {
   localStorage.clear();
+  localStorage.setItem('village-accessibility', JSON.stringify({ motion: 'reduce' }));
   sessionStorage.clear();
-  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), interact: jest.fn(), ruins: jest.fn(), closeDoor: jest.fn(), firework: jest.fn(), stopFireworks: jest.fn(), dispose: jest.fn() }));
+  VillageAudio.mockImplementation(() => ({ enable: jest.fn().mockResolvedValue(true), setChannels: jest.fn(), mute: jest.fn(), parchment: jest.fn(), stopParchment: jest.fn(), ruins: jest.fn(), firework: jest.fn(), stopFireworks: jest.fn(), dispose: jest.fn() }));
   jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
@@ -59,27 +61,29 @@ test('os edifícios abrem as seções, registram a visita e fecham com Escape', 
   expect(screen.getByRole('button', { name: 'Entrar: Sobre mim' }).textContent).toContain('EXPLORADO');
 });
 
-test('a oficina preserva os quatro projetos e suas imagens', async () => {
+test('a oficina preserva os projetos e suas imagens', async () => {
   await start(); fireEvent.click(screen.getByRole('button', { name: 'Entrar: Projetos' }));
   const dialog = screen.getByRole('dialog');
-  for (const name of ['Talkdoor', 'Vitrine Funcap', 'Tetris para 2 jogadores', 'Chronos-UFC']) expect(within(dialog).getByRole('heading', { name })).toBeTruthy();
-  expect(within(dialog).getAllByRole('img')).toHaveLength(18);
+  for (const { titulo } of projetos) expect(within(dialog).getByRole('heading', { name: titulo })).toBeTruthy();
+  expect(within(dialog).getAllByRole('img')).toHaveLength(projetos.reduce((count, project) => count + project.imagens.length, 0));
   expect(dialog.querySelectorAll('audio')).toHaveLength(1);
 });
 
-test('o modo leitura oferece todas as seções e quatro narrações sem caminhar', async () => {
-  await start(); fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' }));
+test('o modo leitura oferece conteúdo profissional e duas narrações', async () => {
+  await start(); await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' })); });
   expect(screen.queryByLabelText('Vilarejo tridimensional do portfólio')).toBeNull();
   expect(screen.getByRole('heading', { name: 'Contato' })).toBeTruthy();
-  expect(document.querySelectorAll('audio[data-narration]')).toHaveLength(4);
-  expect(screen.getByRole('link', { name: 'Enviar email ↗' }).getAttribute('href')).toBe('mailto:felipesantosswengineer@email.com');
+  const about = screen.getByRole('region', { name: 'Sobre mim' });
+  expect(within(about).getAllByRole('heading', { level: 3 })[0].textContent).toBe('A curiosidade que move a jornada');
+  expect(document.querySelectorAll('audio[data-narration]')).toHaveLength(2);
+  expect(screen.getByRole('link', { name: /^E-mail: felipesantosswengineer/ }).getAttribute('href')).toBe('mailto:felipesantosswengineer@email.com');
 });
 
 test('as categorias são independentes e o controle geral preserva as escolhas', async () => {
   await start();
   await configure(p => fireEvent.click(p.getByRole('button', { name: 'Ativar tudo' })));
   await configure(p => { fireEvent.click(p.getByRole('checkbox', { name: /^Música ambiente/ })); });
-  fireEvent.click(screen.getByRole('button', { name: 'Entrar: Projetos' })); expect(engine().interact).toHaveBeenCalledWith(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar: Projetos' })); expect(engine().parchment).toHaveBeenCalledWith('open');
   fireEvent.keyDown(document, { key: 'Escape' });
   await configure(p => fireEvent.click(p.getByRole('checkbox', { name: /^Som geral/ })));
   await configure(p => {
@@ -94,7 +98,7 @@ test('as categorias são independentes e o controle geral preserva as escolhas',
 test('desativar tudo bloqueia interações e novas narrações', async () => {
   await start(); await configure(p => fireEvent.click(p.getByRole('button', { name: 'Ativar tudo' })));
   await configure(p => fireEvent.click(p.getByRole('button', { name: 'Desativar tudo' })));
-  fireEvent.click(screen.getByRole('button', { name: 'Entrar: Minha história' })); expect(engine().interact).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar: Minha história' })); expect(engine().parchment).not.toHaveBeenCalled();
   const narration = document.querySelector('audio[data-narration]');
   expect(narration.muted).toBe(true);
   fireEvent.play(narration); expect(narration.pause).toHaveBeenCalled();
@@ -199,7 +203,7 @@ test.each([
   fireEvent.click(screen.getByRole('button', { name: entrance }));
   if (entrance === 'Simular entrada no portal') fireEvent.click(screen.getByRole('button', { name: /Lago das Interfaces/ }));
   expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' })); });
   expect(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: exit })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Modo 3D' }));
@@ -211,7 +215,7 @@ test('configuracoes de acessibilidade permitem abrir leitura dentro do castelo',
   fireEvent.click(screen.getByRole('button', { name: 'Simular entrada no castelo' }));
   await screen.findByRole('button', { name: 'Sair do salao de teste' });
   fireEvent.click(screen.getByRole('button', { name: 'Abrir acessibilidade' }));
-  fireEvent.click(screen.getByRole('checkbox', { name: /^Modo leitura sem 3D/ }));
+  await act(async () => { fireEvent.click(screen.getByRole('checkbox', { name: /^Modo leitura sem 3D/ })); });
   fireEvent.keyDown(document, { key: 'Escape' });
   expect(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' })).toBeTruthy();
 });
@@ -219,7 +223,7 @@ test('configuracoes de acessibilidade permitem abrir leitura dentro do castelo',
 
 test('o menu do modo leitura pode ser recolhido e reaberto', async () => {
   await start();
-  fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Modo leitura' })); });
   const menu = within(screen.getByRole('navigation', { name: 'Se\u00e7\u00f5es do portf\u00f3lio' }));
   const collapse = menu.getByRole('button', { name: 'Recolher menu' });
   expect(collapse.getAttribute('aria-expanded')).toBe('true');
@@ -241,13 +245,13 @@ test('a troca de idioma persiste e apresenta conteudo e vozes em ingles', async 
   expect(screen.getByRole('button', { name: 'English (United States)' }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.getByRole('button', { name: 'Portugu\u00eas (Brasil)' }).getAttribute('aria-pressed')).toBe('false');
   expect(document.documentElement.lang).toBe('en-US');
-  fireEvent.click(screen.getByRole('button', { name: 'Reading mode' }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Reading mode' })); });
   expect(screen.getByRole('navigation', { name: 'Portfolio sections' })).toBeTruthy();
-  expect(screen.getByRole('heading', { name: 'My story' })).toBeTruthy();
-  expect(screen.getByText(/Felipe Santos, software engineer/i)).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'The curiosity that drives the journey' })).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'My story' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Portugu\u00eas (Brasil)' }));
   expect(document.documentElement.lang).toBe('pt-BR');
-  expect(screen.getByRole('heading', { name: 'Minha hist\u00f3ria' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'A curiosidade que move a jornada' })).toBeTruthy();
 });
 
 
@@ -261,14 +265,15 @@ test.each([
   expect(await screen.findByRole('button', { name: exit })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'English (United States)' }));
   expect(screen.getByRole('button', { name: exit })).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Reading mode' }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Reading mode' })); });
   expect(screen.getByRole('navigation', { name: 'Portfolio sections' })).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Modo 3D' }));
+  fireEvent.click(screen.getByRole('button', { name: '3D mode' }));
   expect(screen.getByRole('button', { name: exit })).toBeTruthy();
 });
 
 
 test('o controle alterna os climas e retorna ao ciclo automatico', async () => {
+  localStorage.removeItem('village-accessibility');
   await start();
   const scene = screen.getByTestId('village-canvas');
   for (const [current, next] of [['Autom\u00e1tico','clear'], ['Limpo','rain'], ['Chuva','snow'], ['Neve','auto']]) {

@@ -9,7 +9,7 @@ import AccessibilitySettings, { loadAccessibilitySettings, useSystemReducedMotio
 import useModalFocus from './components/useModalFocus';
 import VillageParchment from './components/VillageParchment';
 import { MarketStall } from './components/MarketStalls';
-import ReadingPortfolio, { ProfessionalLinks } from './components/ReadingPortfolio';
+import ReadingPortfolio from './components/ReadingPortfolio';
 import PortalArtwork from './components/PortalArtwork';
 import CampaignNavigation from './components/CampaignNavigation';
 import VillagerSpeech from './audio/VillagerSpeech';
@@ -162,13 +162,9 @@ function Content({ index, narrationEnabled, language = 'pt-BR', editorial = fals
       <EditorialQualifications language={language} type={index === 6 ? 'technologies' : 'education'} />
     </Suspense>
   );
-  if (editorial && index === 7) return <>
+  if (editorial && index === 7) return (
     <ol className="editorial-timeline"><CareerEntries text={activeTexts[4]} editorial /></ol>
-    <details className="editorial-role-details">
-      <summary>{en ? 'Explore each role' : 'Conheça cada experiência'}</summary>
-      <MarketStall key={language} language={language} type="experience" />
-    </details>
-  </>;
+  );
   if (index === 7) return <MarketStall key={language} language={language} type="experience" />;
   if (index === 8) return <MarketStall key={language} language={language} type="education" />;
   if (index === 6) return <MarketStall key={language} language={language} type="technologies" />;
@@ -713,7 +709,7 @@ export default function App() {
   return <div className={`app${reading ? ' reading-mode' : ''} text-${accessibility.textSize}${accessibility.highContrast ? ' high-contrast' : ''}${accessibility.simpleFont ? ' simple-font' : ''}${reduceMotion ? ' reduce-motion' : ''}`}>
     <a className="skip-link" href="#portfolio" tabIndex={backgroundInert ? -1 : 0} aria-hidden={backgroundInert || undefined} onClick={e => { e.preventDefault(); document.getElementById('portfolio')?.focus(); }}>{en ? 'Skip to content' : 'Pular para o conteúdo'}</a>
     <div inert={backgroundInert || undefined} aria-hidden={backgroundInert || undefined}>
-    <header id={reading ? "editorial-top" : undefined} className={reading ? "editorial-header" : undefined}><a className="brand" href="#portfolio" aria-label={en ? 'Felipe Santos, home' : 'Felipe Santos, início'}><span className="brand-mark">F<span>.</span></span><span>FELIPE SANTOS<small>{en ? 'SOFTWARE ENGINEER' : 'ENGENHEIRO DE SOFTWARE'}</small></span></a><div className="header-actions">{reading && <ProfessionalLinks en={en} compact />}<span className="edition" title={commitId || undefined}>{reading ? (en ? 'PORTFOLIO' : 'PORTFÓLIO') : en ? '3D PORTFOLIO' : 'PORTFÓLIO 3D'} · <Github size={14} aria-hidden="true" /> <span className="sr-only">Commit </span>{displayedVersion}</span><LanguageFlags language={language} onChange={changeLanguage} /><button className={reading ? "editorial-3d-toggle" : undefined} onClick={() => { endConversation(); setReading(!reading); }}><BookOpen size={16} /><span>{reading ? (en ? '3D mode' : 'Modo 3D') : en ? 'Reading mode' : 'Modo leitura'}</span></button><button onClick={() => { keys.current.clear(); setAccessibilityOpen(false); setAudioPanelOpen(true); }} aria-label={en ? 'Audio settings' : 'Configurações de áudio'} aria-haspopup="dialog">{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>{en ? 'Audio' : 'Áudio'}</span></button><div className="header-accessibility-actions"><button onClick={openAccessibility} aria-label={en ? 'Open accessibility settings' : 'Abrir acessibilidade'} aria-haspopup="dialog"><Accessibility size={18} /><span>{en ? 'Accessibility' : 'Acessibilidade'}</span></button>
+    <header id={reading ? "editorial-top" : undefined} className={reading ? "editorial-header" : undefined}><a className="brand" href="#portfolio" aria-label={en ? 'Felipe Santos, home' : 'Felipe Santos, início'}><span className="brand-mark">F<span>.</span></span><span>FELIPE SANTOS<small>{en ? 'SOFTWARE ENGINEER' : 'ENGENHEIRO DE SOFTWARE'}</small></span></a><div className="header-actions"><span className="edition" title={commitId || undefined}>{reading ? (en ? 'PORTFOLIO' : 'PORTFÓLIO') : en ? '3D PORTFOLIO' : 'PORTFÓLIO 3D'} · <Github size={14} aria-hidden="true" /> <span className="sr-only">Commit </span>{displayedVersion}</span><LanguageFlags language={language} onChange={changeLanguage} /><button className={reading ? "editorial-3d-toggle" : undefined} onClick={() => { endConversation(); setReading(!reading); }}><BookOpen size={16} /><span>{reading ? (en ? '3D mode' : 'Modo 3D') : en ? 'Reading mode' : 'Modo leitura'}</span></button><button onClick={() => { keys.current.clear(); setAccessibilityOpen(false); setAudioPanelOpen(true); }} aria-label={en ? 'Audio settings' : 'Configurações de áudio'} aria-haspopup="dialog">{sound ? <Volume2 size={18} /> : <VolumeX size={18} />}<span>{en ? 'Audio' : 'Áudio'}</span></button><div className="header-accessibility-actions"><button onClick={openAccessibility} aria-label={en ? 'Open accessibility settings' : 'Abrir acessibilidade'} aria-haspopup="dialog"><Accessibility size={18} /><span>{en ? 'Accessibility' : 'Acessibilidade'}</span></button>
       {!reading && <button type="button" className="game-ui-toggle" aria-pressed={gameUiHidden}
         aria-label={en ? 'Hide game overlays' : 'Ocultar sobreposi\u00e7\u00f5es do jogo'}
         title={gameUiHidden ? (en ? 'Show game overlays' : 'Mostrar sobreposi\u00e7\u00f5es do jogo') : (en ? 'Hide game overlays' : 'Ocultar sobreposi\u00e7\u00f5es do jogo')}

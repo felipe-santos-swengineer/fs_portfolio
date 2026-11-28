@@ -8,9 +8,6 @@
 }
 
 .village-parchment {
-  --parchment-fold: 50%;
-  --parchment-curl: 1.36;
-  --parchment-shadow: .48;
   --parchment-ink: #302015;
   --parchment-rule: #8a592f;
   --parchment-gold: #694014;
@@ -23,12 +20,7 @@
   font-family: Georgia, 'Times New Roman', serif;
 }
 
-.parchment-window {
-  clip-path: inset(var(--parchment-fold) -4px);
-}
-
 .parchment-window[data-unrolled] {
-  clip-path: none;
   box-shadow: 0 18px 28px #10060278;
 }
 
@@ -87,19 +79,27 @@
 .parchment-scroll::-webkit-scrollbar-track { background: #edcf99; }
 .parchment-scroll::-webkit-scrollbar-thumb { background: #845027; border: 2px solid #edcf99; border-radius: 8px; }
 
-.parchment-roll {
+.parchment-roll-track {
   position: absolute;
   z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.parchment-roll-track-top { transform-origin: center top; }
+.parchment-roll-track-bottom { transform-origin: center bottom; }
+
+.parchment-roll {
+  position: absolute;
   inset-inline: -12px;
   height: clamp(20px, 3.6vw, 29px);
   display: grid;
   place-items: center;
-  transform: translateY(-50%) scaleY(var(--parchment-curl));
-  pointer-events: none;
+  transform: translateY(-50%);
 }
 
-.parchment-roll-top { top: var(--parchment-fold); }
-.parchment-roll-bottom { top: calc(100% - var(--parchment-fold)); }
+.parchment-roll-top { top: 0; }
+.parchment-roll-bottom { top: 100%; }
 
 .parchment-roll i {
   width: 100%;
@@ -135,7 +135,7 @@
   position: absolute;
   inset: 47% 16px -95%;
   background: linear-gradient(#38200d, transparent);
-  opacity: var(--parchment-shadow);
+  opacity: .30;
   z-index: 1;
 }
 

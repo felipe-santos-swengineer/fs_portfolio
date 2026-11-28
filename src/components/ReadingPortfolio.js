@@ -5,13 +5,13 @@ import './ReadingPortfolio.css';
 const sectionOrder = [1, 6, 7, 8, 2, 3];
 const sectionId = index => `reading-section-${index}`;
 
-export function ProfessionalLinks({ en, compact = false }) {
+function ProfessionalLinks({ en }) {
   const newTab = en ? 'opens in a new tab' : 'abre em nova aba';
-  return <div className={`editorial-social${compact ? ' editorial-social-compact' : ''}`}>
+  return <div className="editorial-social">
     <a href="https://github.com/felipe-santos-swengineer" target="_blank" rel="noreferrer"
-      aria-label={`GitHub (${newTab})`}><Github size={17} aria-hidden="true" />{!compact && 'GitHub'}</a>
+      aria-label={`GitHub (${newTab})`}><Github size={17} aria-hidden="true" /> GitHub</a>
     <a href="https://www.linkedin.com/in/felipe-santos-rodrigues/" target="_blank" rel="noreferrer"
-      aria-label={`LinkedIn (${newTab})`}><Linkedin size={17} aria-hidden="true" />{!compact && 'LinkedIn'}</a>
+      aria-label={`LinkedIn (${newTab})`}><Linkedin size={17} aria-hidden="true" /> LinkedIn</a>
   </div>;
 }
 

@@ -51,8 +51,6 @@
 }
 .app.reading-mode .editorial-header .header-actions button:hover { background: var(--editorial-raised); }
 .app.reading-mode .editorial-header .language-flags button[aria-pressed="true"] { border-color: var(--gold); }
-.editorial-social-compact { gap: 2px; }
-.editorial-social-compact a { justify-content: center; min-width: 44px; }
 
 .editorial { --editorial-nav-height: 54px; }
 .editorial-index {
@@ -292,7 +290,7 @@
   line-height: 1.12;
 }
 .app.reading-mode .editorial :is(.story p, .project p, .career-entry p) { color: var(--muted); line-height: 1.78; }
-.editorial :is(.story, .editorial-timeline, .editorial-role-details) { max-width: 76ch; }
+.editorial :is(.story, .editorial-timeline) { max-width: 76ch; }
 .editorial .story + .story { margin-top: 25px; padding-top: 24px; }
 .editorial #reading-section-1 .story p { max-width: 70ch; }
 @media (min-width: 940px) {
@@ -366,29 +364,19 @@
 .editorial-timeline .career-entry + .career-entry { margin-top: 29px; }
 .editorial-position { color: var(--ink); font-size: calc(.96rem * var(--text-scale, 1)); font-weight: 600; }
 .editorial .career-period { margin-top: 5px; color: var(--gold); }
-.editorial-role-details { margin-top: 26px; }
-.editorial-project-intro { max-width: 76ch; }
-.editorial :is(.editorial-role-details, .editorial-project-intro) {
+.editorial .editorial-project-intro {
+  max-width: 76ch;
   padding: 4px 16px;
   border: 1px solid var(--line);
   background: var(--editorial-panel);
   border-radius: 5px;
 }
-.editorial :is(.editorial-role-details, .editorial-project-intro) > summary {
+.editorial .editorial-project-intro > summary {
   cursor: pointer;
   align-content: center;
   color: var(--gold);
 }
-.editorial :is(.editorial-role-details, .editorial-project-intro) .story { padding: 15px 0; }
-.editorial .market-options button {
-  background: var(--editorial-raised);
-  color: var(--ink);
-  border: 1px solid #567265;
-  border-radius: 4px;
-  padding: 8px 12px;
-}
-.editorial .market-options button[aria-pressed="true"] { background: #294238; border-color: var(--gold); }
-.editorial .market-result { color: var(--muted); }
+.editorial .editorial-project-intro .story { padding: 15px 0; }
 
 .editorial-project-grid { margin-top: 28px; }
 .editorial .project {
@@ -478,7 +466,8 @@
 }
 
 @media (max-width: 800px) {
-  .app.reading-mode .editorial-header .header-actions { justify-content: flex-start; }
+  .app.reading-mode .editorial-header,
+  .app.reading-mode .editorial-header .header-actions { justify-content: center; }
   .app.reading-mode .editorial-header .edition { display: none; }
   .editorial-index { flex-direction: column; gap: 0; }
   .editorial-index-toggle { order: 0; }
@@ -501,7 +490,7 @@
 
 @media (max-width: 570px) {
   .app.reading-mode .editorial-header, .editorial { width: min(92%, 1260px); }
-  .app.reading-mode .editorial-header { justify-content: flex-start; row-gap: 10px; }
+  .app.reading-mode .editorial-header { row-gap: 10px; }
   .app.reading-mode .editorial-header .header-actions { gap: 6px; }
   .app.reading-mode .editorial-header .header-actions button { padding-inline: 8px; }
   .editorial-hero { grid-template-columns: minmax(0, 1fr); padding-block: 48px 42px; }
